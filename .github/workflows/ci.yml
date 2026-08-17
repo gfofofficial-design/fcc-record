@@ -1,0 +1,59 @@
+name: FCC Stage-0 CI Foundation
+on: [push, pull_request]
+jobs:
+  foundation-battery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: npm test
+
+  append-only-actual-range:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Determine comparison range
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "CI_APPEND_ONLY_BASE=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_ENV"
+            echo "CI_APPEND_ONLY_HEAD=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_ENV"
+          else
+            echo "CI_APPEND_ONLY_BASE=${{ github.event.before }}" >> "$GITHUB_ENV"
+            echo "CI_APPEND_ONLY_HEAD=${{ github.event.after }}" >> "$GITHUB_ENV"
+          fi
+      - run: node tools/ci-append-only-check.js
+
+  cross-os-byte-and-hash-equality:
+    strategy:
+      matrix: { os: [ubuntu-latest, macos-latest, windows-latest] }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: node tools/verify-frozen-hashes.js
+      - run: node tools/verify-byte-preservation.js
+      - run: node tools/verify-byte-manifest-completeness.js
+      - run: node tools/verify-schemas.js
+
+  canonicalization-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: node -e "const c=require('canonicalize'); console.log(c({b:1,a:2}))" > /tmp/js.out
+      - run: python3 -c "import rfc8785; print(rfc8785.dumps({'b':1,'a':2}).decode())" > /tmp/py.out
+      - run: diff /tmp/js.out /tmp/py.out && echo "JS/Python RFC 8785 parity confirmed"
