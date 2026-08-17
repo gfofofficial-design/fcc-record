@@ -1,0 +1,10 @@
+# FCC record byte-preservation policy — frozen architecture v0.1.2 §2
+# Cryptographic/evidentiary artifacts are protected from Git working-tree
+# transformations (line-ending conversion, encoding changes). No other
+# preservation scheme is used; this is normative.
+record/** -text
+governance/frozen/** -text
+governance/keys/** -text
+*.ots binary
+*.ndjson -text
+*.json -text
