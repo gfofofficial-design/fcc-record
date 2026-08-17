@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fcc-record/governance/schemas/v1/event.schema.json",
+  "title": "FCC Record Event Envelope (v1)",
+  "description": "Foundation-scope schema for the append-only event envelope shape defined by the frozen implementation architecture v0.1.2 Correction 2. Validates SHAPE only (field presence/type/format) — it does not implement or verify the RFC 8785 canonicalization or hash-chain math, which is BUILD 02 scope.",
+  "type": "object",
+  "required": ["event_id", "type", "at", "payload_refs", "prev_event_sha256", "event_sha256"],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": { "type": "string", "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$", "description": "ULID" },
+    "type": {
+      "type": "string",
+      "enum": ["filed-locked", "published", "witness-degraded", "witness-completed",
+               "anchor-requested", "anchor-confirmed", "annex-added", "state-transition",
+               "challenge-received", "resolution-recorded"]
+    },
+    "at": { "type": "string", "format": "date-time" },
+    "payload_refs": { "type": "array", "items": { "type": "string" } },
+    "prev_event_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "event_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

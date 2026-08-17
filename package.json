@@ -1,0 +1,14 @@
+{
+  "name": "fcc-record-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FCC Stage-0 CI foundation tooling (Node primary)",
+  "scripts": {
+    "test": "node tools/run-ci-foundation-tests.js"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "canonicalize": "2.1.0",
+    "ajv-formats": "3.0.1"
+  }
+}
