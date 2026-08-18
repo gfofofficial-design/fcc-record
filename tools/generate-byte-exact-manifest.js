@@ -10,6 +10,7 @@ const BYTE_EXACT_PATHS = [
   'governance/frozen/FCC_PRODUCT_BLUEPRINT_V1_1_1.md',
   'governance/frozen/FCC_CAPITAL_DOCTRINE_V0_1_1.md',
   'governance/frozen/FCC_CAPITAL_INSTRUMENT_SPEC_V0_1_1.md',
+  'governance/frozen/FCC_STAGE0_IMPLEMENTATION_ARCHITECTURE_V0_1_2.md',
   'governance/keys/key-TEST-000.pub.pem',
 ];
 const entries = BYTE_EXACT_PATHS.map(p => {

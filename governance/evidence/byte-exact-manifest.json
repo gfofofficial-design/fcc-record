@@ -21,6 +21,12 @@
       "bytes": 21999
     },
     {
+      "path": "governance/frozen/FCC_STAGE0_IMPLEMENTATION_ARCHITECTURE_V0_1_2.md",
+      "git_blob_sha1": "b277c264f990e7184334279cd0d9de612ef4a8b0",
+      "content_sha256": "ddaa2b3d4eafc3e23851be5795443470a26307618eaa2ea06a25fa5b4c36a9da",
+      "bytes": 58170
+    },
+    {
       "path": "governance/keys/key-TEST-000.pub.pem",
       "git_blob_sha1": "acea813c2e035e21550be7e4094d15443242c7f5",
       "content_sha256": "381d5c3370131c5b23d664145ed41b38cd922b691bb2659e2292023293458205",

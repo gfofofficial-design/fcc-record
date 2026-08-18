@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fcc-record/governance/schemas/v1/filing-log-event.schema.json",
+  "title": "FCC Filing Log Event (v1)",
+  "description": "Extracted directly from frozen Stage 0 Implementation Architecture v0.1.2 line 41's Filing Log entry definition plus the general event-hash envelope (Correction 2), and the ratified BUILD 02 architecture adjudication ('the Filing Log entry created at draft registration carries the reserved instrument_id'). record/filing-log.ndjson is a sequence of these events -- status is derived from the event history, never mutated in place. Event types map 1:1 onto the frozen status enum OPEN-WORK | FILED | ABANDONED: filing-opened -> OPEN-WORK (and is the act that reserves both filing_id and instrument_id), filing-filed -> FILED (schema-recognized for forward compatibility; NOT exercised by this build -- real filing requires a real Lock Run, out of scope), filing-abandoned -> ABANDONED. No initiator/identity field is included: no frozen text requires identity attribution for Filing Log entries (unlike the Challenge schema, which explicitly does via S-3) -- its absence here is a resolved reading of frozen text, not an invented omission. No speculative statuses beyond the frozen three.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id", "type", "at", "filing_id", "payload", "prev_event_sha256", "event_sha256"],
+  "properties": {
+    "event_id": { "type": "string", "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$", "description": "ULID" },
+    "type": { "type": "string", "enum": ["filing-opened", "filing-filed", "filing-abandoned"] },
+    "at": { "type": "string", "format": "date-time" },
+    "filing_id": { "type": "string", "pattern": "^FCC-F-[0-9]{6}$" },
+    "payload": {
+      "type": "object",
+      "description": "Shape depends on type -- validated further by the per-type oneOf below."
+    },
+    "prev_event_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "event_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "filing-opened" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object", "additionalProperties": false,
+            "required": ["subject", "rationale", "instrument_id"],
+            "properties": {
+              "subject": { "type": "string", "minLength": 1 },
+              "rationale": { "type": "string", "minLength": 1 },
+              "instrument_id": { "type": "string", "pattern": "^FCC-I-[0-9]{6}$" },
+              "proposal_source": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "filing-abandoned" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object", "additionalProperties": false,
+            "required": ["abandonment_reason"],
+            "properties": { "abandonment_reason": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "filing-filed" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object", "additionalProperties": false,
+            "required": [],
+            "properties": {}
+          }
+        }
+      }
+    }
+  ]
+}

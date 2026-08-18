@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fcc-record/governance/schemas/v1/prelock-body.schema.json",
+  "title": "FCC Capital Instrument — PRELOCK Package (v1, generated)",
+  "description": "GENERATED from locked-body.schema.json by tools/generate-prelock-schema.js -- do not hand-edit. Represents the semantic body BEFORE instrument_id and filed_at are injected by an authoritative LOCK RUN. A PRELOCK package that validates here is not filed, not locked, and carries no lock_sha256.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "instrument_type",
+    "decision",
+    "thesis",
+    "evidence_chain",
+    "risk_statement",
+    "horizon",
+    "resolution_criteria",
+    "resolution_sources",
+    "conflicts_disclosures",
+    "doctrine_version",
+    "schema_version"
+  ],
+  "properties": {
+    "instrument_type": {
+      "type": "string",
+      "enum": [
+        "qualification-stance",
+        "process",
+        "allocation"
+      ]
+    },
+    "decision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "thesis": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_chain": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_url",
+          "retrieved_at"
+        ],
+        "properties": {
+          "source_url": {
+            "type": "string"
+          },
+          "retrieved_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "content_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "query": {
+            "type": "string"
+          },
+          "snapshot_value": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "risk_statement": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sizing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "book_pct",
+        "sector",
+        "denomination"
+      ],
+      "properties": {
+        "book_pct": {
+          "type": "number"
+        },
+        "sector": {
+          "type": "string"
+        },
+        "denomination": {
+          "type": "string"
+        }
+      }
+    },
+    "horizon": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolution_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "criterion_id",
+          "statement",
+          "comparator",
+          "threshold",
+          "evaluation_procedure"
+        ],
+        "properties": {
+          "criterion_id": {
+            "type": "string"
+          },
+          "statement": {
+            "type": "string"
+          },
+          "comparator": {
+            "type": "string"
+          },
+          "threshold": {},
+          "evaluation_procedure": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "resolution_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "criterion_id",
+          "primary_source",
+          "registry_class"
+        ],
+        "properties": {
+          "criterion_id": {
+            "type": "string"
+          },
+          "primary_source": {
+            "type": "string"
+          },
+          "fallback_source": {
+            "type": "string"
+          },
+          "registry_class": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "benchmarks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "null_baseline",
+        "passive_comparator",
+        "composition_snapshot"
+      ],
+      "properties": {
+        "null_baseline": {
+          "type": "string"
+        },
+        "passive_comparator": {
+          "type": "string"
+        },
+        "composition_snapshot": {
+          "type": "string"
+        }
+      }
+    },
+    "conflicts_disclosures": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "base_rate_note": {
+      "type": "string"
+    },
+    "doctrine_version": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "not": {
+          "properties": {
+            "instrument_type": {
+              "const": "allocation"
+            }
+          },
+          "required": [
+            "instrument_type"
+          ]
+        }
+      },
+      "then": {
+        "properties": {
+          "sizing": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "instrument_type": {
+            "const": "allocation"
+          }
+        },
+        "required": [
+          "instrument_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "sizing"
+        ]
+      }
+    }
+  ],
+  "$comment": "ENCODING CHOICE (documented, not an architecture-decision stop): N/A conditional fields (sizing, benchmarks) are represented as omission, never null, within this versioned schema. sizing is schema-forbidden outright for non-allocation types per Doctrine H1 Stage-0 N/A; benchmarks remains unconstrained (no mechanical rule distinguishes 'comparative' from 'non-comparative' stance instruments in the frozen text). EVIDENCE FLOOR (owner/ChatGPT final closure, BUILD 02.1): evidence_chain minItems:1 applies UNIVERSALLY to every instrument_type -- qualification-stance, process, and future allocation. For process instruments, a qualifying item is any authoritative source, governing artifact, prior record, measurement, proposal, specification, or correction the decision materially depends on -- not market-price or performance evidence. All existing per-item evidence structure and conditional fields (content_sha256/query/snapshot_value) are unchanged."
+}
