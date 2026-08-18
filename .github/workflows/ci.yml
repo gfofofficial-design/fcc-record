@@ -1,5 +1,6 @@
 name: FCC Stage-0 CI Foundation
 on: [push, pull_request]
+
 jobs:
   foundation-battery:
     runs-on: ubuntu-latest
@@ -8,9 +9,41 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
       - run: npm ci
+      - run: pip install -r requirements.txt
       - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
-      - run: npm test
+      - run: npm test   # runs BUILD 01 + BUILD 02 batteries together; BUILD 01 tests must stay green
+
+  filing-log-battery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: node tools/run-filing-log-tests.js
+
+  build02-fixtures-isolated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: node tools/run-build02-tests.js
+      - run: node tools/verify-candidate-quarantine.js
 
   append-only-actual-range:
     runs-on: ubuntu-latest
@@ -38,11 +71,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
       - run: npm ci
+      - run: pip install -r requirements.txt
       - run: node tools/verify-frozen-hashes.js
       - run: node tools/verify-byte-preservation.js
       - run: node tools/verify-byte-manifest-completeness.js
       - run: node tools/verify-schemas.js
+      - run: node tools/run-build02-tests.js   # dual canonicalization must agree on every OS too
 
   canonicalization-parity:
     runs-on: ubuntu-latest
