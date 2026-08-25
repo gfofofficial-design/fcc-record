@@ -1,0 +1,9 @@
+{
+  "artifact_class": "KNOWN_AFFILIATION_BASELINE",
+  "not_a_capital_instrument": true,
+  "purpose": "Pre-experiment list of Federation-affiliated identities (spec section 16), excluded from external-facing metrics (primary metric components). Additions only during the experiment, applied prospectively; a person is never removed once flagged; a discovered pre-existing affiliation triggers a retroactive correction per the affiliation timing rules in experiment-freeze.json, never a silent edit.",
+  "status": "AWAITING_OWNER_INPUT",
+  "blocking_reason": "No concrete pseudonymous identity list has been supplied or fabricated. Populating this with real wallet/account identifiers for known team members, contractors, or moderators is an owner data-entry action -- BUILD 04 does not invent identities or guess at who should be listed.",
+  "known_affiliated_identities": [],
+  "how_to_populate": "Owner supplies pseudonymous identifiers (wallet address or account identity, per spec section 10) for every publicly known team member, contractor, Federation-controlled-channel moderator/admin, or anyone who self-discloses affiliation, per the behavioral test in spec section 16. Real names are not required or wanted here -- only the identifiers the challenge system itself would see."
+}

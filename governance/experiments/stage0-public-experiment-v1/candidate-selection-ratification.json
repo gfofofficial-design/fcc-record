@@ -1,0 +1,17 @@
+{
+  "artifact_class": "GOVERNANCE_RATIFICATION_RECORD",
+  "not_a_capital_instrument": true,
+  "ratifies": {
+    "document": "FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_2.md",
+    "sha256": "751953212fa1f17d0041fc6f3d36c570dae66d25c62d4ac16ed4f9849aaf5927"
+  },
+  "ratified": true,
+  "ratified_at": "2026-08-18",
+  "ratified_at_granularity": "date-only -- the exact time-of-day this record was created is not independently attested by anything stronger than this file's own existence, so no fabricated time-of-day precision is claimed; the cutoff computation (tools/lib/intake-cutoff.js) treats this as 2026-08-18T00:00:00Z for the purpose of the frozen +2-day formula, which is a conservative (later, not earlier) reading",
+  "ratification_history": [
+    { "pass": "v0.1 design", "outcome": "not ratified, accepted in concept, red-team correction ordered (C-1..C-7)" },
+    { "pass": "v0.2 red-team correction", "outcome": "not yet ratified, C-3 flagged for final correction" },
+    { "pass": "v0.2 final C-3-only correction", "outcome": "RATIFIED", "sha256": "751953212fa1f17d0041fc6f3d36c570dae66d25c62d4ac16ed4f9849aaf5927" }
+  ],
+  "note": "This record's existence is trigger condition 2 of the Candidate Selection Method v0.2's own frozen cutoff formula (Section 2, Step 0): CUTOFF_TIMESTAMP = 00:00:00 UTC + 2 calendar days after the LATER of (1) BUILD 03.1 AD-3 reaching VERIFIED, (2) this ratification record existing. Its presence satisfies condition 2. It does not, by itself, authorize intake -- condition 1 (governance/gates/build03-1-ad3-status.json) must independently reach VERIFIED before a cutoff timestamp can even be computed."
+}

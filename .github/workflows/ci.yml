@@ -94,3 +94,48 @@ jobs:
       - run: node -e "const c=require('canonicalize'); console.log(c({b:1,a:2}))" > /tmp/js.out
       - run: python3 -c "import rfc8785; print(rfc8785.dumps({'b':1,'a':2}).decode())" > /tmp/py.out
       - run: diff /tmp/js.out /tmp/py.out && echo "JS/Python RFC 8785 parity confirmed"
+
+  build03-witness-battery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: node tools/run-build03-tests.js
+
+  build04-experiment-freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: node tools/verify-experiment-freeze.js
+      - run: node tools/run-build04-tests.js
+
+  build04-1-candidate-intake-machinery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: node tools/verify-experiment-freeze.js
+      - run: node tools/run-build04-1-tests.js
+      - run: node tools/run-candidate-intake.js || test $? -eq 2

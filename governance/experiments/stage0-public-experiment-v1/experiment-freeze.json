@@ -1,0 +1,214 @@
+{
+  "artifact_class": "GOVERNANCE_EXPERIMENT_FREEZE",
+  "not_a_capital_instrument": true,
+  "instrument_id": null,
+  "witness_publication_required": false,
+  "controlling_spec": {
+    "path": "FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_2.md",
+    "sha256": "ef9dab7654e48ec18867706168ea640e46910814923193674fb847160ca89ec6",
+    "version": "v0.2"
+  },
+  "instrument_plan": {
+    "total_count": 15,
+    "window_days": 90,
+    "horizon_distribution": {
+      "short": {
+        "count": 5,
+        "definition": "<=14 days"
+      },
+      "medium": {
+        "count": 5,
+        "definition": "15-45 days"
+      },
+      "long": {
+        "count": 5,
+        "definition": "46-90 days"
+      }
+    }
+  },
+  "primary_metric": {
+    "name": "EXTERNAL_CHALLENGER_DEPTH",
+    "is_absolute_count_not_rate": true,
+    "components": {
+      "unique_substantive_external_challengers": {
+        "definition": "distinct identities (spec section 10) filing >=1 SUBSTANTIVE challenge (spec section 9) during Stage 0, excluding Federation-affiliated identities (spec section 16)"
+      },
+      "qualifying_returning_external_challengers": {
+        "definition": "of the above, count who engage again (a further substantive challenge, or an independently loggable instrument-page view) at least N days after their first engagement",
+        "minimum_gap_days": 7
+      }
+    }
+  },
+  "secondary_metrics": [
+    {
+      "name": "return_engagement_rate",
+      "load_bearing": false,
+      "definition": "qualifying_returning / unique_substantive, published for context only"
+    },
+    {
+      "name": "challenge_rate_per_instrument",
+      "load_bearing": false,
+      "definition": "substantive challenges per filed instrument, plus zero-challenge instrument count"
+    },
+    {
+      "name": "process_compliance",
+      "load_bearing": false,
+      "definition": "frozen section 12 Process-Scoring Engine metrics, unchanged"
+    },
+    {
+      "name": "external_citation_reference",
+      "load_bearing": false,
+      "definition": "privacy-respecting supplemental analytics only; NOT_MEASURED if unavailable"
+    }
+  ],
+  "thresholds": {
+    "minimum_success": {
+      "unique_substantive_external_challengers_gte": 5,
+      "qualifying_returning_external_challengers_gte": 2,
+      "deadline_day": 90
+    },
+    "strong_success": {
+      "unique_substantive_external_challengers_gte": 10,
+      "qualifying_returning_external_challengers_gte": 4,
+      "instrument_coverage_pct_gte": 25
+    },
+    "failure": {
+      "condition": "minimum_success not met by deadline_day"
+    }
+  },
+  "kill_pivot_rule": {
+    "day": 45,
+    "condition": "cumulative unique substantive external challengers = 0 AND no instrument has received any substantive external engagement at all",
+    "early_success_permitted": false,
+    "permitted_actions": [
+      "continue_to_day_90",
+      "declare_early_failure_and_stop"
+    ]
+  },
+  "accuracy_non_load_bearing": true,
+  "privacy_rules": {
+    "authoritative_evidence_source": "challenge_behavior",
+    "prohibited_methods": [
+      "fingerprinting",
+      "cross_site_profiling",
+      "covert_identity_correlation",
+      "invasive_identity_collection"
+    ],
+    "citation_metric_if_unavailable": "NOT_MEASURED"
+  },
+  "affiliation_rules": {
+    "test_type": "behavioral_not_formal_title",
+    "known_affiliation_baseline_ref": "known-affiliation-baseline.json",
+    "timing_cases": {
+      "new_affiliation_during_experiment": {
+        "exclusion_applies": "prospective_from_actual_start_date",
+        "past_genuine_external_engagement_retained": true
+      },
+      "previously_existing_discovered_later": {
+        "correction_required": "retroactive_to_true_affiliation_start",
+        "historical_counts_removed_silently": false,
+        "correction_publicly_recorded": true,
+        "recorded_as": "corrections_class_entry_per_spec_section_13"
+      }
+    }
+  },
+  "promotion_methodology": {
+    "equal_visibility_rule": true,
+    "definition": "every filed instrument receives the same category of public listing/visibility; no differential promotion"
+  },
+  "candidate_selection_methodology": {
+    "status": "RATIFIED_AWAITING_CUTOFF",
+    "named_source_list": [
+      {
+        "id": "A1",
+        "name": "Snapshot",
+        "url": "snapshot.org"
+      },
+      {
+        "id": "A2",
+        "name": "Cactus (formerly Tally)",
+        "url": "tally.xyz"
+      },
+      {
+        "id": "B1",
+        "name": "SEC EDGAR",
+        "url": "sec.gov"
+      },
+      {
+        "id": "B2",
+        "name": "CFTC Press Releases + Enforcement Actions",
+        "url": "cftc.gov",
+        "acquisitionTier": "DOWNGRADED"
+      },
+      {
+        "id": "C1",
+        "name": "Coinbase",
+        "url": "coinbase.com",
+        "acquisitionTier": "DOWNGRADED_CONDITIONAL"
+      },
+      {
+        "id": "C2",
+        "name": "Kraken",
+        "url": "kraken.com",
+        "acquisitionTier": "DOWNGRADED_CONDITIONAL"
+      },
+      {
+        "id": "D1",
+        "name": "L2BEAT",
+        "url": "l2beat.com"
+      },
+      {
+        "id": "D2",
+        "name": "DefiLlama",
+        "url": "defillama.com"
+      },
+      {
+        "id": "E1",
+        "name": "Ethereum core-upgrade schedule",
+        "url": "ethereum.org"
+      },
+      {
+        "id": "F1",
+        "name": "SEC EDGAR (named ETF issuer CIKs)",
+        "url": "sec.gov"
+      },
+      {
+        "id": "G1",
+        "name": "Polymarket",
+        "url": "polymarket.com",
+        "role": "BENCHMARK_ONLY_NEVER_A_CANDIDATE_SOURCE"
+      },
+      {
+        "id": "G2",
+        "name": "Kalshi",
+        "url": "kalshi.com",
+        "role": "BENCHMARK_ONLY_NEVER_A_CANDIDATE_SOURCE"
+      }
+    ],
+    "mechanical_procedure_text": {
+      "document": "FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_2.md",
+      "sha256": "751953212fa1f17d0041fc6f3d36c570dae66d25c62d4ac16ed4f9849aaf5927",
+      "ratification_record": "candidate-selection-ratification.json"
+    },
+    "cutoff_gate_ref": {
+      "formula": "CUTOFF_TIMESTAMP = 00:00:00 UTC + 2 calendar days after the LATER of (1) BUILD 03.1 AD-3 -> VERIFIED, (2) this methodology ratification recorded",
+      "condition_1_ref": "governance/gates/build03-1-ad3-status.json",
+      "condition_2_ref": "candidate-selection-ratification.json",
+      "trigger_set_frozen": true,
+      "compute_tool": "tools/compute-intake-cutoff.js"
+    },
+    "blocking_reason": null
+  },
+  "experiment_dates": {
+    "start_utc": null,
+    "end_utc": null,
+    "status": "PENDING_FROZEN_IMMEDIATELY_BEFORE_LAUNCH",
+    "note": "Per spec section 17 Launch timing: deliberately not selected in this pass. Day 1 begins only after required infrastructure and outstanding production prerequisites (including BUILD 03.1 AD-3 Telegram production-classifier resolution) are ready."
+  },
+  "candidate_slate_ref": {
+    "path": "candidate-slate.json",
+    "sha256": "ad63329bed879484750ad5bfa0a91e7a9fc27f9482baf0c4d4f6f1e1cacc1109"
+  },
+  "freeze_status": "BLOCKED",
+  "freeze_status_reason": "Candidate/source-selection methodology is now RATIFIED (was the prior blocker) but intake has not run and cannot run yet: the frozen cutoff formula requires BUILD 03.1 AD-3 to reach VERIFIED status, which has not happened (governance/gates/build03-1-ad3-status.json remains UNRESOLVED (status field literally reads UNRESOLVED, not VERIFIED \u2014 any non-VERIFIED value blocks the cutoff formula identically)). Calendar dates also remain unchosen per the spec's own launch-timing rule. freeze_status becomes VALID only once intake has actually run (producing a populated, non-placeholder candidate-slate.json) and calendar dates are frozen -- neither is authorized yet."
+}
