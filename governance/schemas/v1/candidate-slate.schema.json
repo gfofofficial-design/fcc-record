@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fcc-record/governance/schemas/v1/candidate-slate.schema.json",
+  "title": "FCC Stage 0 Candidate Slate Structure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact_class", "not_a_capital_instrument", "total_slots", "horizon_distribution", "all_slots_populated", "fabrication_prohibited", "slots"],
+  "properties": {
+    "artifact_class": { "const": "CANDIDATE_SLATE_STRUCTURE" },
+    "not_a_capital_instrument": { "const": true },
+    "total_slots": { "const": 15 },
+    "horizon_distribution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["short", "medium", "long"],
+      "properties": { "short": { "const": 5 }, "medium": { "const": 5 }, "long": { "const": 5 } }
+    },
+    "all_slots_populated": { "type": "boolean" },
+    "fabrication_prohibited": { "const": true },
+    "slots": {
+      "type": "array", "minItems": 15, "maxItems": 15,
+      "items": {
+        "type": "object", "additionalProperties": true,
+        "required": ["slot_id", "horizon_bucket", "status"],
+        "properties": {
+          "slot_id": { "type": "string", "pattern": "^SLOT-[0-9]{2}$" },
+          "horizon_bucket": { "enum": ["short", "medium", "long"] },
+          "status": { "enum": ["AWAITING_CANDIDATE_SELECTION", "SELECTED_PENDING_ELIGIBILITY", "ELIGIBLE_PENDING_FILING"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "artifact_class": "GOVERNANCE_GATE_STATUS_RECORD",
+  "not_a_capital_instrument": true,
+  "gate": "BUILD 03.1 — Telegram Witness Environment Verification",
+  "decision": "AD-3",
+  "status": "UNRESOLVED",
+  "verified_at": null,
+  "recorded_at": "2026-08-18T00:00:00.000Z",
+  "reason": "Build environment cannot reach api.telegram.org/t.me (egress policy: host_not_allowed) and no credentials are present. Standalone harness (fcc-build03-1-telegram-envtest.js) delivered for the owner to run on his own machine. AD-3 remains UNRESOLVED until the owner returns evidence and an adjudication pass issues a VERIFIED / CORRECTION REQUIRED / UNRESOLVED verdict.",
+  "note": "This record is the sole authoritative source Candidate Selection Method v0.2 section 2 Step 0's cutoff-trigger formula reads for condition 1. It is never set to VERIFIED by this tooling automatically. Because this file lives under the append-only-protected governance/gates/ root, a future update cannot edit this file in place -- it requires a new, separately-versioned file plus its own adjudication gate, exactly like every other governance record in this repo."
+}

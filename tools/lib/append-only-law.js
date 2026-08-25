@@ -17,7 +17,7 @@ const { execSync } = require('child_process');
 
 function isNdjson(path) { return /\.ndjson$/.test(path); }
 function isProtectedRoot(path) {
-  return /^record\//.test(path) || /^governance\/frozen\//.test(path) || /^governance\/keys\//.test(path);
+  return /^record\//.test(path) || /^governance\/frozen\//.test(path) || /^governance\/keys\//.test(path) || /^governance\/experiments\//.test(path) || /^governance\/gates\//.test(path);
 }
 
 function blobBytes(ref, path) {
