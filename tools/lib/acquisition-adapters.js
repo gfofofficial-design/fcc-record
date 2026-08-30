@@ -50,7 +50,17 @@ function classifyTransportFailure(err, res) {
     if (res.statusCode === 403 && res.bodySample && /rate limit/i.test(res.bodySample)) {
       return { state: READINESS.NETWORK_BLOCKED, detail: 'HTTP 403 shared-IP unauthenticated rate limit — surface reachable, this environment is rate-exhausted' };
     }
-    if (res.statusCode === 401 || res.statusCode === 403) return { state: READINESS.CREDENTIAL_REQUIRED, detail: `HTTP ${res.statusCode}` };
+    // ADJUDICATED (B2 gate, 2026-08-30): a bare 403 is NEVER by itself proof of a
+    // credential requirement. CREDENTIAL_REQUIRED needs an actual authentication
+    // challenge (401, or 403 carrying WWW-Authenticate). A 403 without one is an
+    // edge/WAF access restriction on this client — the interface stays valid, the
+    // environment's request is what was refused: NETWORK_BLOCKED.
+    if (res.statusCode === 401 || (res.statusCode === 403 && res.headers && res.headers['www-authenticate'])) {
+      return { state: READINESS.CREDENTIAL_REQUIRED, detail: `HTTP ${res.statusCode} with authentication challenge` };
+    }
+    if (res.statusCode === 403) {
+      return { state: READINESS.NETWORK_BLOCKED, detail: 'HTTP 403 without an authentication challenge — edge/bot access restriction on this client; surface is publicly served to browser clients, no credential is required' };
+    }
     if (res.statusCode === 404) return { state: READINESS.SOURCE_INTERFACE_DRIFT, detail: 'HTTP 404 on ratified surface' };
     if (res.statusCode >= 400) return { state: READINESS.FAIL, detail: `HTTP ${res.statusCode}` };
   }
@@ -187,9 +197,17 @@ const b2Cftc = {
   id: 'B2', name: 'CFTC press releases + enforcement index', klass: 'B', tier: 'DOWNGRADED', conditional: false,
   fragile: true,
   pressSurface: (seq, yy) => `https://www.cftc.gov/PressRoom/PressReleases/${seq}-${yy}`,
-  enforcementSurface: 'https://www.cftc.gov/LawRegulation/Enforcement/EnforcementActions',
+  // Canonical Drupal path of the same frozen "Enforcement Actions index page"
+  // (verified live 2026-08-30; the previous alias path is not the page's
+  // canonical URL). Same page, same fixed structure — a URL correction, not a
+  // source substitution. Paginated via the page's own ?page=N mechanism.
+  enforcementSurface: 'https://www.cftc.gov/LawRegulation/EnforcementActions/index.htm',
+  // Honest, standard-compliant client identification. Node sends NO User-Agent
+  // by default, which government edge/WAF layers commonly refuse with 403.
+  // Identifying ourselves is a transport correction, not identity spoofing.
+  headers: { 'user-agent': 'Mozilla/5.0 (compatible; FCC-Stage0-readiness; admin@dossiertrack.co)', accept: 'text/html' },
   buildPressRequest({ seq, yy }) {
-    return { url: this.pressSurface(seq, yy), method: 'GET', headers: {}, pageState: { seq, yy } };
+    return { url: this.pressSurface(seq, yy), method: 'GET', headers: this.headers, pageState: { seq, yy } };
   },
   parsePress(bodyText, { seq, yy }) {
     // Fixed-structure expectations: an <h1> page title and a visible dateline.
@@ -202,20 +220,30 @@ const b2Cftc = {
     return { ok: true, exists: true, items: [{ canonicalId: `${seq}-${yy}`, sourceTimestamp: date[0], title: h1[1].replace(/<[^>]+>/g, '').trim() }] };
   },
   nextPressRequest(prev) { return this.buildPressRequest({ seq: prev.pageState.seq + 1, yy: prev.pageState.yy }); },
-  buildEnforcementRequest() { return { url: this.enforcementSurface, method: 'GET', headers: {} }; },
+  buildEnforcementRequest({ page = 0 } = {}) {
+    return { url: page > 0 ? `${this.enforcementSurface}?page=${page}` : this.enforcementSurface, method: 'GET', headers: this.headers, pageState: { page } };
+  },
+  nextEnforcementRequest(prev) { return this.buildEnforcementRequest({ page: prev.pageState.page + 1 }); },
   parseEnforcement(bodyText) {
+    // Fixed structure (verified live 2026-08-30): a date+actions table whose
+    // action cell links the governing press release at
+    // /PressRoom/PressReleases/{seq}-{yy}. The frozen methodology's canonical
+    // ID for B2 IS the press-release number, so it is extracted from that
+    // link verbatim; rows without one (e.g. Federal Register notices) are
+    // deterministically skipped. Structure changes surface as drift — never
+    // silently substituted (frozen §1.5 B2 rule).
     const rows = bodyText.match(/<tr[\s\S]*?<\/tr>/gi);
     if (!rows || rows.length < 2) return drift('enforcement index: fixed-structure table not found');
     const items = [];
     for (const row of rows.slice(1)) {
       const cells = row.match(/<td[\s\S]*?<\/td>/gi);
       if (!cells || cells.length < 2) continue;
+      const rel = /PressRoom\/PressReleases\/(\d{3,4}-\d{2})/.exec(row);
       const text = cells.map((c) => c.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
-      const caseId = text.find((t) => /^\d{2}-(civ|cr|\d+)|^[A-Za-z]*\s*No\.|^\d{4}-\d+/i.test(t)) || text[0];
       const date = text.find((t) => /\d{1,2}\/\d{1,2}\/\d{2,4}|\w+ \d{1,2}, \d{4}/.test(t)) || null;
-      if (caseId && date) items.push({ canonicalId: caseId, sourceTimestamp: date });
+      if (rel && date) items.push({ canonicalId: rel[1], sourceTimestamp: date });
     }
-    if (!items.length) return drift('enforcement index: no parseable case rows in fixed structure');
+    if (!items.length) return drift('enforcement index: table present but no rows carry the canonical press-release identifier');
     return { ok: true, items };
   },
   probe() { return this.buildEnforcementRequest(); },

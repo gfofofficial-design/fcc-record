@@ -105,8 +105,8 @@ async function probeLive(adapter, req) {
   // B2 CFTC (downgraded, fragile-by-design) ──────────────────────────────
   {
     const fxP = ADAPTERS.B2.parsePress(FIX('b2-press.html'), { seq: 9999, yy: 26 });
-    const fxE = ADAPTERS.B2.parseEnforcement(FIX('b2-enforcement.html'));
-    const okFx = fxP.ok && fxP.exists && fxP.items[0].canonicalId === '9999-26' && fxE.ok && fxE.items.length === 2;
+    const fxE = ADAPTERS.B2.parseEnforcement(FIX('b2-enforcement-live.html'));
+    const okFx = fxP.ok && fxP.exists && fxP.items[0].canonicalId === '9999-26' && fxE.ok && fxE.items.length === 2 && fxE.items[0].canonicalId === '9289-26';
     if (!okFx) { failures++; record('B2', ADAPTERS.B2.name, READINESS.FAIL, `fixture: press=${fxP.ok && fxP.exists} enf=${fxE.ok}`); }
     else if (SKIP_LIVE) record('B2', ADAPTERS.B2.name, READINESS.READY_IMPLEMENTED_NOT_LIVE_VERIFIED, 'fixtures-only run (fragile tier, per frozen §1.5)');
     else {

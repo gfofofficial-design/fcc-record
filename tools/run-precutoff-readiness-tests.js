@@ -24,7 +24,9 @@ ok(guardDecision({ authorized: true, runnerExit: null, slateShaNow: 'S', frozenS
 // ── deterministic failure classification ────────────────────────────────
 ok(classifyTransportFailure({ code: 'ENOTFOUND' }).state === READINESS.NETWORK_BLOCKED, 'F1: DNS refusal classifies NETWORK_BLOCKED');
 ok(classifyTransportFailure({ code: 'ETIMEDOUT' }).state === READINESS.NETWORK_BLOCKED, 'F2: timeout classifies NETWORK_BLOCKED');
-ok(classifyTransportFailure(null, { statusCode: 403, headers: {} }).state === READINESS.CREDENTIAL_REQUIRED, 'F3: 403 classifies CREDENTIAL_REQUIRED');
+ok(classifyTransportFailure(null, { statusCode: 401, headers: {} }).state === READINESS.CREDENTIAL_REQUIRED, 'F3a: 401 (authentication challenge) classifies CREDENTIAL_REQUIRED');
+ok(classifyTransportFailure(null, { statusCode: 403, headers: { 'www-authenticate': 'Basic' } }).state === READINESS.CREDENTIAL_REQUIRED, 'F3b: 403 WITH an authentication challenge classifies CREDENTIAL_REQUIRED');
+ok(classifyTransportFailure(null, { statusCode: 403, headers: {} }).state === READINESS.NETWORK_BLOCKED, 'F3c: bare 403 is an access restriction, NEVER proof of a credential requirement (B2 adjudication)');
 ok(classifyTransportFailure(null, { statusCode: 404, headers: {} }).state === READINESS.SOURCE_INTERFACE_DRIFT, 'F4: 404 on a ratified surface classifies SOURCE_INTERFACE_DRIFT');
 ok(classifyTransportFailure(null, { statusCode: 200, headers: { 'x-deny-reason': 'host_not_allowed' } }).state === READINESS.NETWORK_BLOCKED, 'F5: egress-proxy denial header classifies NETWORK_BLOCKED');
 
