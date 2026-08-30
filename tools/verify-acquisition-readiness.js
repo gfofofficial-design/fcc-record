@@ -18,7 +18,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { ADAPTERS, READINESS, windowBounds, liveFetch, classifyTransportFailure } = require('./lib/acquisition-adapters.js');
+const { ADAPTERS, READINESS, windowBounds, liveFetch, classifyTransportFailure, loadRegistryAddenda } = require('./lib/acquisition-adapters.js');
 
 const ROOT = path.join(__dirname, '..');
 const FIX = (f) => fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', 'acquisition', f), 'utf8');
@@ -116,13 +116,21 @@ async function probeLive(adapter, req) {
     }
   }
 
-  // C1/C2 conditional exchanges ──────────────────────────────────────────
+  // C1/C2 conditional exchanges — read the RATIFIED addenda, never a guess ──
+  const addenda = loadRegistryAddenda(ROOT);
   for (const id of ['C1', 'C2']) {
     const a = ADAPTERS[id];
     const fx = a.parseFeed(FIX('c-feed.xml'));
     if (!fx.ok || fx.items[0].canonicalId !== 'https://fixture.example/post/123') { failures++; record(id, a.name, READINESS.FAIL, 'feed-parser fixture failed'); continue; }
-    const conf = a.confirmAcquisition({ registryAddendum: null });
-    record(id, a.name, conf.state, conf.reason, { confirmed: false, contribution: 'ZERO' });
+    const conf = a.confirmAcquisition({ registryAddendum: addenda.confirmations.length ? { confirmations: addenda.confirmations } : null });
+    if (!conf.confirmed) { record(id, a.name, conf.state, conf.reason, { confirmed: false, contribution: 'ZERO' }); continue; }
+    if (SKIP_LIVE) { record(id, a.name, READINESS.READY_IMPLEMENTED_NOT_LIVE_VERIFIED, `ratified surface ${conf.feedUrl}; fixtures-only run`, { confirmed: true }); continue; }
+    const p = await probeLive(a, { url: conf.feedUrl, method: 'GET', headers: {} });
+    if (p.cls) record(id, a.name, p.cls.state, `ratified surface ${conf.feedUrl}; probe: ${p.cls.detail} (zero-contribution fallback stays lawful at execution time)`, { confirmed: true, surface: conf.feedUrl });
+    else {
+      const parsed = a.parseFeed(p.res.body);
+      record(id, a.name, parsed.ok ? READINESS.READY_LIVE_VERIFIED : READINESS.SOURCE_INTERFACE_DRIFT, parsed.ok ? `ratified feed live: HTTP ${p.res.statusCode}, ${parsed.items.length} dated item(s), guid+pubDate extracted` : parsed.detail, { confirmed: true, surface: conf.feedUrl });
+    }
   }
 
   // D1 L2BEAT / E1 Ethereum (GitHub REST primary) ────────────────────────
@@ -157,11 +165,15 @@ async function probeLive(adapter, req) {
   {
     const fx = fixtureCheck('F1', (b) => ADAPTERS.F1.parse(b), FIX('f1-submissions.json'), ['0001111111-26-000001', '0001111111-26-000002']);
     let guardOk = false; try { ADAPTERS.F1.buildRequest({ cik: 'not-a-cik' }); } catch (e) { guardOk = /never guessed/.test(e.message); }
+    const ratifiedCiks = addenda.f1Ciks;
     if (!fx.ok || !guardOk) { failures++; record('F1', ADAPTERS.F1.name, READINESS.FAIL, fx.ok ? 'CIK guess-guard missing' : fx.why); }
     else if (SKIP_LIVE) record('F1', ADAPTERS.F1.name, READINESS.READY_IMPLEMENTED_NOT_LIVE_VERIFIED, 'fixtures-only run; NOTE: the six ratified issuers\' numeric CIKs are not machine-recorded in this repo — owner addendum required before intake');
     else {
-      const p = await probeLive(ADAPTERS.F1, ADAPTERS.F1.probe({}));
-      const note = ' (mechanism probe against a syntactically valid public CIK; the ratified six-issuer CIK list itself is NOT in this repo and needs an owner addendum)';
+      const probeCik = ratifiedCiks.length ? ratifiedCiks[0].cik : null;
+      const p = await probeLive(ADAPTERS.F1, ADAPTERS.F1.probe({ cik: probeCik || undefined }));
+      const note = ratifiedCiks.length === 6
+        ? ` (ratified addendum present: ${ratifiedCiks.map((e) => e.ticker).join(',')}; probe CIK ${probeCik})`
+        : ' (RATIFIED CIK ADDENDUM INCOMPLETE OR ABSENT — owner addendum required before intake)';
       if (p.cls) record('F1', ADAPTERS.F1.name, p.cls.state, `probe: ${p.cls.detail}${note}`, { surface: 'data.sec.gov/submissions' });
       else { const parsed = ADAPTERS.F1.parse(p.res.body); record('F1', ADAPTERS.F1.name, parsed.ok ? READINESS.READY_LIVE_VERIFIED : READINESS.SOURCE_INTERFACE_DRIFT, (parsed.ok ? `live: HTTP ${p.res.statusCode}, accession+filingDate arrays extracted` : parsed.detail) + note, { surface: 'data.sec.gov/submissions' }); }
     }
@@ -173,10 +185,13 @@ async function probeLive(adapter, req) {
 
   // ── aggregate: fail closed ─────────────────────────────────────────────
   const required = ['A1', 'A2', 'B1', 'B2', 'D1', 'D2', 'E1', 'F1'];
-  const lawfulConditional = results.filter((r) => ['C1', 'C2'].includes(r.source)).every((r) => r.state === READINESS.CONDITIONAL_ZERO_CONTRIBUTION);
+  // C1/C2 never gate the aggregate: the frozen rule's confirm-or-zero fallback
+  // makes zero contribution lawful at execution time even if a ratified feed
+  // is unreachable or drifted then. Their implementation failures still count
+  // via `failures` above.
   const allLive = required.every((id) => { const r = results.find((x) => x.source === id); return r && r.state === READINESS.READY_LIVE_VERIFIED; });
-  const ready = failures === 0 && allLive && lawfulConditional;
-  console.log(`\nAGGREGATE INTAKE_READINESS: ${ready ? 'READY' : 'BLOCKED'} (fail-closed: every non-conditional source must be READY_LIVE_VERIFIED; C1/C2 must be lawfully conditional-zero)`);
+  const ready = failures === 0 && allLive;
+  console.log(`\nAGGREGATE INTAKE_READINESS: ${ready ? 'READY' : 'BLOCKED'} (fail-closed: every non-conditional source must be READY_LIVE_VERIFIED; C1/C2 follow the frozen confirm-or-zero rule and never gate this aggregate)`);
   if (!ready) {
     const blockers = required.map((id) => results.find((x) => x.source === id)).filter((r) => r && r.state !== READINESS.READY_LIVE_VERIFIED).map((r) => `${r.source}=${r.state}`);
     console.log(`BLOCKERS: ${blockers.join(' · ')}`);

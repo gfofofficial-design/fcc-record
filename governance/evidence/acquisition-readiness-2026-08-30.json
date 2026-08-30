@@ -1,0 +1,102 @@
+{
+  "artifact_class": "ACQUISITION_READINESS_EVIDENCE",
+  "not_a_capital_instrument": true,
+  "classification": "READINESS_PROBE_ONLY / NOT_CANDIDATE_INTAKE",
+  "recorded_at": "2026-08-30T01:57:38.088Z",
+  "lookback_window": {
+    "start": "2026-08-09T01:57:25.000Z",
+    "end": "2026-08-30T01:57:25.000Z"
+  },
+  "note": "Endpoint/interface readiness metadata only. No market-derived candidate content is persisted here; item counts and HTTP statuses are the only probe outputs retained.",
+  "results": [
+    {
+      "source": "A1",
+      "name": "Snapshot",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed",
+      "surface": "https://hub.snapshot.org/graphql"
+    },
+    {
+      "source": "A2",
+      "name": "Cactus (formerly Tally)",
+      "state": "CREDENTIAL_REQUIRED",
+      "detail": "fixture parse deterministic; TALLY_API_KEY absent in this environment — live verification honestly not claimed",
+      "surface": "https://api.tally.xyz/query"
+    },
+    {
+      "source": "B1",
+      "name": "SEC EDGAR full-text search",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed",
+      "surface": "https://efts.sec.gov/LATEST/search-index"
+    },
+    {
+      "source": "B2",
+      "name": "CFTC press releases + enforcement index",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed (fragile downgraded tier; drift must be surfaced, never substituted)",
+      "surface": "https://www.cftc.gov/LawRegulation/Enforcement/EnforcementActions"
+    },
+    {
+      "source": "C1",
+      "name": "Coinbase",
+      "state": "CONDITIONAL_ZERO_CONTRIBUTION",
+      "detail": "no ratified registry addendum confirms a reproducible dated feed/archive index for C1 — contributes zero candidates this run, exactly as frozen",
+      "confirmed": false,
+      "contribution": "ZERO"
+    },
+    {
+      "source": "C2",
+      "name": "Kraken",
+      "state": "NETWORK_BLOCKED",
+      "detail": "ratified surface https://blog.kraken.com/feed; probe: egress-proxy: host_not_allowed (zero-contribution fallback stays lawful at execution time)",
+      "confirmed": true,
+      "surface": "https://blog.kraken.com/feed"
+    },
+    {
+      "source": "D1",
+      "name": "L2BEAT config repo",
+      "state": "READY_LIVE_VERIFIED",
+      "detail": "live: HTTP 200, 100 commit(s) in window, sha+committer.date extracted, Link pagination present",
+      "surface": "api.github.com/repos/l2beat/l2beat",
+      "http": 200,
+      "itemCount": 100
+    },
+    {
+      "source": "E1",
+      "name": "Ethereum upgrade schedule (spec repo)",
+      "state": "READY_LIVE_VERIFIED",
+      "detail": "live: HTTP 200, 45 commit(s) in window, sha+committer.date extracted, Link pagination single-page",
+      "surface": "api.github.com/repos/ethereum/execution-specs",
+      "http": 200,
+      "itemCount": 45
+    },
+    {
+      "source": "D2",
+      "name": "DefiLlama",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed",
+      "surface": "https://api.llama.fi"
+    },
+    {
+      "source": "F1",
+      "name": "SEC EDGAR named issuer CIKs",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed (ratified addendum present: IBIT,FBTC,GBTC,HODL,ARKB,BITB; probe CIK 0001980994)",
+      "surface": "data.sec.gov/submissions"
+    },
+    {
+      "source": "G1",
+      "name": "Polymarket",
+      "state": "BENCHMARK_ONLY_EXCLUDED",
+      "detail": "no candidate-layer adapter exists by design — must never generate or resolve candidates"
+    },
+    {
+      "source": "G2",
+      "name": "Kalshi",
+      "state": "BENCHMARK_ONLY_EXCLUDED",
+      "detail": "no candidate-layer adapter exists by design — must never generate or resolve candidates"
+    }
+  ],
+  "aggregate": "BLOCKED"
+}

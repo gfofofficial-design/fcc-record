@@ -168,4 +168,5 @@ jobs:
       - run: npm ci
       - run: pip install -r requirements.txt
       - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: node tools/run-addendum-tests.js
       - run: node tools/verify-acquisition-readiness.js

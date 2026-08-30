@@ -1,0 +1,15 @@
+{
+  "_DRAFT_NOTICE": "PREPARED, NOT RECORDED. This is the exact append-only INTAKE_BLOCKED event to be recorded at governance/gates/intake-blocked-2026-08-31T000000Z.json IF AND ONLY IF the frozen cutoff (2026-08-31T00:00:00.000Z) arrives with the blockers below still unresolved. It sits under tools/templates/ (an unprotected path) precisely so that nothing is prematurely recorded before the cutoff. Recording it early, editing the frozen cutoff timestamp, or recomputing the cutoff are all prohibited by Candidate Selection Method v0.2 §2 Step 0.",
+  "artifact_class": "GOVERNANCE_GATE_STATUS_RECORD",
+  "not_a_capital_instrument": true,
+  "gate": "STAGE 0 CANDIDATE INTAKE — CUTOFF DISPOSITION",
+  "status": "INTAKE_BLOCKED",
+  "cutoff_timestamp": "2026-08-31T00:00:00.000Z",
+  "cutoff_computation": "Frozen formula, unchanged: 00:00:00 UTC exactly 2 calendar days after the LATER of AD-3 VERIFIED (2026-08-29T23:27:52Z, governance/gates/build03-1-ad3-status.v2.json) and methodology ratification (2026-08-18). Never recomputed, never rolled.",
+  "blocking_reasons": [
+    "A2 (Cactus/Tally): frozen §1.5 requires a free API key; no owner-provided TALLY_API_KEY was present in the execution environment at cutoff (credentials are never stored in this repository).",
+    "Run-environment egress: the preparation environment's network policy blocked live verification of A1 (hub.snapshot.org), B1/F1 (efts.sec.gov / data.sec.gov), B2 (cftc.gov), C2 (blog.kraken.com), and D2 (api.llama.fi); a full-egress execution run confirming these surfaces live did not occur before the cutoff."
+  ],
+  "not_blocking": "C1 zero-contribution and C2 zero-contribution fallback are lawful states, not blockers. D1 and E1 were live-verified. The candidate slate is untouched and byte-identical to the frozen reference.",
+  "consequence": "Per §2 Step 0: the cutoff is never silently recomputed, postponed, or substituted. Resuming candidate selection requires a NEW, separately-ratified experiment/freeze gate that visibly addresses this blocked run, with its own equally-frozen cutoff computation. No intake, slate population, or Instrument #1 occurred."
+}

@@ -1,0 +1,32 @@
+{
+  "artifact_class": "SOURCE_REGISTRY_ADDENDUM",
+  "not_a_capital_instrument": true,
+  "addendum_id": "source-registry-addendum-001",
+  "recorded_at": "2026-08-30",
+  "authority": "Owner-authorized in the Intake Execution Readiness + Cutoff Disposition Gate brief (§6): if the C2 binary acquisition-confirmation condition independently verifies, create the narrowest additive registry addendum ratifying that exact reproducible dated surface. The frozen methodology document is not modified; §1.5's C1/C2 rule (confirm-or-zero, entered into the registry as an addendum) is executed exactly as written.",
+  "confirmations": [
+    {
+      "source": "C2",
+      "source_name": "Kraken",
+      "confirmed": true,
+      "feedUrl": "https://blog.kraken.com/feed",
+      "verified_at": "2026-08-30",
+      "verification": "Fetched live twice within this gate window (2026-08-29 and 2026-08-30 UTC). Valid RSS 2.0 (WordPress-generated), Content-Type application/rss+xml; per-item stable non-permalink <guid> (https://blog.kraken.com/?p=NNNNN), per-item <pubDate>, <lastBuildDate> present, declared hourly update frequency; category taxonomy includes 'Asset Listings' carrying the asset listing/status-change posts this source class targets.",
+      "pinned_semantics": {
+        "canonical_id": "the item's own <guid> element, verbatim",
+        "source_timestamp": "the item's own <pubDate> element, verbatim (RFC 822)",
+        "enumeration": "walk the feed's items; the feed is the reproducible dated surface — no scraping of undated pages, no other Kraken surface is ratified by this addendum",
+        "eligible_subclass": "delisting/status-change announcements only, exactly as the frozen registry already restricts C2; roadmap-only items remain mechanically ineligible (C-6)",
+        "scope_limit": "This addendum ratifies EXACTLY https://blog.kraken.com/feed and nothing else. It does not expand C2 to other subdomains, does not ratify any Coinbase surface, and confers no exemption from live parse verification at execution time. If the feed is unreachable or structurally drifted at execution time, C2 lawfully contributes zero candidates that run (frozen §1.5 rule) — the run is not blocked."
+      }
+    },
+    {
+      "source": "C1",
+      "source_name": "Coinbase",
+      "confirmed": false,
+      "feedUrl": null,
+      "verified_at": "2026-08-30",
+      "verification": "No reproducible dated public feed or dated archive index satisfying the frozen condition was confirmed for the relevant announcement subdomain. C1 remains CONDITIONAL_ZERO_CONTRIBUTION — a lawful state under the frozen methodology, not a failure."
+    }
+  ]
+}

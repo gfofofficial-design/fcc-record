@@ -374,6 +374,36 @@ const f1EdgarCiks = {
 // path to exactly that. Their benchmark use (spec §6) is a different, later,
 // separately-gated surface.
 
+// ── RATIFIED REGISTRY ADDENDA (write-once files under the experiment root) ──
+// Loaded strictly: a file that fails shape validation is ignored entirely, so
+// a malformed or tampered addendum can never widen a source's scope.
+const fsAdd = require('fs');
+const pathAdd = require('path');
+function loadRegistryAddenda(repoRoot) {
+  const dir = pathAdd.join(repoRoot, 'governance', 'experiments', 'stage0-public-experiment-v1');
+  const out = { confirmations: [], f1Ciks: [] };
+  if (!fsAdd.existsSync(dir)) return out;
+  for (const f of fsAdd.readdirSync(dir)) {
+    if (!/^(source-registry|f1-cik)-addendum-[0-9]{3}\.json$/.test(f)) continue;
+    let j; try { j = JSON.parse(fsAdd.readFileSync(pathAdd.join(dir, f), 'utf8')); } catch (e) { continue; }
+    if (j.artifact_class !== 'SOURCE_REGISTRY_ADDENDUM') continue;
+    if (Array.isArray(j.confirmations)) {
+      for (const c of j.confirmations) {
+        const ok = c && ['C1', 'C2'].includes(c.source) && typeof c.confirmed === 'boolean'
+          && (c.confirmed === false || (typeof c.feedUrl === 'string' && /^https:\/\//.test(c.feedUrl)));
+        if (ok) out.confirmations.push(c);
+      }
+    }
+    if (Array.isArray(j.issuer_ciks)) {
+      for (const e of j.issuer_ciks) {
+        const ok = e && typeof e.ticker === 'string' && /^\d{10}$/.test(e.cik || '') && typeof e.sec_surface === 'string' && /sec\.gov/.test(e.sec_surface);
+        if (ok) out.f1Ciks.push(e);
+      }
+    }
+  }
+  return out;
+}
+
 const ADAPTERS = { A1: a1Snapshot, A2: a2Tally, B1: b1Edgar, B2: b2Cftc, C1: c1Coinbase, C2: c2Kraken, D1: d1L2beat, D2: d2Llama, E1: e1Ethereum, F1: f1EdgarCiks };
 
-module.exports = { ADAPTERS, READINESS, LOOKBACK_DAYS, windowBounds, liveFetch, classifyTransportFailure };
+module.exports = { ADAPTERS, READINESS, LOOKBACK_DAYS, windowBounds, liveFetch, classifyTransportFailure, loadRegistryAddenda };
