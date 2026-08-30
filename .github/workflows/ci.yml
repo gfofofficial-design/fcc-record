@@ -61,6 +61,7 @@ jobs:
             echo "CI_APPEND_ONLY_HEAD=${{ github.event.after }}" >> "$GITHUB_ENV"
           fi
       - run: node tools/ci-append-only-check.js
+      - run: node tools/run-append-correction-tests.js
 
   cross-os-byte-and-hash-equality:
     strategy:

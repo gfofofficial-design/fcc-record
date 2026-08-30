@@ -1,0 +1,28 @@
+{
+  "artifact_class": "APPEND_ONLY_HISTORY_CORRECTION_RECORD",
+  "not_a_capital_instrument": true,
+  "record_id": "append-only-correction-001",
+  "incident_class": "PROTECTED_PLACEHOLDER_BYTE_NORMALIZATION",
+  "recorded_at": "2026-08-30",
+  "summary": "Four protected placeholder files were reduced from their authoritative one-byte LF content to zero bytes in public commit ca192cf4 and restored byte-for-byte in public commit b66c4181. No protected semantic content was created, altered, or destroyed at any point; the incident is newline/empty-file normalization of empty-directory placeholders only.",
+  "root_cause": "The zero-byte variants did not originate in the offending public commit's upload action: they were already present in the fcc-record-BUILD04.1 tar.gz snapshot as re-uploaded into the build sandbox (verified 2026-08-30 against the archive with sha256 4d8598ac58b462a2c768f228766839765cff957fd6eb141d69ea7f61e3b3ed16), and were inherited by every derivative snapshot including the pre-cutoff readiness archive whose upload became the offending commit. The byte loss therefore occurred somewhere in the tarball download/re-upload transport chain after the BUILD 04.1 integration push (which carried the correct LF blobs) and before the readiness sync; the exact transport step is not independently provable and is not asserted.",
+  "detection": "GitHub CI job append-only-actual-range failed on the push of the restorative commit, because the restoration itself is a modification of protected non-ndjson artifacts — exactly the fail-closed behavior the law prescribes. The failed CI run remains publicly visible and is not erased by this record.",
+  "offending_commit": "ca192cf4fe84353b978d19ddfc44131e1a7bcbe6",
+  "restorative_commit": "b66c41814d3883950084a5549c48b8b9a472c19d",
+  "paths": [
+    "record/challenges/.gitkeep",
+    "record/corrections/.gitkeep",
+    "record/identities/.gitkeep",
+    "record/instruments/.gitkeep"
+  ],
+  "before_blob_sha1": "8b137891791fe96927ad78e64b0aad7bded08bdc",
+  "bad_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+  "restored_blob_sha1": "8b137891791fe96927ad78e64b0aad7bded08bdc",
+  "restoration_is_byte_exact_return": true,
+  "scope_and_limits": {
+    "what_this_record_excuses": "EXACTLY ONE transition, on EXACTLY the four paths above: base-side blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 (the bad zero-byte state introduced in the offending commit) to head-side blob 8b137891791fe96927ad78e64b0aad7bded08bdc (the authoritative pre-incident byte). The checker additionally verifies each pin against real recorded history (parent-of-offending, offending, and restorative trees) before honoring this record.",
+    "what_this_record_never_excuses": "Any other path; any other blob transition on these paths; any deletion; any future modification of these four files after the restorative commit; any modification of this record itself (it lives under the append-only-protected governance/gates/ root and is write-once like every other gate record).",
+    "no_generalization": "This record contains no wildcard, path-class, author, date, message, or generic correction exception, and the checker's schema rejects any correction record that is not pinned to exact commit SHAs, exact paths, and exact blob SHAs with before == restored."
+  },
+  "permanence": "The offending commit, the restorative commit, the red CI run, and this record are all permanent public history. Nothing is rewritten, deleted, or force-pushed."
+}
