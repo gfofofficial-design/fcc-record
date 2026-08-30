@@ -1,0 +1,1 @@
+{"hits":{"total":{"value":2},"hits":[{"_id":"0001234567-26-000111:primarydoc.htm","_source":{"file_date":"2026-08-21","file_type":"8-K"}},{"_id":"0007654321-26-000222:filing.htm","_source":{"file_date":"2026-08-22","file_type":"S-1"}}]}}

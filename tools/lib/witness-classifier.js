@@ -14,14 +14,17 @@
 // Branch protection (frozen: force-push and deletion disabled on main) is
 // what makes confirmed-absence deterministic evidence for git.
 //
-// TELEGRAM (AD-3 RATIFIED FOR IMPLEMENTATION, PRODUCTION ACTIVATION GATED):
+// TELEGRAM (AD-3 VERIFIED — governance/gates/build03-1-ad3-status.v2.json):
 // SUCCESS = send acknowledgement + independent public observability. The
-// classifier below implements that standard against MOCK transport evidence
-// only. PRODUCTION MODE IS STRUCTURALLY GATED: classifyTelegramAttempt
-// throws unless mode === 'MOCK', because the real Federation-channel
-// readback semantics have not been verified and must not be guessed.
+// real Federation-channel readback semantics were empirically verified by
+// the owner-run harness (2026-08); production-mode classification is lawful
+// ONLY when the VERIFIED AD-3 governance record is explicitly injected as
+// the third argument. MOCK mode is unchanged. Classification rules are
+// identical in both modes — production activation relaxes nothing.
 // Absence-after-API-success NEVER downgrades to failure (deletion is
-// possible on Telegram) — it stays UNCERTAIN, permanently if need be.
+// possible on Telegram — empirically confirmed) — it stays UNCERTAIN,
+// permanently if need be. Timeout behavior was deliberately not
+// manufactured against the live service; Case-B treatment retained.
 
 const OUTCOME = { SUCCESS: 'SUCCESS', FAILURE: 'AUTHORITATIVE_FAILURE', UNCERTAIN: 'UNCERTAIN' };
 const toJournalOutcome = (o) => (o === OUTCOME.SUCCESS ? 'CONFIRMED_PUBLISHED' : o === OUTCOME.FAILURE ? 'CONFIRMED_FAILED' : 'PENDING');
@@ -59,9 +62,24 @@ function refFromGit(push, authReadback) {
   return { witness: 'git', commitSha: (authReadback && authReadback.commitSha) || push.commitSha || null, path: null };
 }
 
-function classifyTelegramAttempt({ send, publicReadback, instrumentId, lockSha256 }, mode) {
-  if (mode !== 'MOCK') {
-    throw new Error('TELEGRAM_PRODUCTION_CLASSIFIER_GATED: AD-3 — the production Telegram success classifier is not activated. Real Federation-channel verification is a later explicit gate. Only mode="MOCK" is lawful in BUILD 03.');
+function classifyTelegramAttempt({ send, publicReadback, instrumentId, lockSha256 }, mode, ad3GateRecord) {
+  // AD-3 CLOSURE (2026-08-29): production-mode classification is lawful ONLY when
+  // the caller explicitly injects the VERIFIED AD-3 governance record (resolved via
+  // the gate lineage, e.g. intake-cutoff.js readAd3Status). Empirical basis: the
+  // owner-run harness against the real @FCC_Com_Bot / @FCC_Command pair verified
+  // send acknowledgement, independent unauthenticated public readback (exact
+  // content, repeated across sessions), edit reflected publicly, delete removing
+  // public visibility, and the authoritative 'chat not found' rejection class.
+  // Timeout behavior was deliberately NOT manufactured against the live service,
+  // so ambiguous/timeout outcomes keep the conservative Case-B treatment below —
+  // this function's classification rules are byte-for-byte the AD-3-ratified
+  // standard and are NOT relaxed by production activation.
+  const productionActivated = !!(ad3GateRecord
+    && ad3GateRecord.decision === 'AD-3'
+    && ad3GateRecord.status === 'VERIFIED'
+    && ad3GateRecord.verified_at);
+  if (mode !== 'MOCK' && !(mode === 'PRODUCTION' && productionActivated)) {
+    throw new Error('TELEGRAM_PRODUCTION_CLASSIFIER_GATED: AD-3 — the production Telegram success classifier activates only with the VERIFIED AD-3 governance record explicitly supplied. Without it, only mode="MOCK" is lawful.');
   }
   if (!send) throw new Error('classifyTelegramAttempt: send evidence required');
   if (send.boundaryCrossed === false) {

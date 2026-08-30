@@ -19,9 +19,27 @@ const CUTOFF_BUFFER_DAYS = 2; // frozen, per the ratified methodology -- not a p
 function readJson(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 
 function readAd3Status(repoRoot) {
-  const p = path.join(repoRoot, 'governance', 'gates', 'build03-1-ad3-status.json');
-  if (!fs.existsSync(p)) return { status: 'MISSING', verified_at: null };
-  return readJson(p);
+  // The v1 record (build03-1-ad3-status.json) is immutable under the repository
+  // append-only law (non-ndjson file under governance/gates/), and its own note
+  // defines the sanctioned update path: a NEW, separately-versioned file plus its
+  // own adjudication gate. Candidate Selection Method v0.2 §2 Step 0 condition 1
+  // is defined on the AD-3 gate's "own governance record", so this reader resolves
+  // the HIGHEST-versioned record in that lineage (build03-1-ad3-status.json = v1,
+  // build03-1-ad3-status.v2.json, .v3.json, ...). This changes only WHICH record
+  // in the gate's lineage is read; the frozen cutoff formula above is untouched.
+  const dir = path.join(repoRoot, 'governance', 'gates');
+  if (!fs.existsSync(dir)) return { status: 'MISSING', verified_at: null };
+  const lineage = /^build03-1-ad3-status(?:\.v(\d+))?\.json$/;
+  let bestFile = null;
+  let bestVersion = -1;
+  for (const f of fs.readdirSync(dir)) {
+    const m = lineage.exec(f);
+    if (!m) continue;
+    const v = m[1] ? parseInt(m[1], 10) : 1;
+    if (v > bestVersion) { bestVersion = v; bestFile = f; }
+  }
+  if (!bestFile) return { status: 'MISSING', verified_at: null };
+  return readJson(path.join(dir, bestFile));
 }
 function readRatificationRecord(repoRoot) {
   const p = path.join(repoRoot, 'governance', 'experiments', 'stage0-public-experiment-v1', 'candidate-selection-ratification.json');

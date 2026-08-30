@@ -1,6 +1,5 @@
 name: FCC Stage-0 CI Foundation
 on: [push, pull_request]
-
 jobs:
   foundation-battery:
     runs-on: ubuntu-latest
@@ -138,4 +137,34 @@ jobs:
       - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
       - run: node tools/verify-experiment-freeze.js
       - run: node tools/run-build04-1-tests.js
-      - run: node tools/run-candidate-intake.js || test $? -eq 2
+      - run: node tools/ci-intake-guard.js
+
+  build03-1-closure-battery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: node tools/verify-frozen-hashes.js
+      - run: node tools/run-build03-1-closure-tests.js
+      - run: node tools/compute-intake-cutoff.js
+
+  acquisition-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
+      - run: node tools/verify-acquisition-readiness.js

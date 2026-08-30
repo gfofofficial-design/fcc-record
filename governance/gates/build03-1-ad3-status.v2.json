@@ -1,0 +1,47 @@
+{
+  "artifact_class": "GOVERNANCE_GATE_STATUS_RECORD",
+  "not_a_capital_instrument": true,
+  "gate": "BUILD 03.1 — Telegram Witness Environment Verification",
+  "decision": "AD-3",
+  "record_version": 2,
+  "supersedes": {
+    "path": "governance/gates/build03-1-ad3-status.json",
+    "sha256": "2fb3c95721531c9f80e3cc4bf3545e0baff1f0c3fef9eaa116ac8069b887902f",
+    "note": "The v1 record is immutable under the repository append-only law and remains in place, unmodified, as the permanent history of the UNRESOLVED period. This v2 record supersedes it per the v1 record's own stated update mechanism (new, separately-versioned file plus its own adjudication gate)."
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-08-29T23:27:52Z",
+  "verified_at_granularity": "This timestamp is the moment this governance record was created — the 'transitioning to VERIFIED in its own governance record' event that Candidate Selection Method v0.2 §2 Step 0 condition 1 is defined on. The underlying empirical harness run and the owner+ChatGPT adjudication occurred earlier (owner-attested, on or before 2026-08-28); no time-of-day precision is claimed for those earlier events, and the later record-creation timestamp is used for the frozen +2-day cutoff formula, which is the conservative (later, not earlier) reading.",
+  "recorded_at": "2026-08-29T23:27:52Z",
+  "adjudication": {
+    "adjudicators": "Owner + ChatGPT (external adjudication pass), recorded by this governance-closure pass",
+    "verdict": "VERIFIED / PASS",
+    "environment": {
+      "bot": "@FCC_Com_Bot",
+      "channel": "@FCC_Command",
+      "note": "Real production Telegram pair. Bot token was environment-only during the harness run and is not stored, printed, committed, logged, or included in any evidence or in this record."
+    },
+    "empirical_findings": [
+      "bot authentication (getMe) succeeded",
+      "authoritative channel lookup (getChat) succeeded",
+      "unauthenticated public t.me/FCC_Command reachability confirmed",
+      "harmless test send succeeded",
+      "four fresh unauthenticated public readbacks returned HTTP 200",
+      "exact-content verification held across independent sessions",
+      "edit through the Bot API succeeded and the public readback reflected the edited content",
+      "original pre-edit content was not recoverable from public readback after the edit",
+      "delete succeeded and the test nonce was no longer publicly visible after deletion",
+      "malformed-channel request produced the authoritative error 'Bad Request: chat not found'"
+    ],
+    "not_established": [
+      "timeout behavior against the live Telegram service was deliberately not manufactured; ambiguous/timeout transport outcomes retain the conservative Case-B treatment (UNCERTAIN, never downgraded to failure)"
+    ],
+    "evidence_custody": "The harness evidence artifact (envtest-FCC-ENVTEST-*.json) is held by the owner and was not submitted into this repository. This record therefore rests on the owner+ChatGPT adjudication attestation in the authorizing brief, not on an in-repo evidence artifact. If the evidence artifact is later submitted, it may be added under governance/evidence/ as a new write-once file referencing this record; this record itself is never edited.",
+    "cleanup": "Temporary test messages were removed. No Capital Instrument, filing, production witness payload, candidate intake, OTS operation, or capital activity occurred during environment verification."
+  },
+  "consequences": {
+    "cutoff_formula_condition_1": "SATISFIED as of verified_at above. Per the v1 record's note and Candidate Selection Method v0.2 §2 Step 0, this record is now the authoritative AD-3 status source for the frozen cutoff-trigger formula's condition 1.",
+    "production_telegram_classifier": "Production-mode classification (mode='PRODUCTION') is lawful only when this VERIFIED record is explicitly injected as the gate evidence. Classification semantics are unchanged from the AD-3-ratified standard: SUCCESS requires send acknowledgement plus independent public observability; definitive pre-publication API rejection with no message created is AUTHORITATIVE_FAILURE; absence after API success and all ambiguous/timeout outcomes remain UNCERTAIN (Case-B), permanently if need be.",
+    "not_authorized_by_this_record": "This record does not authorize candidate intake before the frozen cutoff timestamp, does not authorize any production witness publication, does not populate any candidate slot, and does not authorize Instrument #1, experiment launch, OTS production activity, or BUILD 05."
+  }
+}

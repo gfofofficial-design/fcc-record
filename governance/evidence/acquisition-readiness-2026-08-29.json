@@ -1,0 +1,114 @@
+{
+  "artifact_class": "ACQUISITION_READINESS_EVIDENCE",
+  "not_a_capital_instrument": true,
+  "classification": "READINESS_PROBE_ONLY / NOT_CANDIDATE_INTAKE",
+  "recorded_at": "2026-08-29T23:46:14.155Z",
+  "lookback_window": {
+    "start": "2026-08-08T23:46:13.000Z",
+    "end": "2026-08-29T23:46:13.000Z"
+  },
+  "note": "Endpoint/interface readiness metadata only. No market-derived candidate content is persisted here; item counts and HTTP statuses are the only probe outputs retained.",
+  "results": [
+    {
+      "source": "A1",
+      "name": "Snapshot",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed",
+      "surface": "https://hub.snapshot.org/graphql"
+    },
+    {
+      "source": "A2",
+      "name": "Cactus (formerly Tally)",
+      "state": "CREDENTIAL_REQUIRED",
+      "detail": "fixture parse deterministic; TALLY_API_KEY absent in this environment \u2014 live verification honestly not claimed",
+      "surface": "https://api.tally.xyz/query"
+    },
+    {
+      "source": "B1",
+      "name": "SEC EDGAR full-text search",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed",
+      "surface": "https://efts.sec.gov/LATEST/search-index"
+    },
+    {
+      "source": "B2",
+      "name": "CFTC press releases + enforcement index",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed (fragile downgraded tier; drift must be surfaced, never substituted)",
+      "surface": "https://www.cftc.gov/LawRegulation/Enforcement/EnforcementActions"
+    },
+    {
+      "source": "C1",
+      "name": "Coinbase",
+      "state": "CONDITIONAL_ZERO_CONTRIBUTION",
+      "detail": "no ratified registry addendum confirms a reproducible dated feed/archive index for C1 \u2014 contributes zero candidates this run, exactly as frozen",
+      "confirmed": false,
+      "contribution": "ZERO"
+    },
+    {
+      "source": "C2",
+      "name": "Kraken",
+      "state": "CONDITIONAL_ZERO_CONTRIBUTION",
+      "detail": "no ratified registry addendum confirms a reproducible dated feed/archive index for C2 \u2014 contributes zero candidates this run, exactly as frozen",
+      "confirmed": false,
+      "contribution": "ZERO"
+    },
+    {
+      "source": "D1",
+      "name": "L2BEAT config repo",
+      "state": "CREDENTIAL_REQUIRED",
+      "detail": "probe: HTTP 403",
+      "surface": "api.github.com/repos/l2beat/l2beat"
+    },
+    {
+      "source": "E1",
+      "name": "Ethereum upgrade schedule (spec repo)",
+      "state": "CREDENTIAL_REQUIRED",
+      "detail": "probe: HTTP 403",
+      "surface": "api.github.com/repos/ethereum/execution-specs"
+    },
+    {
+      "source": "D2",
+      "name": "DefiLlama",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed",
+      "surface": "https://api.llama.fi"
+    },
+    {
+      "source": "F1",
+      "name": "SEC EDGAR named issuer CIKs",
+      "state": "NETWORK_BLOCKED",
+      "detail": "probe: egress-proxy: host_not_allowed (mechanism probe against a syntactically valid public CIK; the ratified six-issuer CIK list itself is NOT in this repo and needs an owner addendum)",
+      "surface": "data.sec.gov/submissions"
+    },
+    {
+      "source": "G1",
+      "name": "Polymarket",
+      "state": "BENCHMARK_ONLY_EXCLUDED",
+      "detail": "no candidate-layer adapter exists by design \u2014 must never generate or resolve candidates"
+    },
+    {
+      "source": "G2",
+      "name": "Kalshi",
+      "state": "BENCHMARK_ONLY_EXCLUDED",
+      "detail": "no candidate-layer adapter exists by design \u2014 must never generate or resolve candidates"
+    }
+  ],
+  "aggregate": "BLOCKED",
+  "out_of_band_probes": {
+    "classification": "READINESS_PROBE_ONLY / NOT_CANDIDATE_INTAKE",
+    "note": "Probes performed out-of-band (assistant-side fetch), because the build environment egress policy blocks these hosts. They confirm surface existence and structure only; in-environment adapter execution remains NETWORK_BLOCKED and is expected to succeed in CI, which has unrestricted egress.",
+    "C2_kraken": {
+      "ratified_condition": "Candidate Selection Method v0.2 \u00a71.5 C1/C2 binary gate: a confirmed RSS/Atom feed on the relevant blog",
+      "surface": "https://blog.kraken.com/feed",
+      "verified": "2026-08-29",
+      "findings": "Live RSS 2.0 (WordPress) feed; per-item stable guid, pubDate, category taxonomy including \"Asset Listings\" covering listing/status-change posts; lastBuildDate present; hourly update frequency declared.",
+      "status": "CONDITION SATISFIABLE \u2014 NOT YET RATIFIED. Entering this surface into the frozen source registry as an addendum is an owner ratification action; until then C2 lawfully contributes ZERO candidates."
+    },
+    "C1_coinbase": {
+      "surface": null,
+      "findings": "No reproducible dated feed or dated archive index confirmed for the relevant announcement subdomain in this pass.",
+      "status": "NOT CONFIRMED \u2014 contributes ZERO candidates, exactly as frozen."
+    }
+  }
+}
