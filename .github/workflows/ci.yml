@@ -170,4 +170,5 @@ jobs:
       - run: git config user.email ci@fcc-record.local && git config user.name "FCC CI"
       - run: node tools/run-addendum-tests.js
       - run: node tools/run-b2-adjudication-tests.js
+      - run: node tools/run-intake-authorization-tests.js
       - run: node tools/verify-acquisition-readiness.js

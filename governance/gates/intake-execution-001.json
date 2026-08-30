@@ -1,0 +1,41 @@
+{
+  "artifact_class": "GOVERNANCE_EXECUTION_AUTHORIZATION",
+  "not_a_capital_instrument": true,
+  "gate": "CANDIDATE_INTAKE_EXECUTION",
+  "authorization_id": "intake-execution-001",
+  "authorized": true,
+  "recorded_at": "2026-08-30T04:54:35Z",
+  "scope": {
+    "what_is_authorized": "EXACTLY ONE supervised Stage 0 candidate-intake execution under the ratified Candidate Selection Method v0.2, performed by the owner in an owner-controlled environment, at or after the frozen cutoff, with every precondition below machine-verified at execution time.",
+    "single_use": true,
+    "completion_marker_path": "governance/gates/intake-execution-001.completed.json",
+    "reuse_rule": "Once the completion marker exists, this authorization is spent. A second intake requires a new, separately-ratified authorization record. The marker is a write-once append-only addition, created ONLY by the supervised execution itself."
+  },
+  "pins": {
+    "methodology": { "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_2.md", "sha256": "751953212fa1f17d0041fc6f3d36c570dae66d25c62d4ac16ed4f9849aaf5927" },
+    "experiment_freeze": { "path": "governance/experiments/stage0-public-experiment-v1/experiment-freeze.json", "sha256": "dbbe2ea740b8d4f1dcf40f8b223bf4d5562fccd40cb4a688dbca98cd89bf1889" },
+    "pre_intake_candidate_slate_sha256": "ad63329bed879484750ad5bfa0a91e7a9fc27f9482baf0c4d4f6f1e1cacc1109",
+    "authorized_at_public_head": "8e884324ba9adb2540387bfd814bd20ffc95cada",
+    "frozen_cutoff": "2026-08-31T00:00:00.000Z"
+  },
+  "execution_preconditions": {
+    "A_cutoff": "Execution is PROHIBITED before the frozen cutoff. The frozen formula in tools/lib/intake-cutoff.js is the sole clock authority; this record never substitutes for it.",
+    "B_authorization": "This record must validate against the pins above at execution time; hash drift in any pinned artifact voids this authorization.",
+    "C_exclusivity": "Exactly one valid CANDIDATE_INTAKE_EXECUTION authorization may exist. A conflicting authorization voids execution.",
+    "D_slate_untouched": "candidate-slate.json must still hash to the pinned pre-intake value immediately before execution.",
+    "E_one_shot": "The completion marker above must NOT exist.",
+    "F_no_blocked_record": "No governance/gates/intake-blocked-*.json record may exist; if one does, it supersedes this gate and a new ratified gate is required.",
+    "G_credentials": "TALLY_API_KEY must be present in the process environment at execution time (frozen A2 requirement). The key is never stored, printed, logged, or recorded anywhere, including here.",
+    "H_readiness": "The EXECUTION ENVIRONMENT must itself produce a live acquisition-readiness result of READY under the frozen fail-closed aggregate immediately before selection — including live verification of the adjudicated exact B2 CFTC surfaces from that environment. A hosted-CI 403 on B2 neither weakens this requirement nor substitutes for it.",
+    "supervision": "Execution requires the explicit supervised invocation mode (CLI flag plus owner-set environment marker). Ordinary CI can never satisfy it; the passage of time alone never executes anything."
+  },
+  "authority_not_granted": [
+    "No Instrument #1 authority.",
+    "No capital activity authority.",
+    "No BUILD 05 authority.",
+    "No FCC UI/site authority.",
+    "No Telegram production witness authority.",
+    "No OTS production authority.",
+    "No authority to alter the frozen cutoff, the frozen methodology, C1/C2 confirm-or-zero semantics, or the G1/G2 benchmark-only exclusion — G1/G2 must never generate or resolve candidates."
+  ]
+}

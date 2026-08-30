@@ -74,9 +74,44 @@ function runIntake({ repoRoot = ROOT, adapters, nowMs, dryRun = true } = {}) {
 }
 
 if (require.main === module) {
+  // AUTHORIZATION GATE (intake-execution-001): after the frozen cutoff, real
+  // execution additionally requires the supervised invocation mode (explicit
+  // CLI flag + owner-set env marker — ordinary CI can never supply it) AND
+  // every machine-verified precondition A–H. Without them the CLI only
+  // reports the precondition state and exits 3 — it NEVER runs the pipeline.
+  // Before the cutoff, the frozen gate inside runIntake still throws first
+  // (exit 2), exactly as BUILD 04.1 CI proves.
+  const authz = require('./lib/intake-authorization.js');
   try {
-    runIntake({});
-    console.log('INTAKE RAN (unexpected in this repo snapshot).');
+    const supervised = authz.supervisedModeRequested(process.argv, process.env);
+    if (!supervised) {
+      // Prove the frozen cutoff gate exactly as before; never proceed past it.
+      const { computeCutoffFromRepo } = require('./lib/intake-cutoff.js');
+      const cutoff = computeCutoffFromRepo(require('path').join(__dirname, '..'));
+      if (!cutoff.authorized) {
+        runIntake({}); // throws INTAKE_NOT_AUTHORIZED -> exit 2 (unchanged pre-cutoff behavior)
+      }
+      const pre = authz.evaluateFromRepo(require('path').join(__dirname, '..'), { supervisedMode: false });
+      console.log('=== INTAKE NOT EXECUTED (unsupervised invocation) ===');
+      for (const f of pre.failures) console.log('  - ' + f);
+      console.log('Supervised execution requires: ' + authz.SUPERVISED_FLAG + ' AND ' + authz.SUPERVISED_ENV + '=' + authz.SUPERVISED_ENV_VALUE);
+      process.exit(3);
+    }
+    // Supervised path: every precondition must hold, verified fresh, fail-closed.
+    // Live readiness must be produced by THIS environment immediately before.
+    const { spawnSync } = require('child_process');
+    const ready = spawnSync(process.execPath, [require('path').join(__dirname, 'verify-acquisition-readiness.js')], { encoding: 'utf8', env: process.env });
+    process.stdout.write(ready.stdout || '');
+    const aggregate = /AGGREGATE INTAKE_READINESS: READY/.test(ready.stdout || '') ? 'READY' : 'BLOCKED';
+    const pre = authz.evaluateFromRepo(require('path').join(__dirname, '..'), { supervisedMode: true, readinessAggregate: aggregate });
+    if (!pre.allowed) {
+      console.log('=== SUPERVISED EXECUTION REFUSED (fail-closed) ===');
+      for (const f of pre.failures) console.log('  - ' + f);
+      process.exit(3);
+    }
+    console.log('=== ALL EXECUTION PRECONDITIONS VERIFIED — proceeding under intake-execution-001 ===');
+    runIntake({ dryRun: false });
+    console.log('INTAKE RAN.');
   } catch (e) {
     console.log(`=== INTAKE REFUSED ===\n${e.message}`);
     process.exit(e.code === 'INTAKE_NOT_AUTHORIZED' ? 2 : 1);
