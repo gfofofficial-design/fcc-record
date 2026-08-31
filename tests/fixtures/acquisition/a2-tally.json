@@ -1,1 +1,1 @@
-{"data":{"proposals":{"nodes":[{"id":"2201","onchainId":"77","createdAt":"2026-08-20T10:00:00Z","end":{"timestamp":"2026-09-05T10:00:00Z"}}],"pageInfo":{"lastCursor":null}}}}
+{"data":{"proposals":{"nodes":[{"id":"2201","onchainId":"77","block":{"timestamp":1755684000},"end":{"timestamp":1757066400},"metadata":{"title":"[FIXTURE] proposal"}}],"pageInfo":{"lastCursor":null}}}}

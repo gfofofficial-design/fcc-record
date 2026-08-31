@@ -62,6 +62,7 @@ function classifyTransportFailure(err, res) {
       return { state: READINESS.NETWORK_BLOCKED, detail: 'HTTP 403 without an authentication challenge — edge/bot access restriction on this client; surface is publicly served to browser clients, no credential is required' };
     }
     if (res.statusCode === 404) return { state: READINESS.SOURCE_INTERFACE_DRIFT, detail: 'HTTP 404 on ratified surface' };
+    if (res.statusCode === 400 || res.statusCode === 422) return { state: READINESS.SOURCE_INTERFACE_DRIFT, detail: `HTTP ${res.statusCode} schema/validation rejection — query shape no longer matches the source schema (not a credential failure)` };
     if (res.statusCode >= 400) return { state: READINESS.FAIL, detail: `HTTP ${res.statusCode}` };
   }
   return { state: READINESS.FAIL, detail: 'unclassified' };
@@ -135,8 +136,11 @@ const a2Tally = {
   hasCredential() { return !!process.env.TALLY_API_KEY; },
   buildRequest({ governorId, afterCursor = null }) {
     if (!this.hasCredential()) { const e = new Error('CREDENTIAL_REQUIRED: TALLY_API_KEY absent (free key, obtainable by any third party; never stored by FCC)'); e.state = READINESS.CREDENTIAL_REQUIRED; throw e; }
-    const query = `query Proposals($input: ProposalsInput!){ proposals(input:$input){ nodes{ ... on Proposal { id onchainId createdAt end { ... on Block { timestamp } } } } pageInfo { lastCursor } } }`;
-    const input = { filters: { governorId }, page: afterCursor ? { afterCursor } : {} };
+    // Schema per apidocs.tally.xyz (verified 2026-08-31): Proposal has NO createdAt —
+    // the source-native creation timestamp is block.timestamp; `end` is the union
+    // Block | BlocklessTimestamp; PageInput.limit hard maximum is 20.
+    const query = `query Proposals($input: ProposalsInput!){ proposals(input:$input){ nodes{ ... on Proposal { id onchainId block { timestamp } end { ... on Block { timestamp } ... on BlocklessTimestamp { timestamp } } metadata { title } } } pageInfo { lastCursor } } }`;
+    const input = { filters: { governorId }, page: afterCursor ? { afterCursor, limit: 20 } : { limit: 20 } };
     return { url: this.surface, method: 'POST', headers: { 'content-type': 'application/json', 'Api-Key': process.env.TALLY_API_KEY }, body: JSON.stringify({ query, variables: { input } }), pageState: { afterCursor } };
   },
   parse(bodyText) {
@@ -146,8 +150,9 @@ const a2Tally = {
     const items = [];
     for (const p of box.nodes) {
       const cid = p.onchainId != null ? String(p.onchainId) : (p.id != null ? String(p.id) : null);
-      if (!cid || !p.createdAt) return drift('node missing on-chain id/createdAt');
-      items.push({ canonicalId: cid, sourceTimestamp: p.createdAt, sourceEnd: p.end && p.end.timestamp });
+      const created = p.block && p.block.timestamp != null ? p.block.timestamp : null;
+      if (!cid || created == null) return drift('node missing on-chain id/block.timestamp');
+      items.push({ canonicalId: cid, sourceTimestamp: created, sourceEnd: p.end && p.end.timestamp != null ? p.end.timestamp : null, title: p.metadata && p.metadata.title });
     }
     const lastCursor = box.pageInfo && box.pageInfo.lastCursor;
     return { ok: true, items, exhausted: !lastCursor || box.nodes.length === 0, lastCursor: lastCursor || null };

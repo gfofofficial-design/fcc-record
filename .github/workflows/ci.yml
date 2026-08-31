@@ -173,4 +173,5 @@ jobs:
       - run: node tools/run-intake-authorization-tests.js
       - run: node tools/run-live-intake-wiring-tests.js
       - run: node tools/run-scope-discovery-tests.js
+      - run: node tools/run-discovery-query-tests.js
       - run: node tools/verify-acquisition-readiness.js
