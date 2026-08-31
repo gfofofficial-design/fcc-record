@@ -44,6 +44,59 @@ async function gql(url, query, variables, headers = {}) {
   return { data: j.data };
 }
 
+// ── TALLY TRANSPORT: serialized, paced, 429-aware (Snapshot leg untouched) ─
+// Tally documents a "fairly low" free-tier rate limit without a number, so the
+// pacing is conservative and deterministic: one request in flight at a time,
+// a fixed minimum gap between requests, and on HTTP 429 either the server's
+// Retry-After (seconds or HTTP-date, capped) or the fixed backoff ladder
+// 1s -> 2s -> 4s -> 8s -> 16s with a frozen retry ceiling. No jitter: every
+// wait is auditable from the response alone.
+const TALLY_MIN_INTERVAL_MS = 1100;
+const TALLY_BACKOFF_MS = [1000, 2000, 4000, 8000, 16000];
+const TALLY_MAX_RETRIES = TALLY_BACKOFF_MS.length;
+const RETRY_AFTER_MAX_MS = 60000;
+const DIAG_RATE_LIMITED = 'RATE_LIMITED'; // diagnostic transport condition for this no-write tool only — not a readiness/governance state
+let sleepFn = (ms) => new Promise((r) => setTimeout(r, ms));
+let nowFn = () => Date.now();
+function setTiming({ sleep, now } = {}) { if (sleep) sleepFn = sleep; if (now) nowFn = now; }
+let tallyChain = Promise.resolve();
+let tallyLastAt = -Infinity;
+const tallyLog = [];
+function parseRetryAfter(h, now) {
+  if (h == null) return null;
+  const s = String(h).trim();
+  if (/^\d+$/.test(s)) return Math.min(parseInt(s, 10) * 1000, RETRY_AFTER_MAX_MS);
+  const t = Date.parse(s);
+  if (!Number.isNaN(t)) return Math.min(Math.max(0, t - now), RETRY_AFTER_MAX_MS);
+  return null;
+}
+function tallyGql(query, variables, headers) {
+  const run = async () => {
+    for (let attempt = 0; ; attempt++) {
+      const gap = TALLY_MIN_INTERVAL_MS - (nowFn() - tallyLastAt);
+      if (gap > 0) { tallyLog.push({ kind: 'pace', ms: gap }); await sleepFn(gap); }
+      tallyLastAt = nowFn();
+      const res = await fetchFn({ url: ADAPTERS.A2.surface, method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify({ query, variables }) });
+      if (res.ok && res.statusCode === 429) {
+        if (attempt >= TALLY_MAX_RETRIES) return { error: { state: DIAG_RATE_LIMITED, detail: `HTTP 429 persisted through ${TALLY_MAX_RETRIES} bounded retries — stopping honestly; rerun later (resume state is saved)` } };
+        const ra = parseRetryAfter(res.headers && res.headers['retry-after'], nowFn());
+        const wait = ra != null ? ra : TALLY_BACKOFF_MS[attempt];
+        tallyLog.push({ kind: '429', attempt, wait, source: ra != null ? 'retry-after' : 'backoff' });
+        await sleepFn(wait);
+        continue;
+      }
+      if (!res.ok) return { error: classifyTransportFailure(res.err, null) };
+      if (res.statusCode >= 400) return { error: classifyTransportFailure(null, { ...res, bodySample: (res.body || '').slice(0, 300) }) };
+      let j; try { j = JSON.parse(res.body); } catch (e) { return { error: { state: 'SOURCE_INTERFACE_DRIFT', detail: 'non-JSON' } }; }
+      if (j.errors) return { error: { state: 'SOURCE_INTERFACE_DRIFT', detail: j.errors.map((e) => e.message).join('; ') } };
+      return { data: j.data };
+    }
+  };
+  const p = tallyChain.then(run, run); // strict serialization: one Tally request at a time
+  tallyChain = p.catch(() => {});
+  return p;
+}
+
 // ── A1 universe via Snapshot's own ranking ──────────────────────────────
 // ADJUDICATED 2026-08-31: the deployed hub enforces `ranking.first <= 20`
 // (ARG_LIMITS.ranking in apps/hub/src/graphql/helpers.ts) inside checkLimits,
@@ -104,41 +157,65 @@ async function a1ProposalsCreatedBetween(spaceId, fromSec, toSec) {
 // sorted by their own proposalStats.total. Enumeration caps are disclosed.
 const TALLY_PAGE = 20;
 const ORG_MAX_PAGES = 400; // 8,000 organizations; hitting it is disclosed
-async function a2Universe() {
+const RULE_TAG = 'a2-rule: organizations(id asc) -> governors by proposalStats.total desc, exact org-count bound, N=25, 90d';
+const resume = require('./lib/discovery-resume.js');
+let resumeRoot = require('path').join(__dirname, '..');
+function setResumeRoot(p) { resumeRoot = p; }
+async function a2Universe({ useResume = true } = {}) {
   if (!process.env.TALLY_API_KEY) return { error: { state: 'CREDENTIAL_REQUIRED', detail: 'TALLY_API_KEY absent (session-only; never printed)' } };
-  const hdr = { 'Api-Key': process.env.TALLY_API_KEY };
-  const orgs = []; let after = null, exhausted = false;
-  for (let page = 0; page < ORG_MAX_PAGES; page++) {
-    const r = await gql(ADAPTERS.A2.surface, `query($input:OrganizationsInput){ organizations(input:$input){ nodes{ ... on Organization { id name slug governorIds proposalsCount hasActiveProposals } } pageInfo{ lastCursor } } }`, { input: { sort: { isDescending: false, sortBy: 'id' }, page: after ? { afterCursor: after, limit: TALLY_PAGE } : { limit: TALLY_PAGE } } }, hdr);
-    if (r.error) return { error: r.error, partial: orgs };
-    const nodes = (r.data.organizations && r.data.organizations.nodes) || [];
-    for (const o of nodes) if (typeof o.id === 'undefined' || !Array.isArray(o.governorIds) || typeof o.proposalsCount !== 'number') return { error: { state: 'SOURCE_INTERFACE_DRIFT', detail: 'organization node missing id/governorIds/proposalsCount' } };
-    orgs.push(...nodes);
-    after = r.data.organizations.pageInfo && r.data.organizations.pageInfo.lastCursor;
-    if (!after || nodes.length < TALLY_PAGE) { exhausted = true; break; }
+  const hdr = { 'Api-Key': process.env.TALLY_API_KEY }; // per-call only; never enters resume state
+  const pins = resume.makePins({ repoRoot: resumeRoot, N, ACTIVITY_DAYS, cutoff: CUTOFF, ruleTag: RULE_TAG });
+  let prog = { phase: 'orgs', orgs: [], after: null, exhausted: false, govs: [], orgIndex: 0 };
+  let resumedFrom = null;
+  if (useResume) {
+    const r = resume.load(resumeRoot, pins);
+    if (r.found && !r.ok) return { error: { state: 'RESUME_REFUSED', detail: r.reason + ' — delete .fcc-local/ to start fresh' } };
+    if (r.found && r.ok) { prog = r.progress; resumedFrom = prog.phase; }
   }
-  orgs.sort((a, b) => (b.proposalsCount - a.proposalsCount) || String(a.id).localeCompare(String(b.id)));
-  // exact top-N governor selection using the organization aggregate as a bound
-  const govs = [];
-  for (let i = 0; i < orgs.length; i++) {
-    const o = orgs[i];
-    if (EXCLUDE_RE.test(`${o.id} ${o.name} ${o.slug}`)) continue;
-    for (const gid of o.governorIds) {
-      const g = await gql(ADAPTERS.A2.surface, `query($input:GovernorInput!){ governor(input:$input){ id name chainId isIndexing proposalStats{ total active } } }`, { input: { id: gid } }, hdr);
-      if (g.error) return { error: g.error, partial: govs };
-      if (g.data.governor) govs.push({ ...g.data.governor, _org: o.slug });
+  const checkpoint = () => { if (useResume) resume.save(resumeRoot, pins, prog); };
+  // Phase 1: Tally-native global enumeration, deterministic id order, limit 20 (hard max)
+  if (prog.phase === 'orgs') {
+    for (let page = Math.floor(prog.orgs.length / TALLY_PAGE); page < ORG_MAX_PAGES; page++) {
+      const r = await tallyGql(`query($input:OrganizationsInput){ organizations(input:$input){ nodes{ ... on Organization { id name slug governorIds proposalsCount hasActiveProposals } } pageInfo{ lastCursor } } }`, { input: { sort: { isDescending: false, sortBy: 'id' }, page: prog.after ? { afterCursor: prog.after, limit: TALLY_PAGE } : { limit: TALLY_PAGE } } }, hdr);
+      if (r.error) { checkpoint(); return { error: r.error, partial: prog.orgs, resumable: useResume }; }
+      const nodes = (r.data.organizations && r.data.organizations.nodes) || [];
+      for (const o of nodes) if (typeof o.id === 'undefined' || !Array.isArray(o.governorIds) || typeof o.proposalsCount !== 'number') return { error: { state: 'SOURCE_INTERFACE_DRIFT', detail: 'organization node missing id/governorIds/proposalsCount' } };
+      prog.orgs.push(...nodes.map((o) => ({ id: o.id, name: o.name, slug: o.slug, governorIds: o.governorIds, proposalsCount: o.proposalsCount })));
+      prog.after = r.data.organizations.pageInfo && r.data.organizations.pageInfo.lastCursor;
+      if (!prog.after || nodes.length < TALLY_PAGE) { prog.exhausted = true; break; }
+      checkpoint();
     }
-    govs.sort((a, b) => (b.proposalStats.total - a.proposalStats.total) || String(a.id).localeCompare(String(b.id)));
-    const nth = govs[N - 1] ? govs[N - 1].proposalStats.total : -1;
-    const next = orgs[i + 1];
-    if (govs.length >= N && (!next || next.proposalsCount < nth)) break;
+    prog.orgs.sort((a, b) => (b.proposalsCount - a.proposalsCount) || String(a.id).localeCompare(String(b.id)));
+    prog.phase = 'govs'; prog.orgIndex = 0; prog.govs = []; checkpoint();
   }
-  return { govs, hdr, exhausted, note: exhausted ? null : `organization enumeration capped at ${ORG_MAX_PAGES} pages; top-N not proven global` };
+  // Phase 2: exact top-N governor selection using the organization aggregate as a bound
+  if (prog.phase === 'govs') {
+    for (let i = prog.orgIndex; i < prog.orgs.length; i++) {
+      const o = prog.orgs[i];
+      if (!EXCLUDE_RE.test(`${o.id} ${o.name} ${o.slug}`)) {
+        for (const gid of o.governorIds) {
+          if (prog.govs.some((g) => g.id === gid)) continue; // idempotent on resume
+          const g = await tallyGql(`query($input:GovernorInput!){ governor(input:$input){ id name chainId isIndexing proposalStats{ total active } } }`, { input: { id: gid } }, hdr);
+          if (g.error) { prog.orgIndex = i; checkpoint(); return { error: g.error, partial: prog.govs, resumable: useResume }; }
+          if (g.data.governor) prog.govs.push({ ...g.data.governor, _org: o.slug });
+        }
+      }
+      prog.govs.sort((a, b) => (b.proposalStats.total - a.proposalStats.total) || String(a.id).localeCompare(String(b.id)));
+      prog.orgIndex = i + 1; checkpoint();
+      const nth = prog.govs[N - 1] ? prog.govs[N - 1].proposalStats.total : -1;
+      const next = prog.orgs[i + 1];
+      if (prog.govs.length >= N && (!next || next.proposalsCount < nth)) break;
+    }
+    prog.phase = 'done'; checkpoint();
+  }
+  // No header object in the result: callers rebuild it from env at call time.
+  return { govs: prog.govs, exhausted: prog.exhausted, resumedFrom, note: prog.exhausted ? null : `organization enumeration capped at ${ORG_MAX_PAGES} pages; top-N not proven global` };
 }
-async function a2ProposalsCreatedBetween(governorId, fromSec, toSec, hdr) {
+async function a2ProposalsCreatedBetween(governorId, fromSec, toSec) {
+  const hdr = { 'Api-Key': process.env.TALLY_API_KEY }; // env-read at call time; never retained or returned
   const out = []; let after = null;
   for (let page = 0; page < 50; page++) {
-    const r = await gql(ADAPTERS.A2.surface, `query($input:ProposalsInput!){ proposals(input:$input){ nodes{ ... on Proposal { id onchainId block{ timestamp } end{ ... on Block { timestamp } ... on BlocklessTimestamp { timestamp } } metadata{ title } } } pageInfo{ lastCursor } } }`, { input: { filters: { governorId }, sort: { isDescending: true, sortBy: 'id' }, page: after ? { afterCursor: after, limit: TALLY_PAGE } : { limit: TALLY_PAGE } } }, hdr);
+    const r = await tallyGql(`query($input:ProposalsInput!){ proposals(input:$input){ nodes{ ... on Proposal { id onchainId block{ timestamp } end{ ... on Block { timestamp } ... on BlocklessTimestamp { timestamp } } metadata{ title } } } pageInfo{ lastCursor } } }`, { input: { filters: { governorId }, sort: { isDescending: true, sortBy: 'id' }, page: after ? { afterCursor: after, limit: TALLY_PAGE } : { limit: TALLY_PAGE } } }, hdr);
     if (r.error) return { error: r.error, items: out };
     const nodes = (r.data.proposals && r.data.proposals.nodes) || [];
     let olderSeen = false;
@@ -167,7 +244,7 @@ function diagnose(pool) {
   return { raw: pool.length, afterExactDedup: dedup.length, exactMerges: merges.length, possibleDuplicateFlags: flags.length, withSourceNativeResolutionDate: dated, eligibleBuckets: buckets, rejectedByReason: reasons, shortage: Object.fromEntries(['short', 'medium', 'long'].map((b) => [b, intake.shortageAction(b, buckets[b], 5, 21).action])) };
 }
 
-module.exports = { setFetch, gql, parseRankingPage, a1Universe, a1ProposalsCreatedBetween, a2Universe, a2ProposalsCreatedBetween, diagnose, N, ACTIVITY_DAYS, EXCLUDE_RE, RANKING_PAGE, TALLY_PAGE };
+module.exports = { setFetch, setTiming, setResumeRoot, gql, tallyGql, tallyLog, parseRetryAfter, parseRankingPage, a1Universe, a1ProposalsCreatedBetween, a2Universe, a2ProposalsCreatedBetween, diagnose, N, ACTIVITY_DAYS, EXCLUDE_RE, RANKING_PAGE, TALLY_PAGE, TALLY_MIN_INTERVAL_MS, TALLY_BACKOFF_MS, TALLY_MAX_RETRIES, RETRY_AFTER_MAX_MS, DIAG_RATE_LIMITED, RULE_TAG };
 
 if (require.main === module) (async () => {
   console.log('=== A1/A2 SCOPE DISCOVERY + SHORTAGE DIAGNOSTIC — NO-WRITE, IN-MEMORY ONLY ===');
@@ -200,13 +277,13 @@ if (require.main === module) (async () => {
 
   // A2
   const u2 = await a2Universe();
-  if (u2.error) { report.A2 = { state: u2.error.state, detail: u2.error.detail }; }
+  if (u2.error) { report.A2 = { state: u2.error.state, detail: u2.error.detail, resumable: !!u2.resumable, tallyTransportLog: tallyLog.slice(-10) }; }
   else {
     const included = [];
-    report.A2.universeExhausted = u2.exhausted; if (u2.note) report.A2.note = u2.note;
+    report.A2.universeExhausted = u2.exhausted; if (u2.note) report.A2.note = u2.note; if (u2.resumedFrom) report.A2.resumedFromPhase = u2.resumedFrom; report.A2.pacing = { minIntervalMs: TALLY_MIN_INTERVAL_MS, backoffMs: TALLY_BACKOFF_MS, maxRetries: TALLY_MAX_RETRIES, retryAfterCapMs: RETRY_AFTER_MAX_MS, rateLimitEvents: tallyLog.filter((e) => e.kind === '429').length };
     for (const g of u2.govs.filter((g) => !EXCLUDE_RE.test(`${g.id} ${g.name}`))) {
       if (included.length >= N) break;
-      const act = await a2ProposalsCreatedBetween(g.id, nowSec - ACTIVITY_DAYS * 86400, nowSec, u2.hdr);
+      const act = await a2ProposalsCreatedBetween(g.id, nowSec - ACTIVITY_DAYS * 86400, nowSec);
       if (act.error) { report.A2.error = act.error; break; }
       if (act.items.length < 1) continue;
       const p21 = act.items.filter((p) => p.block.timestamp >= win(21).fromSec).length;

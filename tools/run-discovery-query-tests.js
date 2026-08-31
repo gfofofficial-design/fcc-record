@@ -3,6 +3,11 @@
 'use strict';
 const fs = require('fs'); const path = require('path'); const crypto = require('crypto');
 const D = require('./diagnose-a1a2-scope.js');
+// isolate: temp resume root, fake timing (pacing/backoff are proven in the rate-limit suite)
+const os = require('os');
+let fakeNow = 1e12; D.setTiming({ sleep: async (ms) => { fakeNow += ms; }, now: () => fakeNow });
+D.setResumeRoot(fs.mkdtempSync(path.join(os.tmpdir(), 'fcc-dq-')));
+const freshResume = () => D.setResumeRoot(fs.mkdtempSync(path.join(os.tmpdir(), 'fcc-dq-')));
 const ROOT = path.join(__dirname, '..');
 const SLATE = path.join(ROOT, 'governance', 'experiments', 'stage0-public-experiment-v1', 'candidate-slate.json');
 const sha = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
@@ -33,15 +38,15 @@ const space = (i, extra = {}) => ({ id: `space${i}.eth`, name: `Space ${i}`, ver
       if (/organizations\(/.test(b.query)) { const after = b.variables.input.page.afterCursor; return res(200, { data: { organizations: { nodes: after ? [orgs[2]] : orgs.slice(0, 2), pageInfo: { lastCursor: after ? null : 'c1' } } } }); }
       if (/governor\(/.test(b.query)) { const id = b.variables.input.id; const k = id.slice(-40)[0]; return res(200, { data: { governor: { id, name: 'G' + k, chainId: id.split(':').slice(0, 2).join(':'), isIndexing: true, proposalStats: { total: totals[k], active: 0 } } } }); }
       return res(422, { errors: [{ message: 'validation' }] }); });
-    const u = await D.a2Universe();
+    freshResume(); const u = await D.a2Universe();
     ok(!u.error && u.govs.length === 3 && u.govs[0].proposalStats.total === 300 && u.govs[1].proposalStats.total === 150, 'D: organizations enumerate (2 pages) -> governors fetched -> sorted by proposalStats.total desc');
     ok(!u.govs.some((g) => /9{40}/.test(g.id)), 'D2: doctrine-excluded organization (GFOF) never has its governors fetched');
     ok(seen.filter((b) => /organizations\(/.test(b.query)).every((b) => b.variables.input.page.limit === 20 && b.variables.input.sort.sortBy === 'id'), 'E: Tally pagination uses limit=20 (hard max) and deterministic id sort');
-    const u2 = await D.a2Universe(); ok(JSON.stringify(u.govs) === JSON.stringify(u2.govs), 'E2: universe result is deterministic across runs');
+    freshResume(); const u2 = await D.a2Universe(); ok(JSON.stringify(u.govs) === JSON.stringify(u2.govs), 'E2: universe result is deterministic across runs');
     // F — 422 is schema failure, 401 is credential failure
-    D.setFetch(async () => res(422, { errors: [{ message: 'Variable "$input" got invalid value' }] })); const f = await D.a2Universe(); ok(f.error && f.error.state === 'SOURCE_INTERFACE_DRIFT' && !/CREDENTIAL/.test(f.error.state), 'F1: Tally 422 => SOURCE_INTERFACE_DRIFT, never credential failure');
-    D.setFetch(async () => res(401, {})); const f2 = await D.a2Universe(); ok(f2.error && f2.error.state === 'CREDENTIAL_REQUIRED', 'F2: 401 remains credential failure');
-    delete process.env.TALLY_API_KEY; const f3 = await D.a2Universe(); ok(f3.error && f3.error.state === 'CREDENTIAL_REQUIRED' && !/placeholder/.test(JSON.stringify(f3)), 'F3: absent key => CREDENTIAL_REQUIRED; no key value ever appears in output'); }
+    D.setFetch(async () => res(422, { errors: [{ message: 'Variable "$input" got invalid value' }] })); freshResume(); const f = await D.a2Universe(); ok(f.error && f.error.state === 'SOURCE_INTERFACE_DRIFT' && !/CREDENTIAL/.test(f.error.state), 'F1: Tally 422 => SOURCE_INTERFACE_DRIFT, never credential failure');
+    D.setFetch(async () => res(401, {})); freshResume(); const f2 = await D.a2Universe(); ok(f2.error && f2.error.state === 'CREDENTIAL_REQUIRED', 'F2: 401 remains credential failure');
+    delete process.env.TALLY_API_KEY; freshResume(); const f3 = await D.a2Universe(); ok(f3.error && f3.error.state === 'CREDENTIAL_REQUIRED' && !/placeholder/.test(JSON.stringify(f3)), 'F3: absent key => CREDENTIAL_REQUIRED; no key value ever appears in output'); }
   // G/H/I — rule unchanged
   ok(D.N === 25, 'G: N=25 fixed'); ok(D.ACTIVITY_DAYS === 90, 'H: 90-day activity rule fixed');
   ok(['GFOF', 'Dossier', 'FCC', 'Polymarket', 'Kalshi', 'Galactic Federation'].every((w) => D.EXCLUDE_RE.test(w)) && !D.EXCLUDE_RE.test('uniswap arbitrum aave'), 'I: doctrine + benchmark exclusions unchanged, ordinary protocols not excluded');
