@@ -157,6 +157,32 @@ async function a1ProposalsCreatedBetween(spaceId, fromSec, toSec) {
 // sorted by their own proposalStats.total. Enumeration caps are disclosed.
 const TALLY_PAGE = 20;
 const ORG_MAX_PAGES = 400; // 8,000 organizations; hitting it is disclosed
+// ── A2 CHAIN IDENTIFIER NORMALIZATION (adjudicated 2026-08-31) ──────────
+// Tally's published schema: ChainID is CAIP-2 ("eip155:1"); AccountID (governor
+// ids) is CAIP-10 ("eip155:1:0x..."). The addendum schema FCC already ratified
+// accepts only `eip155:<n>:0x<40 hex>` governorIds. Normalization therefore maps
+// ONLY source-supported EVM forms to `eip155:<n>` and never fabricates an EVM id:
+//   - "eip155:<n>"            -> "eip155:<n>"
+//   - 137 / "137"             -> "eip155:137" (bare numerics are EVM-only by definition)
+//   - governor id prefix      -> used only because AccountID is schema-guaranteed CAIP-10
+//   - any other namespace     -> null + explicit reason (excluded transparently, never dropped silently)
+// Governors the source itself rejects with "chain id not supported" are recorded
+// with that verbatim source message and the enumeration continues.
+function normalizeChain(chainIdField, governorId) {
+  const evm = (n) => ({ chain: `eip155:${n}`, namespace: 'eip155' });
+  if (typeof chainIdField === 'string' && /^eip155:\d+$/.test(chainIdField)) return evm(chainIdField.split(':')[1]);
+  if (typeof chainIdField === 'number' && Number.isInteger(chainIdField) && chainIdField > 0) return evm(chainIdField);
+  if (typeof chainIdField === 'string' && /^\d+$/.test(chainIdField)) return evm(chainIdField);
+  if (typeof chainIdField === 'string' && /^[a-z0-9-]+:[^:]+$/.test(chainIdField)) return { chain: null, namespace: chainIdField.split(':')[0], reason: `NON_EVM_CHAIN_NOT_REPRESENTABLE: source chainId "${chainIdField}" is outside the ratified eip155 addendum schema` };
+  const m = typeof governorId === 'string' ? /^([a-z0-9-]+):([^:]+):(.+)$/.exec(governorId) : null;
+  if (m) {
+    if (m[1] === 'eip155' && /^\d+$/.test(m[2])) return evm(m[2]);
+    return { chain: null, namespace: m[1], reason: `NON_EVM_CHAIN_NOT_REPRESENTABLE: governor id namespace "${m[1]}" is outside the ratified eip155 addendum schema` };
+  }
+  return { chain: null, namespace: null, reason: 'CHAIN_ID_MISSING: source provided no chainId and the governor id is not CAIP-10 shaped' };
+}
+const SOURCE_CHAIN_REJECT_RE = /chain id not supported/i;
+
 const RULE_TAG = 'a2-rule: organizations(id asc) -> governors by proposalStats.total desc, exact org-count bound, N=25, 90d';
 const resume = require('./lib/discovery-resume.js');
 let resumeRoot = require('path').join(__dirname, '..');
@@ -165,12 +191,12 @@ async function a2Universe({ useResume = true } = {}) {
   if (!process.env.TALLY_API_KEY) return { error: { state: 'CREDENTIAL_REQUIRED', detail: 'TALLY_API_KEY absent (session-only; never printed)' } };
   const hdr = { 'Api-Key': process.env.TALLY_API_KEY }; // per-call only; never enters resume state
   const pins = resume.makePins({ repoRoot: resumeRoot, N, ACTIVITY_DAYS, cutoff: CUTOFF, ruleTag: RULE_TAG });
-  let prog = { phase: 'orgs', orgs: [], after: null, exhausted: false, govs: [], orgIndex: 0 };
+  let prog = { phase: 'orgs', orgs: [], after: null, exhausted: false, govs: [], orgIndex: 0, excludedGovernors: [] };
   let resumedFrom = null;
   if (useResume) {
     const r = resume.load(resumeRoot, pins);
     if (r.found && !r.ok) return { error: { state: 'RESUME_REFUSED', detail: r.reason + ' — delete .fcc-local/ to start fresh' } };
-    if (r.found && r.ok) { prog = r.progress; resumedFrom = prog.phase; }
+    if (r.found && r.ok) { prog = r.progress; resumedFrom = prog.phase; if (!Array.isArray(prog.excludedGovernors)) prog.excludedGovernors = []; } // older checkpoints lack the field; the enumeration state itself is compatible
   }
   const checkpoint = () => { if (useResume) resume.save(resumeRoot, pins, prog); };
   // Phase 1: Tally-native global enumeration, deterministic id order, limit 20 (hard max)
@@ -194,10 +220,20 @@ async function a2Universe({ useResume = true } = {}) {
       const o = prog.orgs[i];
       if (!EXCLUDE_RE.test(`${o.id} ${o.name} ${o.slug}`)) {
         for (const gid of o.governorIds) {
-          if (prog.govs.some((g) => g.id === gid)) continue; // idempotent on resume
+          if (prog.govs.some((g) => g.id === gid) || prog.excludedGovernors.some((x) => x.governorId === gid)) continue; // idempotent on resume
+          const pre = normalizeChain(null, gid);
+          if (!pre.chain) { prog.excludedGovernors.push({ governorId: gid, organization: o.slug, namespace: pre.namespace, reason: pre.reason }); continue; } // non-EVM: excluded transparently, no request spent
           const g = await tallyGql(`query($input:GovernorInput!){ governor(input:$input){ id name chainId isIndexing proposalStats{ total active } } }`, { input: { id: gid } }, hdr);
+          if (g.error && g.error.state === 'SOURCE_INTERFACE_DRIFT' && SOURCE_CHAIN_REJECT_RE.test(g.error.detail)) {
+            prog.excludedGovernors.push({ governorId: gid, organization: o.slug, namespace: pre.namespace, reason: `SOURCE_REJECTED_CHAIN: Tally answered "${g.error.detail}" for this governor id` });
+            checkpoint(); continue; // the source itself declines this chain — recorded verbatim, enumeration continues
+          }
           if (g.error) { prog.orgIndex = i; checkpoint(); return { error: g.error, partial: prog.govs, resumable: useResume }; }
-          if (g.data.governor) prog.govs.push({ ...g.data.governor, _org: o.slug });
+          if (g.data.governor) {
+            const nc = normalizeChain(g.data.governor.chainId, g.data.governor.id);
+            if (!nc.chain) { prog.excludedGovernors.push({ governorId: gid, organization: o.slug, namespace: nc.namespace, reason: nc.reason }); checkpoint(); continue; }
+            prog.govs.push({ ...g.data.governor, chain: nc.chain, _org: o.slug });
+          }
         }
       }
       prog.govs.sort((a, b) => (b.proposalStats.total - a.proposalStats.total) || String(a.id).localeCompare(String(b.id)));
@@ -209,7 +245,7 @@ async function a2Universe({ useResume = true } = {}) {
     prog.phase = 'done'; checkpoint();
   }
   // No header object in the result: callers rebuild it from env at call time.
-  return { govs: prog.govs, exhausted: prog.exhausted, resumedFrom, note: prog.exhausted ? null : `organization enumeration capped at ${ORG_MAX_PAGES} pages; top-N not proven global` };
+  return { govs: prog.govs, excludedGovernors: prog.excludedGovernors, exhausted: prog.exhausted, resumedFrom, note: prog.exhausted ? null : `organization enumeration capped at ${ORG_MAX_PAGES} pages; top-N not proven global` };
 }
 async function a2ProposalsCreatedBetween(governorId, fromSec, toSec) {
   const hdr = { 'Api-Key': process.env.TALLY_API_KEY }; // env-read at call time; never retained or returned
@@ -244,7 +280,7 @@ function diagnose(pool) {
   return { raw: pool.length, afterExactDedup: dedup.length, exactMerges: merges.length, possibleDuplicateFlags: flags.length, withSourceNativeResolutionDate: dated, eligibleBuckets: buckets, rejectedByReason: reasons, shortage: Object.fromEntries(['short', 'medium', 'long'].map((b) => [b, intake.shortageAction(b, buckets[b], 5, 21).action])) };
 }
 
-module.exports = { setFetch, setTiming, setResumeRoot, gql, tallyGql, tallyLog, parseRetryAfter, parseRankingPage, a1Universe, a1ProposalsCreatedBetween, a2Universe, a2ProposalsCreatedBetween, diagnose, N, ACTIVITY_DAYS, EXCLUDE_RE, RANKING_PAGE, TALLY_PAGE, TALLY_MIN_INTERVAL_MS, TALLY_BACKOFF_MS, TALLY_MAX_RETRIES, RETRY_AFTER_MAX_MS, DIAG_RATE_LIMITED, RULE_TAG };
+module.exports = { normalizeChain, SOURCE_CHAIN_REJECT_RE, setFetch, setTiming, setResumeRoot, gql, tallyGql, tallyLog, parseRetryAfter, parseRankingPage, a1Universe, a1ProposalsCreatedBetween, a2Universe, a2ProposalsCreatedBetween, diagnose, N, ACTIVITY_DAYS, EXCLUDE_RE, RANKING_PAGE, TALLY_PAGE, TALLY_MIN_INTERVAL_MS, TALLY_BACKOFF_MS, TALLY_MAX_RETRIES, RETRY_AFTER_MAX_MS, DIAG_RATE_LIMITED, RULE_TAG };
 
 if (require.main === module) (async () => {
   console.log('=== A1/A2 SCOPE DISCOVERY + SHORTAGE DIAGNOSTIC — NO-WRITE, IN-MEMORY ONLY ===');
@@ -280,7 +316,7 @@ if (require.main === module) (async () => {
   if (u2.error) { report.A2 = { state: u2.error.state, detail: u2.error.detail, resumable: !!u2.resumable, tallyTransportLog: tallyLog.slice(-10) }; }
   else {
     const included = [];
-    report.A2.universeExhausted = u2.exhausted; if (u2.note) report.A2.note = u2.note; if (u2.resumedFrom) report.A2.resumedFromPhase = u2.resumedFrom; report.A2.pacing = { minIntervalMs: TALLY_MIN_INTERVAL_MS, backoffMs: TALLY_BACKOFF_MS, maxRetries: TALLY_MAX_RETRIES, retryAfterCapMs: RETRY_AFTER_MAX_MS, rateLimitEvents: tallyLog.filter((e) => e.kind === '429').length };
+    report.A2.excludedGovernors = u2.excludedGovernors; report.A2.universeExhausted = u2.exhausted; if (u2.note) report.A2.note = u2.note; if (u2.resumedFrom) report.A2.resumedFromPhase = u2.resumedFrom; report.A2.pacing = { minIntervalMs: TALLY_MIN_INTERVAL_MS, backoffMs: TALLY_BACKOFF_MS, maxRetries: TALLY_MAX_RETRIES, retryAfterCapMs: RETRY_AFTER_MAX_MS, rateLimitEvents: tallyLog.filter((e) => e.kind === '429').length };
     for (const g of u2.govs.filter((g) => !EXCLUDE_RE.test(`${g.id} ${g.name}`))) {
       if (included.length >= N) break;
       const act = await a2ProposalsCreatedBetween(g.id, nowSec - ACTIVITY_DAYS * 86400, nowSec);
@@ -288,7 +324,7 @@ if (require.main === module) (async () => {
       if (act.items.length < 1) continue;
       const p21 = act.items.filter((p) => p.block.timestamp >= win(21).fromSec).length;
       const p42 = act.items.filter((p) => p.block.timestamp >= win(42).fromSec).length;
-      included.push({ governorId: g.id, name: g.name, organization: g._org, chain: g.chainId || String(g.id).split(':').slice(0, 2).join(':'), proposalsTotal: g.proposalStats.total, proposals90d: act.items.length, proposals21d: p21, proposals42d: p42, _items: act.items });
+      included.push({ governorId: g.id, name: g.name, organization: g._org, chain: g.chain, proposalsTotal: g.proposalStats.total, proposals90d: act.items.length, proposals21d: p21, proposals42d: p42, _items: act.items });
     }
     report.A2.included = included.map(({ _items, ...x }) => x);
     report._a2Items = included.flatMap((g) => g._items.map((p) => ({ ...p, _gov: g.governorId })));
