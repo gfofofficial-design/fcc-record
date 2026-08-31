@@ -109,7 +109,14 @@ if (freeze.candidate_selection_methodology.status === 'RATIFIED_AWAITING_CUTOFF'
   ok(Array.isArray(freeze.candidate_selection_methodology.named_source_list) && freeze.candidate_selection_methodology.named_source_list.length === 12, 'named source list recorded with exactly 12 entries (10 generating + 2 benchmark-only)');
   ok(freeze.freeze_status !== 'VALID', 'freeze_status is NOT VALID while intake has not actually run, even though the methodology itself is ratified');
   const cutoff = require('./lib/intake-cutoff.js').computeCutoffFromRepo(ROOT);
-  ok(cutoff.authorized === false, 'live cutoff computation confirms intake is NOT currently authorized (AD-3 unverified) -- freeze correctly stays BLOCKED, not VALID');
+  // Time-aware (corrected 2026-08-31 after the frozen cutoff passed): the freeze
+  // stays BLOCKED-not-VALID regardless of the clock; what must hold is that the
+  // frozen formula is DEFINED with exactly the frozen cutoff, and that while no
+  // completion marker exists the slate is byte-identical to candidate_slate_ref.
+  ok(cutoff.defined === true && cutoff.cutoffTimestamp === '2026-08-31T00:00:00.000Z', 'live cutoff computation is defined and equals the frozen cutoff 2026-08-31T00:00:00.000Z');
+  const markerExists = fs.existsSync(path.join(ROOT, 'governance', 'gates', 'intake-execution-001.completed.json'));
+  const slateSha = sha256(path.join(DIR, 'candidate-slate.json'));
+  ok(markerExists || slateSha === freeze.candidate_slate_ref.sha256, 'with no completion marker, candidate-slate.json is byte-identical to the frozen candidate_slate_ref (intake has not written)');
   const slate = loadJson(path.join(DIR, 'candidate-slate.json'));
   ok(slate.slots.every((s) => s.status === 'AWAITING_CANDIDATE_SELECTION' && s.subject === null), 'candidate slate remains 100% honest placeholder -- ratifying the methodology did not itself populate any slot');
 }

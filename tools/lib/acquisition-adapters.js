@@ -409,7 +409,7 @@ const fsAdd = require('fs');
 const pathAdd = require('path');
 function loadRegistryAddenda(repoRoot) {
   const dir = pathAdd.join(repoRoot, 'governance', 'experiments', 'stage0-public-experiment-v1');
-  const out = { confirmations: [], f1Ciks: [] };
+  const out = { confirmations: [], f1Ciks: [], scopes: {} }; // scopes: future ratified A1 spaces / A2 governorIds
   if (!fsAdd.existsSync(dir)) return out;
   for (const f of fsAdd.readdirSync(dir)) {
     if (!/^(source-registry|f1-cik)-addendum-[0-9]{3}\.json$/.test(f)) continue;
@@ -421,6 +421,12 @@ function loadRegistryAddenda(repoRoot) {
           && (c.confirmed === false || (typeof c.feedUrl === 'string' && /^https:\/\//.test(c.feedUrl)));
         if (ok) out.confirmations.push(c);
       }
+    }
+    if (j.scopes && typeof j.scopes === 'object') {
+      const a1 = j.scopes.A1 && Array.isArray(j.scopes.A1.spaces) ? j.scopes.A1.spaces.filter((x) => typeof x === 'string' && /^[a-z0-9.-]+$/i.test(x)) : null;
+      const a2 = j.scopes.A2 && Array.isArray(j.scopes.A2.governorIds) ? j.scopes.A2.governorIds.filter((x) => typeof x === 'string' && /^eip155:\d+:0x[0-9a-fA-F]{40}$/.test(x)) : null;
+      if (a1 && a1.length) out.scopes.A1 = { spaces: a1 };
+      if (a2 && a2.length) out.scopes.A2 = { governorIds: a2 };
     }
     if (Array.isArray(j.issuer_ciks)) {
       for (const e of j.issuer_ciks) {

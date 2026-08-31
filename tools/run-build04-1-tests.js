@@ -56,17 +56,24 @@ console.log('\n=== FIXTURE Y — frozen trigger set: no third condition, no over
 
 console.log('\n=== FIXTURE Z — production entry point REFUSES to run against the real repo (AD-3 genuinely unverified) ===');
 {
-  throws(() => runIntake({}), 'INTAKE_NOT_AUTHORIZED', 'Z1: runIntake() against real repo state throws INTAKE_NOT_AUTHORIZED');
+  // Time-aware (corrected 2026-08-31 after the frozen cutoff passed): the gate is
+  // proven with an injected pre-cutoff clock so the assertion stays true forever;
+  // real-clock behavior post-cutoff is asserted separately (Z3).
+  const PRE_CUTOFF_MS = Date.parse('2026-08-30T23:59:59Z');
+  throws(() => runIntake({ nowMs: PRE_CUTOFF_MS }), 'INTAKE_NOT_AUTHORIZED', 'Z1: runIntake() against real repo state with a pre-cutoff clock throws INTAKE_NOT_AUTHORIZED');
   let threw = false;
-  try { runIntake({}); } catch (e) { threw = e.code === 'INTAKE_NOT_AUTHORIZED' && e.cutoff && e.cutoff.authorized === false; }
+  try { runIntake({ nowMs: PRE_CUTOFF_MS }); } catch (e) { threw = e.code === 'INTAKE_NOT_AUTHORIZED' && e.cutoff && e.cutoff.authorized === false; }
   ok(threw, 'Z2: thrown error carries the cutoff evidence, not just a message');
+  const realNow = require('./lib/intake-cutoff.js').computeCutoffFromRepo(ROOT);
+  let z3 = false; try { runIntake({}); } catch (e) { z3 = realNow.reached ? /no acquisition adapters/.test(e.message) : e.code === 'INTAKE_NOT_AUTHORIZED'; }
+  ok(z3, `Z3: with the real clock (${realNow.reached ? 'post' : 'pre'}-cutoff) runIntake() still refuses without injected adapters`);
 }
 
 console.log('\n=== FIXTURE AA — gate fires BEFORE any adapter or pipeline function runs (no partial execution) ===');
 {
   let adapterCalled = false;
   const spyAdapters = { collectRawPool: () => { adapterCalled = true; return []; } };
-  try { runIntake({ adapters: spyAdapters }); } catch (e) { /* expected */ }
+  try { runIntake({ adapters: spyAdapters, nowMs: Date.parse('2026-08-30T23:59:59Z') }); } catch (e) { /* expected */ }
   ok(adapterCalled === false, 'AA1: collectRawPool was NEVER called -- the gate short-circuits before any acquisition happens');
 }
 

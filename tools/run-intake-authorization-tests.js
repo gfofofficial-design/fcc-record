@@ -77,7 +77,8 @@ ok(supervisedModeRequested([SUPERVISED_FLAG], { [SUPERVISED_ENV]: 'true' }) === 
   const pre2 = evaluateFromRepo(ROOT, { nowMs: Date.parse('2026-08-31T00:00:00Z'), env: {}, readinessAggregate: 'READY', supervisedMode: true });
   ok(pre2.allowed === false, 'R2: same instant without the key => refused');
   const r = spawnSync(process.execPath, [path.join(__dirname, 'run-candidate-intake.js')], { encoding: 'utf8' });
-  ok(r.status === 2, 'R3: unsupervised CLI right now (pre-cutoff) still exits 2 — BUILD 04.1 CI expectation intact');
+  const nowCut = require('./lib/intake-cutoff.js').computeCutoffFromRepo(ROOT);
+  ok(nowCut.reached ? r.status === 3 : r.status === 2, `R3: unsupervised CLI right now exits ${nowCut.reached ? '3 (post-cutoff: reports preconditions, never executes)' : '2 (pre-cutoff frozen gate)'}`);
   ok(!/INTAKE RAN/.test(r.stdout), 'R4: no invocation in this suite ever ran the pipeline');
 }
 
