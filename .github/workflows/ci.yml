@@ -176,4 +176,5 @@ jobs:
       - run: node tools/run-discovery-query-tests.js
       - run: node tools/run-a2-ratelimit-tests.js
       - run: node tools/run-a2-chainid-tests.js
+      - run: node tools/run-a2-timestamp-fix-tests.js
       - run: node tools/verify-acquisition-readiness.js

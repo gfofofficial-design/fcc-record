@@ -155,6 +155,24 @@ async function a1ProposalsCreatedBetween(spaceId, fromSec, toSec) {
 // organization's proposalsCount is below the N-th governor's total (an
 // organization's count bounds every governor inside it), then governors are
 // sorted by their own proposalStats.total. Enumeration caps are disclosed.
+// ── A2 TIMESTAMP NORMALIZATION (fix, 2026-09-01) ─────────────────────────
+// Tally's published API reference defines `Timestamp` as an RFC3339 STRING.
+// Comparing that string against numeric epoch seconds coerces to NaN and is
+// always false — which silently dropped every A2 proposal in the Epoch 1
+// diagnostic. All A2 time comparisons now go through tsToSec(): RFC3339 ->
+// epoch seconds; numeric seconds pass through; numeric milliseconds (>1e12)
+// are scaled; anything unparseable returns null and the item is reported,
+// never silently counted or dropped.
+function tsToSec(v) {
+  if (v == null) return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? (v > 1e12 ? Math.floor(v / 1000) : v) : null;
+  if (typeof v === 'string') {
+    if (/^\d+$/.test(v)) return tsToSec(Number(v));
+    const ms = Date.parse(v);
+    return Number.isNaN(ms) ? null : Math.floor(ms / 1000);
+  }
+  return null;
+}
 const TALLY_PAGE = 20;
 const ORG_MAX_PAGES = 400; // 8,000 organizations; hitting it is disclosed
 // ── A2 CHAIN IDENTIFIER NORMALIZATION (adjudicated 2026-08-31) ──────────
@@ -249,25 +267,28 @@ async function a2Universe({ useResume = true } = {}) {
 }
 async function a2ProposalsCreatedBetween(governorId, fromSec, toSec) {
   const hdr = { 'Api-Key': process.env.TALLY_API_KEY }; // env-read at call time; never retained or returned
-  const out = []; let after = null;
+  const out = []; const unparseable = []; let after = null;
   for (let page = 0; page < 50; page++) {
     const r = await tallyGql(`query($input:ProposalsInput!){ proposals(input:$input){ nodes{ ... on Proposal { id onchainId block{ timestamp } end{ ... on Block { timestamp } ... on BlocklessTimestamp { timestamp } } metadata{ title } } } pageInfo{ lastCursor } } }`, { input: { filters: { governorId }, sort: { isDescending: true, sortBy: 'id' }, page: after ? { afterCursor: after, limit: TALLY_PAGE } : { limit: TALLY_PAGE } } }, hdr);
-    if (r.error) return { error: r.error, items: out };
+    if (r.error) return { error: r.error, items: out, unparseable };
     const nodes = (r.data.proposals && r.data.proposals.nodes) || [];
     let olderSeen = false;
     for (const p of nodes) {
       const created = p.block && p.block.timestamp;
       if (created == null) continue;
-      if (created >= fromSec && created <= toSec) out.push(p); else if (created < fromSec) olderSeen = true;
+      const createdSec = tsToSec(created);
+      if (createdSec == null) { unparseable.push({ id: p.id, onchainId: p.onchainId, rawTimestamp: created }); continue; }
+      p._createdSec = createdSec; // normalized once; every later comparison uses seconds
+      if (createdSec >= fromSec && createdSec <= toSec) out.push(p); else if (createdSec < fromSec) olderSeen = true;
     }
     after = r.data.proposals.pageInfo && r.data.proposals.pageInfo.lastCursor;
     if (!after || nodes.length < TALLY_PAGE || olderSeen) break; // newest-first: stop once older than the window
   }
-  return { items: out };
+  return { items: out, unparseable };
 }
 
 // ── frozen eligibility/bucket diagnostic, in memory ─────────────────────
-function diagnose(pool) {
+function diagnose(pool, lookbackDays = 21) {
   const { pool: dedup, merges } = intake.dedupExactId(pool);
   const { flags } = intake.flagPossibleDuplicates(dedup);
   const reasons = {}; const buckets = { short: 0, medium: 0, long: 0 }; let dated = 0;
@@ -277,10 +298,10 @@ function diagnose(pool) {
     if (!e.eligible) { reasons[e.reason] = (reasons[e.reason] || 0) + 1; continue; }
     buckets[intake.horizonBucket(e.daysToResolution)]++;
   }
-  return { raw: pool.length, afterExactDedup: dedup.length, exactMerges: merges.length, possibleDuplicateFlags: flags.length, withSourceNativeResolutionDate: dated, eligibleBuckets: buckets, rejectedByReason: reasons, shortage: Object.fromEntries(['short', 'medium', 'long'].map((b) => [b, intake.shortageAction(b, buckets[b], 5, 21).action])) };
+  return { raw: pool.length, afterExactDedup: dedup.length, exactMerges: merges.length, possibleDuplicateFlags: flags.length, withSourceNativeResolutionDate: dated, eligibleBuckets: buckets, rejectedByReason: reasons, shortage: Object.fromEntries(['short', 'medium', 'long'].map((b) => [b, intake.shortageAction(b, buckets[b], 5, lookbackDays).action])) }; // FIX: lookback passed through (was hardcoded 21 for the 42d block)
 }
 
-module.exports = { normalizeChain, SOURCE_CHAIN_REJECT_RE, setFetch, setTiming, setResumeRoot, gql, tallyGql, tallyLog, parseRetryAfter, parseRankingPage, a1Universe, a1ProposalsCreatedBetween, a2Universe, a2ProposalsCreatedBetween, diagnose, N, ACTIVITY_DAYS, EXCLUDE_RE, RANKING_PAGE, TALLY_PAGE, TALLY_MIN_INTERVAL_MS, TALLY_BACKOFF_MS, TALLY_MAX_RETRIES, RETRY_AFTER_MAX_MS, DIAG_RATE_LIMITED, RULE_TAG };
+module.exports = { tsToSec, normalizeChain, SOURCE_CHAIN_REJECT_RE, setFetch, setTiming, setResumeRoot, gql, tallyGql, tallyLog, parseRetryAfter, parseRankingPage, a1Universe, a1ProposalsCreatedBetween, a2Universe, a2ProposalsCreatedBetween, diagnose, N, ACTIVITY_DAYS, EXCLUDE_RE, RANKING_PAGE, TALLY_PAGE, TALLY_MIN_INTERVAL_MS, TALLY_BACKOFF_MS, TALLY_MAX_RETRIES, RETRY_AFTER_MAX_MS, DIAG_RATE_LIMITED, RULE_TAG };
 
 if (require.main === module) (async () => {
   console.log('=== A1/A2 SCOPE DISCOVERY + SHORTAGE DIAGNOSTIC — NO-WRITE, IN-MEMORY ONLY ===');
@@ -315,18 +336,21 @@ if (require.main === module) (async () => {
   const u2 = await a2Universe();
   if (u2.error) { report.A2 = { state: u2.error.state, detail: u2.error.detail, resumable: !!u2.resumable, tallyTransportLog: tallyLog.slice(-10) }; }
   else {
-    const included = [];
+    const included = []; const fetchedInactive = [];
     report.A2.excludedGovernors = u2.excludedGovernors; report.A2.universeExhausted = u2.exhausted; if (u2.note) report.A2.note = u2.note; if (u2.resumedFrom) report.A2.resumedFromPhase = u2.resumedFrom; report.A2.pacing = { minIntervalMs: TALLY_MIN_INTERVAL_MS, backoffMs: TALLY_BACKOFF_MS, maxRetries: TALLY_MAX_RETRIES, retryAfterCapMs: RETRY_AFTER_MAX_MS, rateLimitEvents: tallyLog.filter((e) => e.kind === '429').length };
     for (const g of u2.govs.filter((g) => !EXCLUDE_RE.test(`${g.id} ${g.name}`))) {
       if (included.length >= N) break;
       const act = await a2ProposalsCreatedBetween(g.id, nowSec - ACTIVITY_DAYS * 86400, nowSec);
       if (act.error) { report.A2.error = act.error; break; }
-      if (act.items.length < 1) continue;
-      const p21 = act.items.filter((p) => p.block.timestamp >= win(21).fromSec).length;
-      const p42 = act.items.filter((p) => p.block.timestamp >= win(42).fromSec).length;
+      if (act.unparseable && act.unparseable.length) report.A2.unparseableTimestamps = (report.A2.unparseableTimestamps || []).concat(act.unparseable.map((u) => ({ governorId: g.id, ...u })));
+      if (act.items.length < 1) { fetchedInactive.push({ governorId: g.id, name: g.name, organization: g._org, chain: g.chain, proposalsTotal: g.proposalStats.total, proposals90d: 0 }); continue; } // FIX: previously silent
+      const p21 = act.items.filter((p) => p._createdSec >= win(21).fromSec).length;
+      const p42 = act.items.filter((p) => p._createdSec >= win(42).fromSec).length;
       included.push({ governorId: g.id, name: g.name, organization: g._org, chain: g.chain, proposalsTotal: g.proposalStats.total, proposals90d: act.items.length, proposals21d: p21, proposals42d: p42, _items: act.items });
     }
     report.A2.included = included.map(({ _items, ...x }) => x);
+    report.A2.fetchedInactive = fetchedInactive; // governors fetched with zero window activity — now printed, never silently skipped
+    report.A2.timestampNormalization = 'RFC3339 string -> epoch seconds via tsToSec() (fix 2026-09-01)';
     report._a2Items = included.flatMap((g) => g._items.map((p) => ({ ...p, _gov: g.governorId })));
   }
 
@@ -335,8 +359,8 @@ if (require.main === module) (async () => {
     const w = win(days);
     const pool = [];
     for (const p of report._a1Items || []) if (p.created >= w.fromSec) pool.push(mapItem('A1', { canonicalId: p.id, sourceTimestamp: p.created, sourceEnd: p.end, space: p.space && p.space.id, title: p.title }, {}));
-    for (const p of report._a2Items || []) if (p.block.timestamp >= w.fromSec) pool.push(mapItem('A2', { canonicalId: p.onchainId || p.id, sourceTimestamp: p.block.timestamp, sourceEnd: p.end && p.end.timestamp, title: p.metadata && p.metadata.title }, { governorId: p._gov }));
-    report[days === 21 ? 'diagnostic21' : 'diagnostic42'] = diagnose(pool);
+    for (const p of report._a2Items || []) if (p._createdSec >= w.fromSec) pool.push(mapItem('A2', { canonicalId: p.onchainId || p.id, sourceTimestamp: p._createdSec, sourceEnd: tsToSec(p.end && p.end.timestamp), title: p.metadata && p.metadata.title }, { governorId: p._gov }));
+    report[days === 21 ? 'diagnostic21' : 'diagnostic42'] = diagnose(pool, days);
   }
   delete report._a1Items; delete report._a2Items;
 
