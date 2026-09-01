@@ -1,0 +1,1170 @@
+{
+  "artifact_class": "EPOCH_OBSERVED_SCOPE_SET",
+  "not_a_capital_instrument": true,
+  "record_id": "stage0-epoch1-observed-scope-set-001",
+  "epoch": 1,
+  "derived_from": {
+    "authoritative": {
+      "path": "governance/evidence/a1a2-epoch1-reconstruction-2026-09-01.txt",
+      "sha256": "541f45161c8f779f7e3c4c486050fff881252adc2b41c498b6dfa9554aa5e908",
+      "byte_length": 58986,
+      "role": "CORRECTED BOUNDED RECONSTRUCTION — AUTHORITATIVE for the Epoch 1 empirical result; acquisition bounded created <= 2026-08-31T00:00:00.000Z on immutable on-chain/source creation timestamps; produced by tools/diagnose-a1a2-scope.js at public commit 9c42f81d0d6bb877f139b15fe38a5ba77a433618 ('Fix A2 diagnostic timestamp parsing'), tool sha256 a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94",
+      "public_head": "9c42f81d0d6bb877f139b15fe38a5ba77a433618",
+      "tool_sha256": "a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94"
+    },
+    "historical": {
+      "path": "governance/evidence/a1a2-scope-diagnostic-2026-08-31.txt",
+      "sha256": "73e73bacd785ffb575fbe1a96c4541e9e8c9bdb4669798e7a046fbefc76b8694",
+      "byte_length": 31012,
+      "role": "ORIGINAL Epoch 1 diagnostic — HISTORICAL EVIDENCE; preserved byte-exact; its A2 figures are known-defective (see defect)",
+      "public_head": "ab414bf8b8704b4257fceaf13780be966d154755"
+    },
+    "extraction": "mechanical parse of each raw report JSON (UTF-16LE decoded in memory for extraction only; artifact bytes untouched); no external query"
+  },
+  "run_headers_verbatim": {
+    "original": "cutoff 2026-08-31T00:00:00.000Z; rule N=25; activity window 90d; run at 2026-08-31T23:16:03.033Z",
+    "reconstruction": "cutoff 2026-08-31T00:00:00.000Z; rule N=25; activity window 90d; run at 2026-09-01T02:52:25.182Z"
+  },
+  "acquisition_bound": {
+    "created_lte": "2026-08-31T00:00:00.000Z",
+    "created_gte": "2026-08-31T00:00:00.000Z minus 90 days",
+    "proof": "tools/diagnose-a1a2-scope.js at both ab414bf8 (original) and 9c42f81d (reconstruction): nowSec = Math.floor(cutoffMs/1000); all proposal queries bounded at nowSec",
+    "consequence": "every item either run could observe has opening timestamp <= the Epoch 1 cutoff"
+  },
+  "per_item_identities": {
+    "present_in_raw": false,
+    "reason": "both tool versions strip per-item arrays before printing; no proposal ids in either file; none fabricated"
+  },
+  "A1_snapshot": {
+    "scope_rule": "pre-registered 2026-08-31T02:17Z (see header)",
+    "universeExhausted": false,
+    "note": "ranking walk capped at skip=400; universe beyond this not examined",
+    "curationFlagsAvailable": true,
+    "included_space_ids": [
+      "balancer.eth",
+      "puffer-gauge.eth",
+      "sushigov.eth",
+      "leagueoflils.eth",
+      "aladdindao.eth",
+      "veclev.eth",
+      "pnounsdao.eth",
+      "ethenagovernance.eth",
+      "sdcrv-gov.eth",
+      "dorg.eth",
+      "concentratordao.eth",
+      "sdcrv.eth",
+      "parallel-protocol.eth",
+      "sdfxs.eth",
+      "spectradao.eth",
+      "arrowair.eth",
+      "vanilladao.eth",
+      "spacetokendao.eth",
+      "sparkfi.eth",
+      "sdspectra.eth",
+      "sdfxn.eth",
+      "grovefinance.eth",
+      "voterootai.eth",
+      "arbitrumfoundation.eth",
+      "snapshot.dcl.eth"
+    ],
+    "included_detail": [
+      {
+        "spaceId": "balancer.eth",
+        "name": "Balancer",
+        "verified": true,
+        "proposalsCountAllTime": 1073,
+        "followers": 36605,
+        "activeProposals": 2,
+        "proposals90d": 8,
+        "proposals21d": 6,
+        "proposals42d": 8
+      },
+      {
+        "spaceId": "puffer-gauge.eth",
+        "name": "Puffer Gauge",
+        "verified": true,
+        "proposalsCountAllTime": 30,
+        "followers": 153,
+        "activeProposals": 1,
+        "proposals90d": 3,
+        "proposals21d": 1,
+        "proposals42d": 2
+      },
+      {
+        "spaceId": "sushigov.eth",
+        "name": "Sushi",
+        "verified": true,
+        "proposalsCountAllTime": 233,
+        "followers": 61234,
+        "activeProposals": 1,
+        "proposals90d": 2,
+        "proposals21d": 2,
+        "proposals42d": 2
+      },
+      {
+        "spaceId": "leagueoflils.eth",
+        "name": "League of Lils",
+        "verified": true,
+        "proposalsCountAllTime": 856,
+        "followers": 231,
+        "activeProposals": 1,
+        "proposals90d": 16,
+        "proposals21d": 5,
+        "proposals42d": 8
+      },
+      {
+        "spaceId": "aladdindao.eth",
+        "name": "AladdinDAO",
+        "verified": true,
+        "proposalsCountAllTime": 1648,
+        "followers": 814,
+        "activeProposals": 1,
+        "proposals90d": 75,
+        "proposals21d": 17,
+        "proposals42d": 36
+      },
+      {
+        "spaceId": "veclev.eth",
+        "name": "CLever",
+        "verified": true,
+        "proposalsCountAllTime": 1593,
+        "followers": 196,
+        "activeProposals": 1,
+        "proposals90d": 78,
+        "proposals21d": 19,
+        "proposals42d": 39
+      },
+      {
+        "spaceId": "pnounsdao.eth",
+        "name": "pNounsDAO",
+        "verified": true,
+        "proposalsCountAllTime": 695,
+        "followers": 190,
+        "activeProposals": 2,
+        "proposals90d": 16,
+        "proposals21d": 6,
+        "proposals42d": 9
+      },
+      {
+        "spaceId": "ethenagovernance.eth",
+        "name": "Ethena",
+        "verified": true,
+        "proposalsCountAllTime": 8,
+        "followers": 526,
+        "activeProposals": 1,
+        "proposals90d": 2,
+        "proposals21d": 1,
+        "proposals42d": 2
+      },
+      {
+        "spaceId": "sdcrv-gov.eth",
+        "name": "sdCRV-Governance",
+        "verified": true,
+        "proposalsCountAllTime": 1243,
+        "followers": 164,
+        "activeProposals": 1,
+        "proposals90d": 69,
+        "proposals21d": 19,
+        "proposals42d": 39
+      },
+      {
+        "spaceId": "dorg.eth",
+        "name": "dOrg",
+        "verified": true,
+        "proposalsCountAllTime": 315,
+        "followers": 282,
+        "activeProposals": 1,
+        "proposals90d": 9,
+        "proposals21d": 1,
+        "proposals42d": 2
+      },
+      {
+        "spaceId": "concentratordao.eth",
+        "name": "Concentrator",
+        "verified": true,
+        "proposalsCountAllTime": 1013,
+        "followers": 239,
+        "activeProposals": 1,
+        "proposals90d": 69,
+        "proposals21d": 19,
+        "proposals42d": 39
+      },
+      {
+        "spaceId": "sdcrv.eth",
+        "name": "Stake DAO CRV",
+        "verified": true,
+        "proposalsCountAllTime": 271,
+        "followers": 134,
+        "activeProposals": 1,
+        "proposals90d": 7,
+        "proposals21d": 2,
+        "proposals42d": 3
+      },
+      {
+        "spaceId": "parallel-protocol.eth",
+        "name": "Parallel",
+        "verified": true,
+        "proposalsCountAllTime": 249,
+        "followers": 145,
+        "activeProposals": 2,
+        "proposals90d": 3,
+        "proposals21d": 2,
+        "proposals42d": 2
+      },
+      {
+        "spaceId": "sdfxs.eth",
+        "name": "Stake DAO FXS",
+        "verified": true,
+        "proposalsCountAllTime": 522,
+        "followers": 56,
+        "activeProposals": 1,
+        "proposals90d": 13,
+        "proposals21d": 4,
+        "proposals42d": 5
+      },
+      {
+        "spaceId": "spectradao.eth",
+        "name": "Spectra DAO",
+        "verified": true,
+        "proposalsCountAllTime": 161,
+        "followers": 113,
+        "activeProposals": 1,
+        "proposals90d": 1,
+        "proposals21d": 0,
+        "proposals42d": 0
+      },
+      {
+        "spaceId": "arrowair.eth",
+        "name": "Arrow Air",
+        "verified": true,
+        "proposalsCountAllTime": 93,
+        "followers": 35,
+        "activeProposals": 1,
+        "proposals90d": 6,
+        "proposals21d": 1,
+        "proposals42d": 3
+      },
+      {
+        "spaceId": "vanilladao.eth",
+        "name": "Vanilla DAO",
+        "verified": true,
+        "proposalsCountAllTime": 10,
+        "followers": 189,
+        "activeProposals": 3,
+        "proposals90d": 7,
+        "proposals21d": 0,
+        "proposals42d": 0
+      },
+      {
+        "spaceId": "spacetokendao.eth",
+        "name": "Space Token",
+        "verified": true,
+        "proposalsCountAllTime": 24,
+        "followers": 103,
+        "activeProposals": 1,
+        "proposals90d": 2,
+        "proposals21d": 0,
+        "proposals42d": 1
+      },
+      {
+        "spaceId": "sparkfi.eth",
+        "name": "Spark",
+        "verified": true,
+        "proposalsCountAllTime": 88,
+        "followers": 132,
+        "activeProposals": 2,
+        "proposals90d": 22,
+        "proposals21d": 3,
+        "proposals42d": 8
+      },
+      {
+        "spaceId": "sdspectra.eth",
+        "name": "sdSPECTRA",
+        "verified": true,
+        "proposalsCountAllTime": 131,
+        "followers": 17,
+        "activeProposals": 1,
+        "proposals90d": 5,
+        "proposals21d": 0,
+        "proposals42d": 0
+      },
+      {
+        "spaceId": "sdfxn.eth",
+        "name": "sdFXN",
+        "verified": true,
+        "proposalsCountAllTime": 99,
+        "followers": 12,
+        "activeProposals": 1,
+        "proposals90d": 7,
+        "proposals21d": 2,
+        "proposals42d": 3
+      },
+      {
+        "spaceId": "grovefinance.eth",
+        "name": "Grove",
+        "verified": true,
+        "proposalsCountAllTime": 12,
+        "followers": 9,
+        "activeProposals": 2,
+        "proposals90d": 10,
+        "proposals21d": 6,
+        "proposals42d": 9
+      },
+      {
+        "spaceId": "voterootai.eth",
+        "name": "rootAI",
+        "verified": true,
+        "proposalsCountAllTime": 1,
+        "followers": 7,
+        "activeProposals": 1,
+        "proposals90d": 1,
+        "proposals21d": 1,
+        "proposals42d": 1
+      },
+      {
+        "spaceId": "arbitrumfoundation.eth",
+        "name": "Arbitrum DAO",
+        "verified": true,
+        "proposalsCountAllTime": 416,
+        "followers": 323616,
+        "activeProposals": 0,
+        "proposals90d": 8,
+        "proposals21d": 1,
+        "proposals42d": 1
+      },
+      {
+        "spaceId": "snapshot.dcl.eth",
+        "name": "Decentraland",
+        "verified": true,
+        "proposalsCountAllTime": 2842,
+        "followers": 34952,
+        "activeProposals": 0,
+        "proposals90d": 16,
+        "proposals21d": 4,
+        "proposals42d": 13
+      }
+    ],
+    "excluded_inactive_space_ids": [
+      "magicappstore.eth",
+      "equilibriafi.eth",
+      "gmgdao.eth"
+    ],
+    "excluded_by_doctrine_space_ids": [],
+    "identical_to_original_run": false
+  },
+  "A2_tally": {
+    "universeExhausted": true,
+    "pacing": {
+      "minIntervalMs": 1100,
+      "backoffMs": [
+        1000,
+        2000,
+        4000,
+        8000,
+        16000
+      ],
+      "maxRetries": 5,
+      "retryAfterCapMs": 60000,
+      "rateLimitEvents": 0
+    },
+    "timestampNormalization": "RFC3339 string -> epoch seconds via tsToSec() (fix 2026-09-01)",
+    "unparseable_timestamps": [],
+    "included_governors": [
+      {
+        "governorId": "eip155:56:0xfa5Cb0f1d3c94325d6ED3c5eD34cE4002c9E1AD8",
+        "name": "LimeWireNetworkGovernor",
+        "organization": "lmwrntwrk",
+        "chain": "eip155:56",
+        "proposalsTotal": 5810,
+        "proposals90d": 109,
+        "proposals21d": 22,
+        "proposals42d": 28
+      },
+      {
+        "governorId": "eip155:1:0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
+        "name": "Nouns Dao",
+        "organization": "nounsdao",
+        "chain": "eip155:1",
+        "proposalsTotal": 992,
+        "proposals90d": 13,
+        "proposals21d": 6,
+        "proposals42d": 9
+      },
+      {
+        "governorId": "eip155:1:0x5d2C31ce16924C2a71D317e5BbFd5ce387854039",
+        "name": "Lil Nouns",
+        "organization": "lil-nouns",
+        "chain": "eip155:1",
+        "proposalsTotal": 387,
+        "proposals90d": 9,
+        "proposals21d": 2,
+        "proposals42d": 4
+      },
+      {
+        "governorId": "eip155:1:0x309a862bbC1A00e45506cB8A802D1ff10004c8C0",
+        "name": "Compound Governor",
+        "organization": "compound",
+        "chain": "eip155:1",
+        "proposalsTotal": 210,
+        "proposals90d": 15,
+        "proposals21d": 9,
+        "proposals42d": 9
+      },
+      {
+        "governorId": "eip155:30:0x71ac6fF904A17F50f2C07B693376cCc1c92627F0",
+        "name": "GovernorRootstockCollective",
+        "organization": "rootstockcollective",
+        "chain": "eip155:30",
+        "proposalsTotal": 144,
+        "proposals90d": 10,
+        "proposals21d": 2,
+        "proposals42d": 6
+      },
+      {
+        "governorId": "eip155:1:0x0204Cd037B2ec03605CFdFe482D8e257C765fA1B",
+        "name": "InstaDapp",
+        "organization": "instadapp",
+        "chain": "eip155:1",
+        "proposalsTotal": 139,
+        "proposals90d": 8,
+        "proposals21d": 2,
+        "proposals42d": 3
+      },
+      {
+        "governorId": "eip155:10:0xe807f3282f3391d237BA8B9bECb0d8Ea3ba23777",
+        "name": "HAI",
+        "organization": "hai",
+        "chain": "eip155:10",
+        "proposalsTotal": 139,
+        "proposals90d": 9,
+        "proposals21d": 1,
+        "proposals42d": 4
+      },
+      {
+        "governorId": "eip155:8453:0x65bA0624403Fc5Ca2b20479e9F626eD4D78E0aD9",
+        "name": "UnlockProtocolGovernor",
+        "organization": "unlock-protocol",
+        "chain": "eip155:8453",
+        "proposalsTotal": 102,
+        "proposals90d": 11,
+        "proposals21d": 2,
+        "proposals42d": 3
+      },
+      {
+        "governorId": "eip155:8453:0x4cEeE1b6289624d381383C1Bb42B118d5f2c3274",
+        "name": "SummerGovernorV2",
+        "organization": "lazy-summer-dao-official-v2",
+        "chain": "eip155:8453",
+        "proposalsTotal": 101,
+        "proposals90d": 45,
+        "proposals21d": 0,
+        "proposals42d": 17
+      },
+      {
+        "governorId": "eip155:1:0x408ED6354d4973f66138C91495F2f2FCbd8724C3",
+        "name": "Uniswap",
+        "organization": "uniswap",
+        "chain": "eip155:1",
+        "proposalsTotal": 93,
+        "proposals90d": 3,
+        "proposals21d": 0,
+        "proposals42d": 0
+      }
+    ],
+    "included_governor_ids": [
+      "eip155:56:0xfa5Cb0f1d3c94325d6ED3c5eD34cE4002c9E1AD8",
+      "eip155:1:0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
+      "eip155:1:0x5d2C31ce16924C2a71D317e5BbFd5ce387854039",
+      "eip155:1:0x309a862bbC1A00e45506cB8A802D1ff10004c8C0",
+      "eip155:30:0x71ac6fF904A17F50f2C07B693376cCc1c92627F0",
+      "eip155:1:0x0204Cd037B2ec03605CFdFe482D8e257C765fA1B",
+      "eip155:10:0xe807f3282f3391d237BA8B9bECb0d8Ea3ba23777",
+      "eip155:8453:0x65bA0624403Fc5Ca2b20479e9F626eD4D78E0aD9",
+      "eip155:8453:0x4cEeE1b6289624d381383C1Bb42B118d5f2c3274",
+      "eip155:1:0x408ED6354d4973f66138C91495F2f2FCbd8724C3"
+    ],
+    "fetched_inactive_governors": [
+      {
+        "governorId": "eip155:11155111:0x865d09e9A99c383Bf64baFFb4C9C7d2f17a6A9B2",
+        "name": "Tally Test DAO (Sepolia) edited",
+        "organization": "tally-test-dao-sepolia",
+        "chain": "eip155:11155111",
+        "proposalsTotal": 2674,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:31:0xB1A39B8f57A55d1429324EEb1564122806eb297F",
+        "name": "RootstockCollective",
+        "organization": "rootstockcollectivedev",
+        "chain": "eip155:31",
+        "proposalsTotal": 887,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:80002:0xd457CE9AA80f3c6927D606A3f208a4745D1427b8",
+        "name": "PadmaGovernor",
+        "organization": "amoy-redeploy-governor",
+        "chain": "eip155:80002",
+        "proposalsTotal": 432,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0xEC568fffba86c094cf06b22134B23074DFE2252c",
+        "name": "Aave",
+        "organization": "aave",
+        "chain": "eip155:1",
+        "proposalsTotal": 401,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0xc0Da02939E1441F497fd74F78cE7Decb17B66529",
+        "name": "Compound",
+        "organization": "compound",
+        "chain": "eip155:1",
+        "proposalsTotal": 348,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:137:0xeeBf3F373997c68a820858Bf4494661b05cf1A07",
+        "name": "Test Dao",
+        "organization": "Test-Dao-12",
+        "chain": "eip155:137",
+        "proposalsTotal": 325,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:11155111:0x491f237E770aB05DA1E40658FAb531f8A5aCF7A8",
+        "name": "Wormhole Sepolia Governor",
+        "organization": "multigov-private",
+        "chain": "eip155:11155111",
+        "proposalsTotal": 181,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:137:0xD4C0fCDc0AC5B3320A538eaB3faBAAb23DC45AAa",
+        "name": "PadmaGovernor",
+        "organization": "padma",
+        "chain": "eip155:137",
+        "proposalsTotal": 171,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:10:0x52C7ccCd0554f8001fD68d579C00F362DE0d3e29",
+        "name": "Overnight Test",
+        "organization": "overnight-test",
+        "chain": "eip155:10",
+        "proposalsTotal": 159,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:42161:0x936139366c5db48543368EE9cD075267d176a02c",
+        "name": "London DAO",
+        "organization": "london-dao",
+        "chain": "eip155:42161",
+        "proposalsTotal": 156,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:137:0x26217Ec5044AEB8D6495BC68eE91951cd7Bb02a0",
+        "name": "Content Guild",
+        "organization": "content-guild-old",
+        "chain": "eip155:137",
+        "proposalsTotal": 108,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:97:0x0000000000000000000000000000000000002004",
+        "name": "BNB Chain Testnet",
+        "organization": "bnb-chain-testnet",
+        "chain": "eip155:97",
+        "proposalsTotal": 104,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0xDBd38F7e739709fe5bFaE6cc8eF67C3820830E0C",
+        "name": "Dope Wars",
+        "organization": "dopeworld",
+        "chain": "eip155:1",
+        "proposalsTotal": 102,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:42161:0xd57E7C8b0626fADC99C9ce2F24A5110bAbD01454",
+        "name": "Test_POOL_DAO",
+        "organization": "test_pool_dao",
+        "chain": "eip155:42161",
+        "proposalsTotal": 98,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:11155420:0x51A3585113330c2022EFFa70D73BE16D7bd8DB01",
+        "name": "DAO FInal Test",
+        "organization": "dao-final-test",
+        "chain": "eip155:11155420",
+        "proposalsTotal": 92,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:8453:0xBE5A4DD68c3526F32B454fE28C9909cA0601e9Fa",
+        "name": "SummerGovernor",
+        "organization": "lazy-summer-dao-official",
+        "chain": "eip155:8453",
+        "proposalsTotal": 92,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:97:0x5573422A1a59385C247ec3a66B93B7C08eC2f8f2",
+        "name": "Venus Protocol",
+        "organization": "venus-protocol-1",
+        "chain": "eip155:97",
+        "proposalsTotal": 84,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0xB3a87172F555ae2a2AB79Be60B336D2F7D0187f0",
+        "name": "PoolTogether (deprecated)",
+        "organization": "pooltogether",
+        "chain": "eip155:1",
+        "proposalsTotal": 79,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:300:0x98fF5B31bBa84f5Ad05a7635a436151F74aDa466",
+        "name": "ZkTokenGovernor",
+        "organization": "testnet-zksync",
+        "chain": "eip155:300",
+        "proposalsTotal": 74,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0xDbD27635A534A3d3169Ef0498beB56Fb9c937489",
+        "name": "Gitcoin (deprecated)",
+        "organization": "gitcoin",
+        "chain": "eip155:1",
+        "proposalsTotal": 66,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:300:0x5a6862ee581b6cDb517D24f0a69237f9D900C23C",
+        "name": "ZkProtocolGovernor",
+        "organization": "testnet-zksync",
+        "chain": "eip155:300",
+        "proposalsTotal": 65,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0x0BEF27FEB58e857046d630B2c03dFb7bae567494",
+        "name": "Fei",
+        "organization": "fei",
+        "chain": "eip155:1",
+        "proposalsTotal": 64,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:300:0xD596BC795a61B8abA327E1b1C7C24E17e11C3f31",
+        "name": "ZkGovOpsGovernor - Deprecated",
+        "organization": "testnet-zksync",
+        "chain": "eip155:300",
+        "proposalsTotal": 55,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0x9D4C63565D5618310271bF3F3c01b2954C1D1639",
+        "name": "Gitcoin",
+        "organization": "gitcoin",
+        "chain": "eip155:1",
+        "proposalsTotal": 48,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0x8a907De47E00830a2b742db65e938a3ea1070A2E",
+        "name": "PoolTogether",
+        "organization": "pooltogether",
+        "chain": "eip155:1",
+        "proposalsTotal": 42,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:1:0x29e2A3aF8eC2d537cBD484c6eC430AbE1C7fe2d8",
+        "name": "Strike Governor Alpha2",
+        "organization": "strike",
+        "chain": "eip155:1",
+        "proposalsTotal": 28,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:300:0x56f6379F945e95558069acb3E945ee3480025605",
+        "name": "ZkGovOpsGovernor",
+        "organization": "testnet-zksync",
+        "chain": "eip155:300",
+        "proposalsTotal": 16,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:300:0x9F9b6f090AF502c5ffe9d89df13e9DBf83df5Bf7",
+        "name": "ZkTokenGovernor - Deprecated",
+        "organization": "testnet-zksync",
+        "chain": "eip155:300",
+        "proposalsTotal": 16,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:300:0xF7bb38207443703265a5b02fff635bB333C73f06",
+        "name": "ZkProtocolGovernor - Deprecated",
+        "organization": "testnet-zksync",
+        "chain": "eip155:300",
+        "proposalsTotal": 4,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:300:0xbcDEE3017941f1cb44E9471876e26EFfF45f08F6",
+        "name": "ZkGovOpsGovernor - Deprecated",
+        "organization": "testnet-zksync",
+        "chain": "eip155:300",
+        "proposalsTotal": 2,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:10:0xB8368aFbFfB116a71f2060a68e93654Ad36ff869",
+        "name": "Spoke Governor on chain eip155:10",
+        "organization": "multigov-private",
+        "chain": "eip155:10",
+        "proposalsTotal": 0,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:11155420:0x073B3333f39eA46aEA1cA1367ba48F5A2C1F336C",
+        "name": "Spoke Governor on chain eip155:11155420",
+        "organization": "multigov-private",
+        "chain": "eip155:11155420",
+        "proposalsTotal": 0,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:42161:0xfd59EF4f3E779cB6C0f7256205cF258318dF4519",
+        "name": "Spoke Governor on chain eip155:42161",
+        "organization": "multigov-private",
+        "chain": "eip155:42161",
+        "proposalsTotal": 0,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:8453:0x53d1A3F2B71880F8383136F61509BA357b8c1423",
+        "name": "Spoke Governor on chain eip155:8453",
+        "organization": "multigov-private",
+        "chain": "eip155:8453",
+        "proposalsTotal": 0,
+        "proposals90d": 0
+      },
+      {
+        "governorId": "eip155:84532:0xA30DCfF626c33612ce26375944566De0d0baE583",
+        "name": "Spoke Governor on chain eip155:84532",
+        "organization": "multigov-private",
+        "chain": "eip155:84532",
+        "proposalsTotal": 0,
+        "proposals90d": 0
+      }
+    ],
+    "fetched_inactive_governor_ids": [
+      "eip155:11155111:0x865d09e9A99c383Bf64baFFb4C9C7d2f17a6A9B2",
+      "eip155:31:0xB1A39B8f57A55d1429324EEb1564122806eb297F",
+      "eip155:80002:0xd457CE9AA80f3c6927D606A3f208a4745D1427b8",
+      "eip155:1:0xEC568fffba86c094cf06b22134B23074DFE2252c",
+      "eip155:1:0xc0Da02939E1441F497fd74F78cE7Decb17B66529",
+      "eip155:137:0xeeBf3F373997c68a820858Bf4494661b05cf1A07",
+      "eip155:11155111:0x491f237E770aB05DA1E40658FAb531f8A5aCF7A8",
+      "eip155:137:0xD4C0fCDc0AC5B3320A538eaB3faBAAb23DC45AAa",
+      "eip155:10:0x52C7ccCd0554f8001fD68d579C00F362DE0d3e29",
+      "eip155:42161:0x936139366c5db48543368EE9cD075267d176a02c",
+      "eip155:137:0x26217Ec5044AEB8D6495BC68eE91951cd7Bb02a0",
+      "eip155:97:0x0000000000000000000000000000000000002004",
+      "eip155:1:0xDBd38F7e739709fe5bFaE6cc8eF67C3820830E0C",
+      "eip155:42161:0xd57E7C8b0626fADC99C9ce2F24A5110bAbD01454",
+      "eip155:11155420:0x51A3585113330c2022EFFa70D73BE16D7bd8DB01",
+      "eip155:8453:0xBE5A4DD68c3526F32B454fE28C9909cA0601e9Fa",
+      "eip155:97:0x5573422A1a59385C247ec3a66B93B7C08eC2f8f2",
+      "eip155:1:0xB3a87172F555ae2a2AB79Be60B336D2F7D0187f0",
+      "eip155:300:0x98fF5B31bBa84f5Ad05a7635a436151F74aDa466",
+      "eip155:1:0xDbD27635A534A3d3169Ef0498beB56Fb9c937489",
+      "eip155:300:0x5a6862ee581b6cDb517D24f0a69237f9D900C23C",
+      "eip155:1:0x0BEF27FEB58e857046d630B2c03dFb7bae567494",
+      "eip155:300:0xD596BC795a61B8abA327E1b1C7C24E17e11C3f31",
+      "eip155:1:0x9D4C63565D5618310271bF3F3c01b2954C1D1639",
+      "eip155:1:0x8a907De47E00830a2b742db65e938a3ea1070A2E",
+      "eip155:1:0x29e2A3aF8eC2d537cBD484c6eC430AbE1C7fe2d8",
+      "eip155:300:0x56f6379F945e95558069acb3E945ee3480025605",
+      "eip155:300:0x9F9b6f090AF502c5ffe9d89df13e9DBf83df5Bf7",
+      "eip155:300:0xF7bb38207443703265a5b02fff635bB333C73f06",
+      "eip155:300:0xbcDEE3017941f1cb44E9471876e26EFfF45f08F6",
+      "eip155:10:0xB8368aFbFfB116a71f2060a68e93654Ad36ff869",
+      "eip155:11155420:0x073B3333f39eA46aEA1cA1367ba48F5A2C1F336C",
+      "eip155:42161:0xfd59EF4f3E779cB6C0f7256205cF258318dF4519",
+      "eip155:8453:0x53d1A3F2B71880F8383136F61509BA357b8c1423",
+      "eip155:84532:0xA30DCfF626c33612ce26375944566De0d0baE583"
+    ],
+    "excluded_governors": [
+      {
+        "governorId": "eip155:80084:0xE3EDa03401Cf32010a9A9967DaBAEe47ed0E1a0b",
+        "organization": "bera-dao",
+        "namespace": "eip155",
+        "reason": "SOURCE_REJECTED_CHAIN: Tally answered \"chain id not supported\" for this governor id"
+      },
+      {
+        "governorId": "eip155:4:0xE108cdBc1eE0F775D93C12C071a1F97d94Ad7811",
+        "organization": "veggiedao-698",
+        "namespace": "eip155",
+        "reason": "SOURCE_REJECTED_CHAIN: Tally answered \"chain id not supported\" for this governor id"
+      },
+      {
+        "governorId": "eip155:42220:0x8f8BB984e652Cb8D0aa7C9D6712Ec2020EB1BAb4",
+        "organization": "impactmarket",
+        "namespace": "eip155",
+        "reason": "SOURCE_REJECTED_CHAIN: Tally answered \"chain id not supported\" for this governor id"
+      },
+      {
+        "governorId": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1:AFuHPdrQGsW8rNQ4oEFF35sm5fg36gwrxyqjkjKvi6ap",
+        "organization": "multigov-private",
+        "namespace": "solana",
+        "reason": "NON_EVM_CHAIN_NOT_REPRESENTABLE: governor id namespace \"solana\" is outside the ratified eip155 addendum schema"
+      },
+      {
+        "governorId": "eip155:5:0xAd562C8F80386F46396FB709420FC3201d69dE85",
+        "organization": "dave-dao-2",
+        "namespace": "eip155",
+        "reason": "SOURCE_REJECTED_CHAIN: Tally answered \"chain id not supported\" for this governor id"
+      },
+      {
+        "governorId": "eip155:421613:0x17BccCC8E7c0DC62453a508988b61850744612F3",
+        "organization": "abyss-gov",
+        "namespace": "eip155",
+        "reason": "SOURCE_REJECTED_CHAIN: Tally answered \"chain id not supported\" for this governor id"
+      },
+      {
+        "governorId": "eip155:4:0xf17C8b2e1d0fDC3781F930301448FD4732511875",
+        "organization": "fei",
+        "namespace": "eip155",
+        "reason": "SOURCE_REJECTED_CHAIN: Tally answered \"chain id not supported\" for this governor id"
+      },
+      {
+        "governorId": "eip155:4:0x0a773fB7d23592E2BAF5dA72eA69CEa24e087BE2",
+        "organization": "fei",
+        "namespace": "eip155",
+        "reason": "SOURCE_REJECTED_CHAIN: Tally answered \"chain id not supported\" for this governor id"
+      },
+      {
+        "governorId": "eip155:4:0x6394f912446AfAcD9EDA199c00Fe66E1fD59aFA2",
+        "organization": "fei",
+        "namespace": "eip155",
+        "reason": "SOURCE_REJECTED_CHAIN: Tally answered \"chain id not supported\" for this governor id"
+      }
+    ],
+    "excluded_governor_ids": [
+      "eip155:80084:0xE3EDa03401Cf32010a9A9967DaBAEe47ed0E1a0b",
+      "eip155:4:0xE108cdBc1eE0F775D93C12C071a1F97d94Ad7811",
+      "eip155:42220:0x8f8BB984e652Cb8D0aa7C9D6712Ec2020EB1BAb4",
+      "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1:AFuHPdrQGsW8rNQ4oEFF35sm5fg36gwrxyqjkjKvi6ap",
+      "eip155:5:0xAd562C8F80386F46396FB709420FC3201d69dE85",
+      "eip155:421613:0x17BccCC8E7c0DC62453a508988b61850744612F3",
+      "eip155:4:0xf17C8b2e1d0fDC3781F930301448FD4732511875",
+      "eip155:4:0x0a773fB7d23592E2BAF5dA72eA69CEa24e087BE2",
+      "eip155:4:0x6394f912446AfAcD9EDA199c00Fe66E1fD59aFA2"
+    ],
+    "activity_evaluation_defect": {
+      "defect_id": "A2-ACTIVITY-EVAL-TYPE-MISMATCH",
+      "status": "RESOLVED_BY_BOUNDED_RECONSTRUCTION",
+      "original_run": "2026-08-31T23:16:03Z — A2 proposal timestamps (RFC3339 strings) compared to numeric seconds without coercion; every A2 proposal silently dropped; inactive governors silently skipped; A2 included [] ; pool 122/235; eligible 7/0/0",
+      "fix": "tools/diagnose-a1a2-scope.js: tsToSec() normalization at every A2 comparison; A2.fetchedInactive printed; unparseable timestamps surfaced; diagnose(pool, lookbackDays) for the 42d disposition label — committed publicly as 9c42f81d0d6bb877f139b15fe38a5ba77a433618 'Fix A2 diagnostic timestamp parsing'; tool sha256 a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94; tests 20/20 incl. reproduction of the pre-fix failure",
+      "reconstruction_run": "cutoff 2026-08-31T00:00:00.000Z; rule N=25; activity window 90d; run at 2026-09-01T02:52:25.182Z",
+      "why_a_reconstruction_not_a_new_observation": "the acquisition bound is the Epoch 1 cutoff in code (nowSec = floor(cutoffMs/1000)); proposal creation timestamps are immutable source/on-chain facts; the corrected run therefore re-measures the same Epoch 1 population with the same frozen rules",
+      "original_result_preserved": {
+        "eligible": {
+          "short": 7,
+          "medium": 0,
+          "long": 0
+        },
+        "eligible_42d": {
+          "short": 7,
+          "medium": 0,
+          "long": 0
+        },
+        "pool_21d": 122,
+        "pool_42d": 235,
+        "reason": "A2 activity filtering was type-defective; all pooled items were A1"
+      },
+      "corrected_result": {
+        "eligible": {
+          "short": 14,
+          "medium": 0,
+          "long": 0
+        },
+        "eligible_42d": {
+          "short": 14,
+          "medium": 0,
+          "long": 0
+        },
+        "pool_21d": 168,
+        "pool_42d": 318,
+        "A2_included": 10,
+        "A2_fetchedInactive": 35,
+        "A2_unparseable": 0
+      }
+    }
+  },
+  "diagnostic_21d": {
+    "raw": 168,
+    "afterExactDedup": 168,
+    "exactMerges": 0,
+    "possibleDuplicateFlags": 0,
+    "withSourceNativeResolutionDate": 168,
+    "eligibleBuckets": {
+      "short": 14,
+      "medium": 0,
+      "long": 0
+    },
+    "rejectedByReason": {
+      "horizon 2d out of range [3, 90]": 11,
+      "horizon -5d out of range [3, 90]": 7,
+      "horizon -12d out of range [3, 90]": 10,
+      "horizon -2d out of range [3, 90]": 6,
+      "horizon -4d out of range [3, 90]": 2,
+      "horizon -7d out of range [3, 90]": 3,
+      "horizon -11d out of range [3, 90]": 4,
+      "horizon -6d out of range [3, 90]": 9,
+      "horizon -9d out of range [3, 90]": 11,
+      "horizon -10d out of range [3, 90]": 8,
+      "horizon -18d out of range [3, 90]": 25,
+      "horizon -3d out of range [3, 90]": 9,
+      "horizon -1d out of range [3, 90]": 6,
+      "horizon -17d out of range [3, 90]": 22,
+      "horizon -15d out of range [3, 90]": 3,
+      "horizon 1d out of range [3, 90]": 4,
+      "horizon 0d out of range [3, 90]": 7,
+      "horizon -8d out of range [3, 90]": 2,
+      "horizon -13d out of range [3, 90]": 1,
+      "horizon -14d out of range [3, 90]": 3,
+      "horizon -16d out of range [3, 90]": 1
+    },
+    "shortage": {
+      "short": "NONE",
+      "medium": "EXTEND_LOOKBACK",
+      "long": "EXTEND_LOOKBACK"
+    }
+  },
+  "diagnostic_42d": {
+    "raw": 318,
+    "afterExactDedup": 318,
+    "exactMerges": 0,
+    "possibleDuplicateFlags": 0,
+    "withSourceNativeResolutionDate": 318,
+    "eligibleBuckets": {
+      "short": 14,
+      "medium": 0,
+      "long": 0
+    },
+    "rejectedByReason": {
+      "horizon 2d out of range [3, 90]": 11,
+      "horizon -5d out of range [3, 90]": 7,
+      "horizon -12d out of range [3, 90]": 10,
+      "horizon -26d out of range [3, 90]": 6,
+      "horizon -23d out of range [3, 90]": 3,
+      "horizon -2d out of range [3, 90]": 6,
+      "horizon -4d out of range [3, 90]": 2,
+      "horizon -7d out of range [3, 90]": 3,
+      "horizon -11d out of range [3, 90]": 4,
+      "horizon -20d out of range [3, 90]": 4,
+      "horizon -25d out of range [3, 90]": 4,
+      "horizon -32d out of range [3, 90]": 7,
+      "horizon -6d out of range [3, 90]": 9,
+      "horizon -9d out of range [3, 90]": 11,
+      "horizon -10d out of range [3, 90]": 9,
+      "horizon -18d out of range [3, 90]": 25,
+      "horizon -29d out of range [3, 90]": 14,
+      "horizon -30d out of range [3, 90]": 16,
+      "horizon -31d out of range [3, 90]": 15,
+      "horizon -33d out of range [3, 90]": 7,
+      "horizon -34d out of range [3, 90]": 5,
+      "horizon -35d out of range [3, 90]": 9,
+      "horizon -37d out of range [3, 90]": 6,
+      "horizon -38d out of range [3, 90]": 12,
+      "horizon -3d out of range [3, 90]": 9,
+      "horizon -21d out of range [3, 90]": 5,
+      "horizon -1d out of range [3, 90]": 6,
+      "horizon -17d out of range [3, 90]": 23,
+      "horizon -22d out of range [3, 90]": 10,
+      "horizon -24d out of range [3, 90]": 10,
+      "horizon -15d out of range [3, 90]": 3,
+      "horizon 1d out of range [3, 90]": 5,
+      "horizon -19d out of range [3, 90]": 6,
+      "horizon -8d out of range [3, 90]": 3,
+      "horizon -28d out of range [3, 90]": 6,
+      "horizon 0d out of range [3, 90]": 7,
+      "horizon -13d out of range [3, 90]": 1,
+      "horizon -14d out of range [3, 90]": 3,
+      "horizon -16d out of range [3, 90]": 1,
+      "horizon -36d out of range [3, 90]": 1
+    },
+    "shortage": {
+      "short": "NONE",
+      "medium": "WAIT_AND_RERUN",
+      "long": "WAIT_AND_RERUN"
+    }
+  },
+  "original_run_diagnostics_historical": {
+    "diagnostic_21d": {
+      "raw": 122,
+      "afterExactDedup": 122,
+      "exactMerges": 0,
+      "possibleDuplicateFlags": 0,
+      "withSourceNativeResolutionDate": 122,
+      "eligibleBuckets": {
+        "short": 7,
+        "medium": 0,
+        "long": 0
+      },
+      "rejectedByReason": {
+        "horizon 2d out of range [3, 90]": 8,
+        "horizon -5d out of range [3, 90]": 5,
+        "horizon -12d out of range [3, 90]": 8,
+        "horizon -2d out of range [3, 90]": 5,
+        "horizon -4d out of range [3, 90]": 1,
+        "horizon -7d out of range [3, 90]": 2,
+        "horizon -11d out of range [3, 90]": 3,
+        "horizon -6d out of range [3, 90]": 4,
+        "horizon -9d out of range [3, 90]": 11,
+        "horizon -10d out of range [3, 90]": 7,
+        "horizon -18d out of range [3, 90]": 25,
+        "horizon -3d out of range [3, 90]": 6,
+        "horizon -1d out of range [3, 90]": 4,
+        "horizon -17d out of range [3, 90]": 22,
+        "horizon -15d out of range [3, 90]": 2,
+        "horizon 1d out of range [3, 90]": 2
+      },
+      "shortage": {
+        "short": "NONE",
+        "medium": "EXTEND_LOOKBACK",
+        "long": "EXTEND_LOOKBACK"
+      }
+    },
+    "diagnostic_42d": {
+      "raw": 235,
+      "afterExactDedup": 235,
+      "exactMerges": 0,
+      "possibleDuplicateFlags": 0,
+      "withSourceNativeResolutionDate": 235,
+      "eligibleBuckets": {
+        "short": 7,
+        "medium": 0,
+        "long": 0
+      },
+      "rejectedByReason": {
+        "horizon 2d out of range [3, 90]": 8,
+        "horizon -5d out of range [3, 90]": 5,
+        "horizon -12d out of range [3, 90]": 8,
+        "horizon -26d out of range [3, 90]": 6,
+        "horizon -23d out of range [3, 90]": 1,
+        "horizon -2d out of range [3, 90]": 5,
+        "horizon -4d out of range [3, 90]": 1,
+        "horizon -7d out of range [3, 90]": 2,
+        "horizon -11d out of range [3, 90]": 3,
+        "horizon -20d out of range [3, 90]": 2,
+        "horizon -25d out of range [3, 90]": 1,
+        "horizon -32d out of range [3, 90]": 5,
+        "horizon -6d out of range [3, 90]": 4,
+        "horizon -9d out of range [3, 90]": 11,
+        "horizon -10d out of range [3, 90]": 8,
+        "horizon -18d out of range [3, 90]": 25,
+        "horizon -29d out of range [3, 90]": 14,
+        "horizon -30d out of range [3, 90]": 16,
+        "horizon -31d out of range [3, 90]": 14,
+        "horizon -33d out of range [3, 90]": 6,
+        "horizon -34d out of range [3, 90]": 4,
+        "horizon -35d out of range [3, 90]": 4,
+        "horizon -37d out of range [3, 90]": 6,
+        "horizon -38d out of range [3, 90]": 12,
+        "horizon -3d out of range [3, 90]": 6,
+        "horizon -21d out of range [3, 90]": 2,
+        "horizon -1d out of range [3, 90]": 4,
+        "horizon -17d out of range [3, 90]": 22,
+        "horizon -22d out of range [3, 90]": 2,
+        "horizon -24d out of range [3, 90]": 8,
+        "horizon -15d out of range [3, 90]": 2,
+        "horizon 1d out of range [3, 90]": 3,
+        "horizon -19d out of range [3, 90]": 2,
+        "horizon -8d out of range [3, 90]": 1,
+        "horizon -28d out of range [3, 90]": 5
+      },
+      "shortage": {
+        "short": "NONE",
+        "medium": "EXTEND_LOOKBACK",
+        "long": "EXTEND_LOOKBACK"
+      }
+    },
+    "disposition_label_defect_in_original": "original diagnostic42.shortage read EXTEND_LOOKBACK due to a hardcoded lookback of 21; the reconstruction reports the frozen-rule WAIT_AND_RERUN"
+  },
+  "fifteenAchievableUnderFrozenLaw": false,
+  "draft_scope_addendum_in_raw": {
+    "status": "NOT RATIFIED — draft output only",
+    "A1_spaces": [
+      "balancer.eth",
+      "puffer-gauge.eth",
+      "sushigov.eth",
+      "leagueoflils.eth",
+      "aladdindao.eth",
+      "veclev.eth",
+      "pnounsdao.eth",
+      "ethenagovernance.eth",
+      "sdcrv-gov.eth",
+      "dorg.eth",
+      "concentratordao.eth",
+      "sdcrv.eth",
+      "parallel-protocol.eth",
+      "sdfxs.eth",
+      "spectradao.eth",
+      "arrowair.eth",
+      "vanilladao.eth",
+      "spacetokendao.eth",
+      "sparkfi.eth",
+      "sdspectra.eth",
+      "sdfxn.eth",
+      "grovefinance.eth",
+      "voterootai.eth",
+      "arbitrumfoundation.eth",
+      "snapshot.dcl.eth"
+    ],
+    "A2_governorIds": [
+      "eip155:56:0xfa5Cb0f1d3c94325d6ED3c5eD34cE4002c9E1AD8",
+      "eip155:1:0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
+      "eip155:1:0x5d2C31ce16924C2a71D317e5BbFd5ce387854039",
+      "eip155:1:0x309a862bbC1A00e45506cB8A802D1ff10004c8C0",
+      "eip155:30:0x71ac6fF904A17F50f2C07B693376cCc1c92627F0",
+      "eip155:1:0x0204Cd037B2ec03605CFdFe482D8e257C765fA1B",
+      "eip155:10:0xe807f3282f3391d237BA8B9bECb0d8Ea3ba23777",
+      "eip155:8453:0x65bA0624403Fc5Ca2b20479e9F626eD4D78E0aD9",
+      "eip155:8453:0x4cEeE1b6289624d381383C1Bb42B118d5f2c3274",
+      "eip155:1:0x408ED6354d4973f66138C91495F2f2FCbd8724C3"
+    ]
+  },
+  "anti_carry_over_rule": {
+    "ineligible_if_either": [
+      "(1) item identity is explicitly present in this artifact where identity exists (space ids; included, inactive and excluded governor ids)",
+      "(2) source-native opening/publication timestamp <= 2026-08-31T00:00:00.000Z"
+    ],
+    "prong_2_exhaustive": "Prong 2 is the exhaustive protection for proposal items whose stable ids were not printed: by the acquisition bound, every observed proposal has opening timestamp <= the Epoch 1 cutoff."
+  },
+  "owner_decisions_applied": [
+    "Accept scope-set + exhaustive timestamp prong for Epoch 1",
+    "A2 defect resolved by bounded reconstruction (tool pass (b)); original diagnostic preserved as history"
+  ],
+  "run_provenance": {
+    "original_diagnostic": {
+      "public_head": "ab414bf8b8704b4257fceaf13780be966d154755",
+      "run_at": "2026-08-31T23:16:03.033Z"
+    },
+    "corrected_reconstruction": {
+      "public_head": "9c42f81d0d6bb877f139b15fe38a5ba77a433618",
+      "commit_subject": "Fix A2 diagnostic timestamp parsing",
+      "tool_sha256": "a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94",
+      "run_at": "2026-09-01T02:52:25.182Z"
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "artifact_class": "ACQUISITION_DIAGNOSTIC_EVIDENCE",
+  "not_a_capital_instrument": true,
+  "evidence_id": "a1a2-scope-diagnostic-2026-08-31",
+  "evidence_type": "LIVE_A1A2_SCOPE_DISCOVERY_DIAGNOSTIC",
+  "classification": "READINESS_PROBE_ONLY / NOT_CANDIDATE_INTAKE",
+  "epoch": 1,
+  "raw_evidence": {
+    "authoritative_reconstruction": {
+      "path": "governance/evidence/a1a2-epoch1-reconstruction-2026-09-01.txt",
+      "sha256": "541f45161c8f779f7e3c4c486050fff881252adc2b41c498b6dfa9554aa5e908",
+      "byte_length": 58986,
+      "role": "CORRECTED BOUNDED RECONSTRUCTION — AUTHORITATIVE for the Epoch 1 empirical result; acquisition bounded created <= 2026-08-31T00:00:00.000Z on immutable on-chain/source creation timestamps; produced by tools/diagnose-a1a2-scope.js at public commit 9c42f81d0d6bb877f139b15fe38a5ba77a433618 ('Fix A2 diagnostic timestamp parsing'), tool sha256 a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94",
+      "encoding_as_preserved": "UTF-16LE with BOM, CRLF; not normalized/repaired/reserialized; nothing prepended",
+      "byte_ingest_confirmed": true,
+      "public_head": "9c42f81d0d6bb877f139b15fe38a5ba77a433618",
+      "tool_sha256": "a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94"
+    },
+    "original_historical": {
+      "path": "governance/evidence/a1a2-scope-diagnostic-2026-08-31.txt",
+      "sha256": "73e73bacd785ffb575fbe1a96c4541e9e8c9bdb4669798e7a046fbefc76b8694",
+      "byte_length": 31012,
+      "role": "ORIGINAL Epoch 1 diagnostic — HISTORICAL EVIDENCE; preserved byte-exact; its A2 figures are known-defective (see defect)",
+      "encoding_as_preserved": "UTF-16LE with BOM, CRLF; header mojibake preserved; not normalized/repaired/reserialized; nothing prepended",
+      "byte_ingest_confirmed": true,
+      "public_head": "ab414bf8b8704b4257fceaf13780be966d154755"
+    },
+    "ingest_verification": "sha256 and byte length recomputed over both ingested files in the packaging environment and found equal to the owner attestations"
+  },
+  "authority_statement": "THE RAW BYTES ARE AUTHORITATIVE: the reconstruction file for the Epoch 1 empirical result; the original file for what was originally observed. Every summary field in this record is non-authoritative and yields to the raw bytes on any conflict.",
+  "source_tool": {
+    "path": "tools/diagnose-a1a2-scope.js",
+    "original_diagnostic_public_head": "ab414bf8b8704b4257fceaf13780be966d154755",
+    "corrected_reconstruction_public_head": "9c42f81d0d6bb877f139b15fe38a5ba77a433618",
+    "corrected_reconstruction_commit": "Fix A2 diagnostic timestamp parsing",
+    "corrected_reconstruction_tool_sha256": "a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94",
+    "acquisition_time_bound": "created <= 2026-08-31T00:00:00.000Z (bound to the cutoff in code at both commits)",
+    "per_item_identities_in_raw": false
+  },
+  "methodology": {
+    "candidate_selection_method": {
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_2.md",
+      "sha256": "751953212fa1f17d0041fc6f3d36c570dae66d25c62d4ac16ed4f9849aaf5927"
+    },
+    "public_experiment_spec": {
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_2.md",
+      "sha256": "ef9dab7654e48ec18867706168ea640e46910814923193674fb847160ca89ec6"
+    }
+  },
+  "frozen_cutoff": "2026-08-31T00:00:00.000Z",
+  "summary_findings_NON_AUTHORITATIVE": {
+    "corrected_reconstruction": {
+      "lookback_21d": {
+        "raw": 168,
+        "afterExactDedup": 168,
+        "withSourceNativeResolutionDate": 168,
+        "eligibleBuckets": {
+          "short": 14,
+          "medium": 0,
+          "long": 0
+        }
+      },
+      "lookback_42d_frozen_extension": {
+        "raw": 318,
+        "afterExactDedup": 318,
+        "withSourceNativeResolutionDate": 318,
+        "eligibleBuckets": {
+          "short": 14,
+          "medium": 0,
+          "long": 0
+        },
+        "disposition": {
+          "short": "NONE",
+          "medium": "WAIT_AND_RERUN",
+          "long": "WAIT_AND_RERUN"
+        }
+      },
+      "A2": {
+        "included": 10,
+        "fetchedInactive": 35,
+        "excluded": 9,
+        "universeExhausted": true,
+        "rateLimitEvents": 0,
+        "unparseableTimestamps": 0
+      },
+      "A1": {
+        "included": 25,
+        "excludedInactive": 3,
+        "excludedByDoctrine": 0,
+        "universeExhausted": false
+      }
+    },
+    "original_run_historical": {
+      "eligible_21d": {
+        "short": 7,
+        "medium": 0,
+        "long": 0
+      },
+      "eligible_42d": {
+        "short": 7,
+        "medium": 0,
+        "long": 0
+      },
+      "pool": {
+        "21d": 122,
+        "42d": 235
+      },
+      "reason_for_difference": "A2 activity filtering was type-defective (RFC3339 string vs numeric seconds); all original pooled items were A1"
+    },
+    "fifteenAchievableUnderFrozenLaw": false,
+    "nothing_written_by_tool": [
+      "candidate-slate.json",
+      "addenda",
+      "experiment-freeze.json",
+      "completion marker",
+      "governance gates"
+    ]
+  },
+  "A2_defect": {
+    "defect_id": "A2-ACTIVITY-EVAL-TYPE-MISMATCH",
+    "status": "RESOLVED_BY_BOUNDED_RECONSTRUCTION"
+  },
+  "observed_scope_set": {
+    "path": "governance/evidence/stage0-epoch1-observed-scope-set-001.json",
+    "sha256": "51320e7a4742f1c0c404e54ed761e56bcb29d2d7fd6a62d7e1bfa46ab7a4cf41"
+  }
+}

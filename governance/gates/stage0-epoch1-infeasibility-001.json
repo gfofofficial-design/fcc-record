@@ -1,0 +1,148 @@
+{
+  "artifact_class": "GOVERNANCE_EPOCH_TERMINAL_RECORD",
+  "not_a_capital_instrument": true,
+  "record_id": "stage0-epoch1-infeasibility-001",
+  "epoch": 1,
+  "classification": "STRUCTURAL_METHODOLOGY_INFEASIBILITY",
+  "disposition": "EPOCH CLOSED / NO INTAKE EXECUTED",
+  "not_an_investment_experiment_failure": "Epoch 1 never reached instrument execution. This records an experiment-DESIGN infeasibility, not a failed investment experiment and not an acquisition failure.",
+  "controlling_law_epoch_1": {
+    "candidate_selection_method": {
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_2.md",
+      "sha256": "751953212fa1f17d0041fc6f3d36c570dae66d25c62d4ac16ed4f9849aaf5927",
+      "disposition": "remains the historical authority for Epoch 1"
+    },
+    "public_experiment_spec": {
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_2.md",
+      "sha256": "ef9dab7654e48ec18867706168ea640e46910814923193674fb847160ca89ec6",
+      "disposition": "remains the historical authority for Epoch 1"
+    },
+    "experiment_freeze_v1": {
+      "path": "governance/experiments/stage0-public-experiment-v1/experiment-freeze.json",
+      "sha256": "dbbe2ea740b8d4f1dcf40f8b223bf4d5562fccd40cb4a688dbca98cd89bf1889",
+      "freeze_status": "BLOCKED",
+      "disposition": "unmodified"
+    }
+  },
+  "original_cutoff": "2026-08-31T00:00:00.000Z",
+  "original_slate": {
+    "path": "governance/experiments/stage0-public-experiment-v1/candidate-slate.json",
+    "sha256": "ad63329bed879484750ad5bfa0a91e7a9fc27f9482baf0c4d4f6f1e1cacc1109",
+    "state": "placeholders only; never populated; unmodified"
+  },
+  "intake_authorization": {
+    "record": "governance/gates/intake-execution-001.json",
+    "sha256": "8fa1006f04154516b1595e5619edde6137f96b3237a59a6bc3321cc09809d00c",
+    "state": "PRESERVED UNSPENT — not amended, not marked completed; no completion marker exists; unusable for any future superseded methodology by its own pin preconditions (methodology/spec/freeze hashes); cannot authorize any later epoch"
+  },
+  "no_candidate_selection": true,
+  "no_outcome_observation": true,
+  "no_completion_marker": true,
+  "evidence": {
+    "original_diagnostic": {
+      "path": "governance/evidence/a1a2-scope-diagnostic-2026-08-31.txt",
+      "sha256": "73e73bacd785ffb575fbe1a96c4541e9e8c9bdb4669798e7a046fbefc76b8694",
+      "byte_length": 31012,
+      "role": "ORIGINAL Epoch 1 diagnostic — HISTORICAL EVIDENCE; preserved byte-exact; its A2 figures are known-defective (see defect)",
+      "public_head": "ab414bf8b8704b4257fceaf13780be966d154755"
+    },
+    "corrected_bounded_reconstruction": {
+      "path": "governance/evidence/a1a2-epoch1-reconstruction-2026-09-01.txt",
+      "sha256": "541f45161c8f779f7e3c4c486050fff881252adc2b41c498b6dfa9554aa5e908",
+      "byte_length": 58986,
+      "role": "CORRECTED BOUNDED RECONSTRUCTION — AUTHORITATIVE for the Epoch 1 empirical result; acquisition bounded created <= 2026-08-31T00:00:00.000Z on immutable on-chain/source creation timestamps; produced by tools/diagnose-a1a2-scope.js at public commit 9c42f81d0d6bb877f139b15fe38a5ba77a433618 ('Fix A2 diagnostic timestamp parsing'), tool sha256 a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94",
+      "public_head": "9c42f81d0d6bb877f139b15fe38a5ba77a433618",
+      "tool_sha256": "a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94"
+    },
+    "metadata": {
+      "path": "governance/evidence/a1a2-scope-diagnostic-2026-08-31.json",
+      "sha256": "20308a3dee696f3d9fdf46bb95036e579863187a4b862f3bca786f9591ee9a82"
+    },
+    "observed_scope_set": {
+      "path": "governance/evidence/stage0-epoch1-observed-scope-set-001.json",
+      "sha256": "51320e7a4742f1c0c404e54ed761e56bcb29d2d7fd6a62d7e1bfa46ab7a4cf41"
+    },
+    "rule": "all four hashes are pinned separately; none substitutes for another; the original diagnostic is never replaced or rewritten"
+  },
+  "empirical_result": {
+    "corrected_A1_A2_reconstruction": {
+      "lookback_21d": {
+        "raw": 168,
+        "afterExactDedup": 168,
+        "withSourceNativeResolutionDate": 168,
+        "eligible": {
+          "short": 14,
+          "medium": 0,
+          "long": 0
+        }
+      },
+      "lookback_42d_frozen_extension": {
+        "raw": 318,
+        "afterExactDedup": 318,
+        "withSourceNativeResolutionDate": 318,
+        "eligible": {
+          "short": 14,
+          "medium": 0,
+          "long": 0
+        },
+        "frozen_rule_disposition": {
+          "short": "NONE",
+          "medium": "WAIT_AND_RERUN",
+          "long": "WAIT_AND_RERUN"
+        }
+      },
+      "A2_measured": {
+        "included_governors": 10,
+        "fetched_inactive_governors": 35,
+        "chain_excluded_governors": 9,
+        "universeExhausted": true,
+        "rateLimitEvents": 0
+      }
+    },
+    "original_diagnostic_historical": {
+      "eligible_21d": {
+        "short": 7,
+        "medium": 0,
+        "long": 0
+      },
+      "eligible_42d": {
+        "short": 7,
+        "medium": 0,
+        "long": 0
+      },
+      "disclosure": "reported 7/0/0 because A2 activity filtering was type-defective; A2 contributed zero; preserved unmodified as history"
+    },
+    "fifteenAchievableUnderFrozenLaw": false
+  },
+  "acquisition_defects_adjudicated_and_resolved": [
+    "Snapshot ranking query limit (first<=20)",
+    "Tally/Cactus GraphQL schema drift (organization-scoped GovernorsInput; PageInput limit 20; Proposal.block.timestamp; end union)",
+    "Unsupported/non-EVM Tally chain ids excluded transparently with the source's verbatim rejection",
+    "Tally rate limiting (paced, Retry-After, bounded backoff, resumable; rateLimitEvents 0; governor enumeration universeExhausted true)",
+    "A2 activity-evaluation type mismatch (RFC3339 string vs numeric seconds) — RESOLVED_BY_BOUNDED_RECONSTRUCTION: fix committed publicly as 9c42f81d0d6bb877f139b15fe38a5ba77a433618 ('Fix A2 diagnostic timestamp parsing'), tool sha256 a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94; reconstruction bounded at created <= 2026-08-31T00:00:00.000Z; 10 A2 governors included, 35 fetched-inactive printed, 0 unparseable"
+  ],
+  "structural_findings": [
+    "Forward-horizon shortage, not source scarcity: widening lookback from 21d to 42d (corrected A1+A2) added 150 dated items — all rejected for negative or sub-lag horizons; eligible buckets unchanged at 14/0/0 (data-backed).",
+    "Horizon = voting period minus opening age; a wider opening window increases opening age and therefore decreases horizon — EXTEND_LOOKBACK cannot create MEDIUM/LONG eligibility for governance-vote observables.",
+    "WAIT_AND_RERUN at the unchanged frozen cutoff re-collects short-period governance votes while near-end items expire; it cannot repair a forward-horizon design mismatch.",
+    "Only governance votes (A1/A2) carry source-native FUTURE dates under v0.2; with A2 now measured (10 active governors, 46 additional 21d items), MEDIUM and LONG remain empty; all other registered classes expose historical timestamps and are ineligible under Step 3 item 2.",
+    "Therefore exact 5/5/5 is structurally unsatisfiable by any lawful v0.2 run over the registered source classes — a methodology-design miss."
+  ],
+  "no_outcome_knowledge_used": "Closure uses structural facts and aggregate counts only; no candidate identity informs it.",
+  "recorded_at": "2026-09-01T10:01:52Z",
+  "acquisition_defects_UNRESOLVED_at_run": [],
+  "classification_basis": "Corrected A1+A2 reconstruction confirms 14/0/0 at both 21d and 42d; the exact frozen 5/5/5 requirement remains unsatisfiable. MEDIUM and LONG are empty across both classes that carry source-native future dates; every positive-horizon rejection lies at 0-2 days (below MIN_FILING_LAG); widening lookback to 42d added 150 dated items and zero MEDIUM/LONG eligibility. The LONG band is additionally unfillable by governance-vote observables of any registered length.",
+  "empirical_result_note": "the corrected reconstruction supersedes the original diagnostic's figures for the Epoch 1 empirical result; the original file is preserved unmodified as the record of what was first observed and why it differed",
+  "public_heads": {
+    "original_diagnostic": "ab414bf8b8704b4257fceaf13780be966d154755",
+    "corrected_reconstruction": "9c42f81d0d6bb877f139b15fe38a5ba77a433618"
+  },
+  "owner_authorization": {
+    "state": "OWNER_AUTHORIZED_RECORDING",
+    "scope": "Epoch 1 closure artifacts ONLY (this gate, the two raw evidence files, the metadata record, the observed-scope set)",
+    "grants_no_v0_3_authority": true,
+    "grants_no_new_cutoff": true,
+    "grants_no_intake": true,
+    "authorized_at": "2026-09-01T10:01:52Z"
+  }
+}
