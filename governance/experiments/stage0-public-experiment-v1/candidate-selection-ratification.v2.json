@@ -1,0 +1,62 @@
+{
+  "artifact_class": "GOVERNANCE_RATIFICATION_RECORD",
+  "not_a_capital_instrument": true,
+  "record_version": 2,
+  "supersedes": {
+    "path": "governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.json",
+    "sha256": "8bff30043a3c0cf2f8d95b8e539ed2025db67728631564bf954fc87aee0d64c0",
+    "note": "v1 (ratifying v0.2) remains in place, unmodified, as the permanent record of Epoch 1's law; sha256 recomputed from public main at 35c5ae93d452b8943e0f3cedecbda89aea6ae9c6 (REV2)."
+  },
+  "ratifies": [
+    {
+      "document": "FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md",
+      "sha256": "ab6be2c5d25ffdf147a162794ee282bfa84605ca53d8179f6580df0eff1df865"
+    },
+    {
+      "document": "FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md",
+      "sha256": "4e50a3ab68c9fbaa5e5e5d13278ae289c33aa6578d6b81a023c1e82cd26a376f"
+    }
+  ],
+  "ratified": true,
+  "ratified_at": "2026-09-01T23:23:02Z",
+  "ratified_at_format_required": "full ISO-8601 UTC with seconds (YYYY-MM-DDTHH:MM:SSZ). Date-only is NOT accepted for v2 (v1 was date-only and needed a granularity convention; v2 removes that ambiguity so ratified_at is an unambiguous temporal input).",
+  "cutoff_rule": {
+    "rule_id": "EPOCH2_CUTOFF_RULE_CANONICAL_V03",
+    "formula": "CUTOFF_TIMESTAMP = 00:00:00 UTC exactly 2 calendar days after the LATER of (1) and (2)",
+    "input_1": {
+      "name": "AD-3 VERIFIED timestamp",
+      "record": "governance/gates/build03-1-ad3-status.v2.json",
+      "field": "verified_at",
+      "value": "2026-08-29T23:27:52Z",
+      "state": "PUBLIC, satisfied"
+    },
+    "input_2": {
+      "name": "v0.3 ratification timestamp",
+      "record": "governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.v2.json",
+      "prerequisites": [
+        "exists on public main",
+        "ratified == true"
+      ],
+      "field": "ratified_at",
+      "field_format": "full ISO-8601 UTC with seconds (YYYY-MM-DDTHH:MM:SSZ); date-only is NOT accepted for v2",
+      "value": "NOT_YET_AVAILABLE — ratification.v2 is not recorded",
+      "state": "PENDING owner ratification act"
+    },
+    "prerequisite_vs_temporal_input": "File existence and ratified:true are PREREQUISITES of input (2), never its timestamp. The explicit ratified_at value is the SOLE temporal input of (2). No other event (commit time, freeze recording, file creation) substitutes for ratified_at.",
+    "computation": "By tooling only (intake-cutoff lineage-aware), reading both inputs from public main; never typed by hand; never owner-selected. NOT COMPUTED in this draft.",
+    "epoch_1_boundary": "Anti-carry-over (Method v0.3 §2 Step 1′) excludes any item with source-native opening timestamp <= 2026-08-31T00:00:00.000Z regardless of the Epoch 2 cutoff value."
+  },
+  "ratification_history": [
+    {
+      "pass": "v0.3 draft governance package",
+      "outcome": "DRAFTED — not ratified"
+    },
+    {
+      "pass": "v0.3 draft governance REV2 — rebase onto public Epoch 1 closure 35c5ae93 (gate sha d93aaa52…0fef)",
+      "outcome": "DRAFTED — not ratified"
+    }
+  ],
+  "note": "Supplies input (2) of EPOCH2_CUTOFF_RULE_CANONICAL_V03 (see cutoff_rule). Its existence with ratified:true does not authorize intake; intake-execution-002.json is separately required and remains unspent until every gate passes.",
+  "pin_provenance": "Method/Spec sha256 pinned at chain step A (REV5) from the finalized byte-identical v0.3 documents; ratification of those exact bytes occurs only at this record's own recording with ratified:true and full-UTC ratified_at (step C).",
+  "ratification_act": "Recording THIS file on public main, by the owner's own commit, with ratified:true and the inserted full-UTC ratified_at, IS the owner ratification act (REV5 chain step C). ratified_at is entered by the owner at the moment of recording — never the git commit timestamp, never a generated file time. This file must be committed alone, byte-exact as finalized, with no subsequent editing."
+}
