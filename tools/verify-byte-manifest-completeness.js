@@ -37,6 +37,8 @@ function matchesByteExactClass(p) {
   if (/^record\/instruments\/[^/]+\/locked\.json$/.test(p)) return 'locked-instrument-body';
   if (/^record\/instruments\/[^/]+\/.*\.json$/.test(p) && !/\/locked\.json$/.test(p)) return 'immutable-annex';
   if (/^record\/.*\.ots$/.test(p)) return 'ots-proof';
+  // F-3: authoritative raw Epoch 1 evidence transcripts must never drift silently
+  if (/^governance\/evidence\/a1a2-.*\.txt$/.test(p)) return 'authoritative-raw-evidence';
   return null;
 }
 

@@ -1,6 +1,6 @@
 {
   "note": "content_sha256 is computed from the authoritative git blob bytes at HEAD (git cat-file blob), independent of any working-tree checkout transform.",
-  "byte_exact_set_definition": "locked bodies, annexes, OTS proofs, and snapshots (none exist yet — BUILD 02+) plus, at BUILD-01 foundation scope, the frozen governing documents and published intake public keys.",
+  "byte_exact_set_definition": "locked bodies, annexes, OTS proofs, and snapshots (none exist yet \u2014 BUILD 02+) plus, at BUILD-01 foundation scope, the frozen governing documents and published intake public keys. F-3 extension: plus the authoritative raw Epoch 1 evidence transcripts (governance/evidence/a1a2-*.txt), byte-frozen as recorded.",
   "entries": [
     {
       "path": "governance/frozen/FCC_PRODUCT_BLUEPRINT_V1_1_1.md",
@@ -31,6 +31,18 @@
       "git_blob_sha1": "acea813c2e035e21550be7e4094d15443242c7f5",
       "content_sha256": "381d5c3370131c5b23d664145ed41b38cd922b691bb2659e2292023293458205",
       "bytes": 113
+    },
+    {
+      "path": "governance/evidence/a1a2-scope-diagnostic-2026-08-31.txt",
+      "git_blob_sha1": "c6bfe8237b04f7fc20d8dd9cfb7e2127ee133de7",
+      "content_sha256": "73e73bacd785ffb575fbe1a96c4541e9e8c9bdb4669798e7a046fbefc76b8694",
+      "bytes": 31012
+    },
+    {
+      "path": "governance/evidence/a1a2-epoch1-reconstruction-2026-09-01.txt",
+      "git_blob_sha1": "66bada43d5e60819394cb6b0cb61e9ecdc952f5b",
+      "content_sha256": "541f45161c8f779f7e3c4c486050fff881252adc2b41c498b6dfa9554aa5e908",
+      "bytes": 58986
     }
   ]
 }

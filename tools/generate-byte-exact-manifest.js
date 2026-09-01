@@ -12,6 +12,9 @@ const BYTE_EXACT_PATHS = [
   'governance/frozen/FCC_CAPITAL_INSTRUMENT_SPEC_V0_1_1.md',
   'governance/frozen/FCC_STAGE0_IMPLEMENTATION_ARCHITECTURE_V0_1_2.md',
   'governance/keys/key-TEST-000.pub.pem',
+  // F-3: authoritative raw Epoch 1 evidence transcripts — byte-frozen
+  'governance/evidence/a1a2-scope-diagnostic-2026-08-31.txt',
+  'governance/evidence/a1a2-epoch1-reconstruction-2026-09-01.txt',
 ];
 const entries = BYTE_EXACT_PATHS.map(p => {
   const blobHash = execSync(`git rev-parse HEAD:${p}`, {encoding:'utf8'}).trim();
@@ -22,7 +25,7 @@ const entries = BYTE_EXACT_PATHS.map(p => {
 });
 fs.writeFileSync('governance/evidence/byte-exact-manifest.json', JSON.stringify({
   note: "content_sha256 is computed from the authoritative git blob bytes at HEAD (git cat-file blob), independent of any working-tree checkout transform.",
-  byte_exact_set_definition: "locked bodies, annexes, OTS proofs, and snapshots (none exist yet — BUILD 02+) plus, at BUILD-01 foundation scope, the frozen governing documents and published intake public keys.",
+  byte_exact_set_definition: "locked bodies, annexes, OTS proofs, and snapshots (none exist yet — BUILD 02+) plus, at BUILD-01 foundation scope, the frozen governing documents and published intake public keys. F-3 extension: plus the authoritative raw Epoch 1 evidence transcripts (governance/evidence/a1a2-*.txt), byte-frozen as recorded.",
   entries
 }, null, 2) + '\n');
 console.log('Manifest written:', entries.length, 'entries');
