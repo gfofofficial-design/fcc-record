@@ -1,0 +1,138 @@
+{
+  "artifact_class": "CANDIDATE_SLATE_STRUCTURE",
+  "not_a_capital_instrument": true,
+  "epoch": 2,
+  "slate_version": 2,
+  "supersedes": {
+    "path": "governance/experiments/stage0-public-experiment-v1/candidate-slate.json",
+    "sha256": "ad63329bed879484750ad5bfa0a91e7a9fc27f9482baf0c4d4f6f1e1cacc1109",
+    "disposition": "PRESERVED — Epoch 1 history"
+  },
+  "methodology": {
+    "document": "FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md",
+    "sha256": "ab6be2c5d25ffdf147a162794ee282bfa84605ca53d8179f6580df0eff1df865"
+  },
+  "total_slots": 15,
+  "slate_control": {
+    "H1_band_max": 7,
+    "H2_band_min": 2,
+    "H3_non_short_min": 5,
+    "S1_class_max": 7,
+    "S2_min_classes": 3,
+    "S3_governance_vote_max": 7,
+    "bands": {
+      "short": "<=14 days",
+      "medium": "15-45 days",
+      "long": "46-90 days"
+    }
+  },
+  "all_slots_populated": false,
+  "fabrication_prohibited": true,
+  "slots": [
+    {
+      "slot_id": "SLOT-01",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-02",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-03",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-04",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-05",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-06",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-07",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-08",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-09",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-10",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-11",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-12",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-13",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-14",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    },
+    {
+      "slot_id": "SLOT-15",
+      "horizon_bucket": null,
+      "source_class": null,
+      "observable_type": null,
+      "status": "AWAITING_CANDIDATE_SELECTION"
+    }
+  ]
+}
