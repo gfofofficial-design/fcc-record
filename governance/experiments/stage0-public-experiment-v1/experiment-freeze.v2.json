@@ -1,0 +1,296 @@
+{
+  "artifact_class": "GOVERNANCE_EXPERIMENT_FREEZE",
+  "not_a_capital_instrument": true,
+  "freeze_version": 2,
+  "epoch": 2,
+  "supersedes": {
+    "path": "governance/experiments/stage0-public-experiment-v1/experiment-freeze.json",
+    "sha256": "dbbe2ea740b8d4f1dcf40f8b223bf4d5562fccd40cb4a688dbca98cd89bf1889",
+    "epoch_1_terminal_record": "governance/gates/stage0-epoch1-infeasibility-001.json",
+    "epoch_1_terminal_record_sha256": "d93aaa52d424f48dca63226738b0fa172b879c2b2d3adcda739e2c38a3530fef",
+    "epoch_1_closure_public_commit": "35c5ae93d452b8943e0f3cedecbda89aea6ae9c6"
+  },
+  "controlling_spec": {
+    "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md",
+    "version": "v0.3",
+    "sha256": "4e50a3ab68c9fbaa5e5e5d13278ae289c33aa6578d6b81a023c1e82cd26a376f",
+    "supersedes_sha256": "ef9dab7654e48ec18867706168ea640e46910814923193674fb847160ca89ec6"
+  },
+  "instrument_plan": {
+    "total_count": 15,
+    "window_days": 90,
+    "slate_control": {
+      "H1_band_max": 7,
+      "H2_band_min": 2,
+      "H3_non_short_min": 5,
+      "S1_class_max": 7,
+      "S2_min_classes": 3,
+      "S3_governance_vote_max": 7
+    },
+    "horizon_bands": {
+      "short": "<=14 days",
+      "medium": "15-45 days",
+      "long": "46-90 days"
+    }
+  },
+  "primary_metric": {
+    "name": "EXTERNAL_CHALLENGER_DEPTH",
+    "is_absolute_count_not_rate": true,
+    "components": {
+      "unique_substantive_external_challengers": {
+        "definition": "distinct identities (spec section 10) filing >=1 SUBSTANTIVE challenge (spec section 9) during Stage 0, excluding Federation-affiliated identities (spec section 16)"
+      },
+      "qualifying_returning_external_challengers": {
+        "definition": "of the above, count who engage again (a further substantive challenge, or an independently loggable instrument-page view) at least N days after their first engagement",
+        "minimum_gap_days": 7
+      }
+    }
+  },
+  "secondary_metrics": [
+    {
+      "name": "return_engagement_rate",
+      "load_bearing": false,
+      "definition": "qualifying_returning / unique_substantive, published for context only"
+    },
+    {
+      "name": "challenge_rate_per_instrument",
+      "load_bearing": false,
+      "definition": "substantive challenges per filed instrument, plus zero-challenge instrument count"
+    },
+    {
+      "name": "process_compliance",
+      "load_bearing": false,
+      "definition": "frozen section 12 Process-Scoring Engine metrics, unchanged"
+    },
+    {
+      "name": "external_citation_reference",
+      "load_bearing": false,
+      "definition": "privacy-respecting supplemental analytics only; NOT_MEASURED if unavailable"
+    }
+  ],
+  "thresholds": {
+    "minimum_success": {
+      "unique_substantive_external_challengers_gte": 5,
+      "qualifying_returning_external_challengers_gte": 2,
+      "deadline_day": 90
+    },
+    "strong_success": {
+      "unique_substantive_external_challengers_gte": 10,
+      "qualifying_returning_external_challengers_gte": 4,
+      "instrument_coverage_pct_gte": 25
+    },
+    "failure": {
+      "condition": "minimum_success not met by deadline_day"
+    }
+  },
+  "kill_pivot_rule": {
+    "day": 45,
+    "condition": "cumulative unique substantive external challengers = 0 AND no instrument has received any substantive external engagement at all",
+    "early_success_permitted": false,
+    "permitted_actions": [
+      "continue_to_day_90",
+      "declare_early_failure_and_stop"
+    ]
+  },
+  "accuracy_non_load_bearing": true,
+  "privacy_rules": {
+    "authoritative_evidence_source": "challenge_behavior",
+    "prohibited_methods": [
+      "fingerprinting",
+      "cross_site_profiling",
+      "covert_identity_correlation",
+      "invasive_identity_collection"
+    ],
+    "citation_metric_if_unavailable": "NOT_MEASURED"
+  },
+  "affiliation_rules": {
+    "test_type": "behavioral_not_formal_title",
+    "known_affiliation_baseline_ref": "known-affiliation-baseline.json",
+    "timing_cases": {
+      "new_affiliation_during_experiment": {
+        "exclusion_applies": "prospective_from_actual_start_date",
+        "past_genuine_external_engagement_retained": true
+      },
+      "previously_existing_discovered_later": {
+        "correction_required": "retroactive_to_true_affiliation_start",
+        "historical_counts_removed_silently": false,
+        "correction_publicly_recorded": true,
+        "recorded_as": "corrections_class_entry_per_spec_section_13"
+      }
+    }
+  },
+  "promotion_methodology": {
+    "equal_visibility_rule": true,
+    "definition": "every filed instrument receives the same category of public listing/visibility; no differential promotion"
+  },
+  "candidate_selection_methodology": {
+    "status": "RATIFIED_AWAITING_CUTOFF",
+    "status_note": "Recorded state: Method v0.3 and Spec v0.3 are RATIFIED (candidate-selection-ratification.v2.json, owner commit 254fd2e8) and the canonical cutoff is computed but NOT yet reached; discovery and intake remain unauthorized.",
+    "mechanical_procedure_text": {
+      "document": "FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md",
+      "sha256": "ab6be2c5d25ffdf147a162794ee282bfa84605ca53d8179f6580df0eff1df865"
+    },
+    "ratification_record": "governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.v2.json",
+    "supersession_record": "governance/gates/methodology-supersession-001.json",
+    "cutoff_gate_ref": {
+      "rule_id": "EPOCH2_CUTOFF_RULE_CANONICAL_V03",
+      "formula": "CUTOFF_TIMESTAMP = 00:00:00 UTC exactly 2 calendar days after the LATER of (1) and (2)",
+      "input_1": {
+        "name": "AD-3 VERIFIED timestamp",
+        "record": "governance/gates/build03-1-ad3-status.v2.json",
+        "field": "verified_at",
+        "value": "2026-08-29T23:27:52Z",
+        "state": "PUBLIC, satisfied"
+      },
+      "input_2": {
+        "name": "v0.3 ratification timestamp",
+        "record": "governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.v2.json",
+        "prerequisites": [
+          "exists on public main",
+          "ratified == true"
+        ],
+        "field": "ratified_at",
+        "field_format": "full ISO-8601 UTC with seconds (YYYY-MM-DDTHH:MM:SSZ); date-only is NOT accepted for v2",
+        "value": "2026-09-01T23:23:02Z",
+        "state": "SATISFIED — candidate-selection-ratification.v2.json recorded on public main at commit 254fd2e82cddf7a84a7e3a8cdff423bd958822e4 with ratified:true; per governance/evidence/v03-ratification-input2-clarification-001.json the top-level ratified_at is the sole temporal input"
+      },
+      "prerequisite_vs_temporal_input": "File existence and ratified:true are PREREQUISITES of input (2), never its timestamp. The explicit ratified_at value is the SOLE temporal input of (2). No other event (commit time, freeze recording, file creation) substitutes for ratified_at.",
+      "computation": "By tooling only (intake-cutoff lineage-aware), reading both inputs from public main; never typed by hand; never owner-selected. NOT COMPUTED in this draft.",
+      "epoch_1_boundary": "Anti-carry-over (Method v0.3 §2 Step 1′) excludes any item with source-native opening timestamp <= 2026-08-31T00:00:00.000Z regardless of the Epoch 2 cutoff value."
+    },
+    "named_source_list": [
+      {
+        "id": "A1",
+        "name": "Snapshot",
+        "url": "snapshot.org"
+      },
+      {
+        "id": "A2",
+        "name": "Cactus (formerly Tally)",
+        "url": "tally.xyz"
+      },
+      {
+        "id": "B1",
+        "name": "SEC EDGAR",
+        "url": "sec.gov"
+      },
+      {
+        "id": "B2",
+        "name": "CFTC Press Releases + Enforcement Actions",
+        "url": "cftc.gov",
+        "acquisitionTier": "DOWNGRADED"
+      },
+      {
+        "id": "C1",
+        "name": "Coinbase",
+        "url": "coinbase.com",
+        "acquisitionTier": "DOWNGRADED_CONDITIONAL"
+      },
+      {
+        "id": "C2",
+        "name": "Kraken",
+        "url": "kraken.com",
+        "acquisitionTier": "DOWNGRADED_CONDITIONAL"
+      },
+      {
+        "id": "D1",
+        "name": "L2BEAT",
+        "url": "l2beat.com"
+      },
+      {
+        "id": "D2",
+        "name": "DefiLlama",
+        "url": "defillama.com"
+      },
+      {
+        "id": "E1",
+        "name": "Ethereum core-upgrade schedule",
+        "url": "ethereum.org"
+      },
+      {
+        "id": "F1",
+        "name": "SEC EDGAR (named ETF issuer CIKs)",
+        "url": "sec.gov"
+      },
+      {
+        "id": "G1",
+        "name": "Polymarket",
+        "url": "polymarket.com",
+        "role": "BENCHMARK_ONLY_NEVER_A_CANDIDATE_SOURCE"
+      },
+      {
+        "id": "G2",
+        "name": "Kalshi",
+        "url": "kalshi.com",
+        "role": "BENCHMARK_ONLY_NEVER_A_CANDIDATE_SOURCE"
+      }
+    ],
+    "blocking_reason": "Epoch 2 execution blocked: the canonical cutoff 2026-09-03T00:00:00.000Z has not been reached at recording, AND intake-execution-002 is not recorded/authorized, AND the v2 intake authorization gate module does not yet exist (CI GUARD CASE E2 hard-fails if intake-execution-002.json appears before it does). Cutoff computability/arrival never authorizes intake.",
+    "source_registry_addenda": {
+      "ratified_and_applied": [
+        "source-registry-addendum-001.json (F1 CIKs, C2 feed) — PUBLIC"
+      ],
+      "drafted_not_ratified": [
+        "source-registry-addendum-002.json (Federal Register / SEC SRO surface for RD-19b4) — DRAFT"
+      ],
+      "rule": "RD-19b4-45 / RD-19b4-240 (Method v0.3 §1.7) contribute ZERO candidates unless source-registry-addendum-002 is ratified and recorded on public main BEFORE the Epoch 2 CUTOFF_TIMESTAMP; an addendum ratified at or after the cutoff does not apply to Epoch 2."
+    },
+    "named_source_list_note": "carried forward from v1 verbatim; ratified addendum-001 (F1 CIKs, C2 feed) applies; addendum-002 (RD-19b4 Federal Register / SEC SRO surface) applies ONLY if separately ratified before the Epoch 2 CUTOFF_TIMESTAMP — see source_registry_addenda",
+    "recorded_public_pins": {
+      "ratification_v2": {
+        "path": "governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.v2.json",
+        "sha256": "89042bb801ccd8a4446e9eda14691ba39ac891cd6f86e812f542fd0b0f61f71c",
+        "public_commit": "254fd2e82cddf7a84a7e3a8cdff423bd958822e4",
+        "ratified_at": "2026-09-01T23:23:02Z"
+      },
+      "supersession": {
+        "path": "governance/gates/methodology-supersession-001.json",
+        "sha256": "7fdf5c2352d5bfe99d16305405b9b79a78478b6d5de2305a57a82050c5c8535d",
+        "public_commit": "e986b0e8aee077650c871ec51ba490ebf6c2c607"
+      },
+      "clarification": {
+        "path": "governance/evidence/v03-ratification-input2-clarification-001.json",
+        "sha256": "10c0189f0ac07f9ded7864650d3941c7e0404ff93460adb9ba8d819fb400b23d",
+        "public_commit": "2c0cdc39454ce1fad213fae2341e7ff618667e85"
+      },
+      "method_v0_3": {
+        "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md",
+        "sha256": "ab6be2c5d25ffdf147a162794ee282bfa84605ca53d8179f6580df0eff1df865"
+      },
+      "spec_v0_3": {
+        "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md",
+        "sha256": "4e50a3ab68c9fbaa5e5e5d13278ae289c33aa6578d6b81a023c1e82cd26a376f"
+      },
+      "schemas_v2": {
+        "candidate_slate": "RECORDED_IMMEDIATELY_BEFORE_THIS_FREEZE — sha pinned in MANIFEST and readable from public main",
+        "experiment_freeze": "RECORDED_IMMEDIATELY_BEFORE_THIS_FREEZE"
+      },
+      "verified_against_public_main": "96920ebac95d2b48c7470282863e789b893ff00a"
+    },
+    "frozen_epoch2_cutoff": {
+      "value": "2026-09-03T00:00:00.000Z",
+      "rule_id": "EPOCH2_CUTOFF_RULE_CANONICAL_V03",
+      "obtained_from": "public canonical tooling (tools/compute-intake-cutoff.js — computeEpoch2CutoffFromRepo) run against public main 96920ebac95d2b48c7470282863e789b893ff00a; NOT hand-computed inside this package",
+      "inputs": {
+        "ad3_verified_at": "2026-08-29T23:27:52Z",
+        "v03_ratified_at": "2026-09-01T23:23:02Z"
+      },
+      "later_condition": "v0.3 ratification (ratified_at)",
+      "formula": "00:00:00 UTC exactly 2 calendar days after the later input",
+      "anti_carry_over": "no item with source-native opening timestamp <= 2026-08-31T00:00:00.000Z may enter Epoch 2 (Method v0.3 §2 Step 1′), independent of this cutoff value",
+      "cutoff_is_not_authorization": "existence or arrival of this cutoff authorizes neither discovery nor intake"
+    }
+  },
+  "experiment_dates": {
+    "start_utc": null,
+    "end_utc": null,
+    "status": "PENDING_FROZEN_IMMEDIATELY_BEFORE_LAUNCH"
+  },
+  "candidate_slate_ref": {
+    "path": "candidate-slate.v2.json",
+    "sha256": "647a0ae9194f24127432648c170f5510b9571eeb5d53407062eaaab721fca66c",
+    "slate_version": 2
+  },
+  "freeze_status": "BLOCKED",
+  "freeze_status_reason": "Epoch 2: Method v0.3 ratified awaiting cutoff; intake has not run; candidate-slate.v2.json holds placeholders; calendar dates unfrozen. freeze_status becomes VALID only once intake has actually run under v0.3 (populated non-placeholder slate satisfying §4A′) and calendar dates are frozen — neither is authorized yet."
+}
