@@ -85,4 +85,40 @@ function fsTarget(dir, { failSlateWrite = false, failMarkerWrite = false, verifi
   };
 }
 
-module.exports = { buildSlateDocument, runFinalWriteTransaction, executeFinalWrite, fsTarget, sha256 };
+// ============================================================================
+// EPOCH 2 (v0.3) FINAL-WRITE TARGET — VERSIONED SUPERSESSION, NEVER IN-PLACE.
+// The architecture decision demanded above is now recorded law for Epoch 2:
+// candidate-slate.v2.json is the IMMUTABLE pre-intake empty shell (its hash is
+// pinned by experiment-freeze.v2 and by intake-execution-002). The one
+// authorized supervised execution writes a NEW append-only artifact instead of
+// ever touching the shell:
+const EPOCH2_SELECTED_SLATE_PATH = 'governance/experiments/stage0-public-experiment-v1/candidate-slate.v2.selected.json';
+// TARGET-AVAILABILITY PROBE ONLY (REV3 / MV-4, option B — the narrower safe form).
+// This function answers exactly one question: is the canonical Epoch 2 output path
+// currently free and is the immutable shell still pristine? It is NOT a final-write
+// authorization and can never be read as one: its result carries no `allowed` key,
+// carries `isFinalWriteAuthorization: false`, and takes no proposed document,
+// authorization, cutoff or schema — because no executable v2 writer exists yet.
+// Before any future v2 write can be lawful, a separate recorded writer pass must
+// machine-verify: exact canonical output path; target absent; pristine shell
+// unchanged; final intake-002 valid and hash-bound; cutoff exact; authorization ID
+// exact; Method/Spec/freeze/supersession pins; exactly 15 unique slots, every slot
+// selected, no duplicate slot identifiers; H1/H2/H3 + S1/S2/S3 controls; schema
+// validation against the RECORDED selected-slate schema; post-write byte re-read +
+// hash verification; and a completion marker written only after that verification.
+function checkEpoch2FinalWriteTargetAvailability(repoRoot, expectedShellSha) {
+  const problems = [];
+  const target = path.join(repoRoot, EPOCH2_SELECTED_SLATE_PATH);
+  if (fs.existsSync(target)) problems.push('candidate-slate.v2.selected.json already exists — write-once; no second population');
+  const shell = path.join(repoRoot, 'governance', 'experiments', 'stage0-public-experiment-v1', 'candidate-slate.v2.json');
+  if (!fs.existsSync(shell)) problems.push('pre-intake shell candidate-slate.v2.json missing');
+  else if (!/^[0-9a-f]{64}$/.test(expectedShellSha || '')) problems.push('expectedShellSha must be the pinned 64-hex shell hash');
+  else if (sha256(fs.readFileSync(shell)) !== expectedShellSha) problems.push('pre-intake shell has DRIFTED from its pinned hash');
+  return { isFinalWriteAuthorization: false, targetAvailable: problems.length === 0, problems, targetPath: EPOCH2_SELECTED_SLATE_PATH, note: 'availability probe only — never an authorization to write' };
+}
+// NOTE: no v2 writer is wired here. executeFinalWrite() continues to REFUSE for
+// the v1 in-place path, and Epoch 2 write wiring is a later task that may only
+// land after the authorization gate is recorded, intake-execution-002 exists and
+// the selected-slate schema is recorded.
+
+module.exports = { buildSlateDocument, runFinalWriteTransaction, executeFinalWrite, fsTarget, sha256, EPOCH2_SELECTED_SLATE_PATH, checkEpoch2FinalWriteTargetAvailability };

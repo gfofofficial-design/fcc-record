@@ -74,15 +74,14 @@ const decision = guardDecision({
 console.log(`GUARD CASE ${decision.caseId}: ${decision.pass ? 'PASS' : 'FAIL'} — ${decision.why}`);
 
 // ---- EPOCH 2 / v0.3 GUARD (additive) ------------------------------------
-// Cutoff computability/arrival must NEVER read as Epoch 2 authorization, and
-// until a v2 authorization gate module exists, ANY intake-execution-002.json
-// on disk hard-fails CI (its preconditions cannot be machine-verified yet).
-const { computeEpoch2CutoffFromRepo } = require('./lib/intake-cutoff.js');
-const e2 = computeEpoch2CutoffFromRepo(ROOT);
-let e2pass = true; let e2why = [];
-if (e2.epoch2IntakeAuthorized !== false) { e2pass = false; e2why.push('epoch2IntakeAuthorized must be hard false'); }
-if (fs.readdirSync(gatesDir).some((f) => f === 'intake-execution-002.json')) {
-  e2pass = false; e2why.push('intake-execution-002.json present but the v2 authorization gate module does not exist — BLOCKED until it does');
-}
-console.log(`GUARD CASE E2: ${e2pass ? 'PASS' : 'FAIL'} — Epoch 2 ${e2.defined ? 'cutoff ' + e2.cutoffTimestamp + (e2.reached ? ' reached' : ' not reached') : 'cutoff undefined'}; intake NOT authorized by cutoff${e2why.length ? '; ' + e2why.join('; ') : ''}`);
-process.exit(decision.pass && e2pass ? 0 : 1);
+// The whole E2 decision lives in tools/lib/epoch2-intake-authorization.js
+// (decideEpoch2GuardCase) so the dedicated suite tests the SAME production
+// logic this guard runs. CI evaluates any intake-execution-002.json UNSUPERVISED
+// and passes only if the refusal reasons are exclusively lawful pre-execution
+// ones (P1 pre-cutoff, M supervised, R readiness); any integrity failure,
+// malformed/renamed-draft/conflicting record, or gate exception fails CI.
+// CI itself never executes an intake.
+const { decideEpoch2GuardCase } = require('./lib/epoch2-intake-authorization.js');
+const e2d = decideEpoch2GuardCase(ROOT);
+console.log(`GUARD CASE ${e2d.caseId}: ${e2d.pass ? 'PASS' : 'FAIL'} — ${e2d.why}`);
+process.exit(decision.pass && e2d.pass ? 0 : 1);
