@@ -1,0 +1,539 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fcc-record/governance/schemas/v2/experiment-freeze.schema.json",
+  "title": "FCC Stage 0 Experiment Freeze Artifact (v2 \u2014 Epoch 2 lineage; DRAFT)",
+  "description": "Governance artifact, NOT a Capital Instrument. Must never carry an FCC-I-* identifier and must never be created or modified via the BUILD 03 witness/publication pipeline. Contents per FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_2.md section 17.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_class",
+    "not_a_capital_instrument",
+    "controlling_spec",
+    "instrument_plan",
+    "primary_metric",
+    "secondary_metrics",
+    "thresholds",
+    "kill_pivot_rule",
+    "accuracy_non_load_bearing",
+    "privacy_rules",
+    "affiliation_rules",
+    "promotion_methodology",
+    "candidate_selection_methodology",
+    "experiment_dates",
+    "candidate_slate_ref",
+    "freeze_status",
+    "freeze_version",
+    "epoch",
+    "supersedes"
+  ],
+  "properties": {
+    "artifact_class": {
+      "const": "GOVERNANCE_EXPERIMENT_FREEZE"
+    },
+    "not_a_capital_instrument": {
+      "const": true
+    },
+    "instrument_id": {
+      "type": "null"
+    },
+    "witness_publication_required": {
+      "const": false
+    },
+    "controlling_spec": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "path",
+        "sha256",
+        "version"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "instrument_plan": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "total_count",
+        "slate_control",
+        "horizon_bands",
+        "window_days"
+      ],
+      "properties": {
+        "total_count": {
+          "const": 15
+        },
+        "window_days": {
+          "const": 90
+        },
+        "slate_control": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "H1_band_max",
+            "H2_band_min",
+            "H3_non_short_min",
+            "S1_class_max",
+            "S2_min_classes",
+            "S3_governance_vote_max"
+          ],
+          "properties": {
+            "H1_band_max": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "H2_band_min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "H3_non_short_min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "S1_class_max": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "S2_min_classes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "S3_governance_vote_max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "horizon_bands": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "short",
+            "medium",
+            "long"
+          ],
+          "properties": {
+            "short": {
+              "const": "<=14 days"
+            },
+            "medium": {
+              "const": "15-45 days"
+            },
+            "long": {
+              "const": "46-90 days"
+            }
+          }
+        }
+      }
+    },
+    "primary_metric": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "name",
+        "components",
+        "is_absolute_count_not_rate"
+      ],
+      "properties": {
+        "name": {
+          "const": "EXTERNAL_CHALLENGER_DEPTH"
+        },
+        "is_absolute_count_not_rate": {
+          "const": true
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "unique_substantive_external_challengers",
+            "qualifying_returning_external_challengers"
+          ],
+          "properties": {
+            "unique_substantive_external_challengers": {
+              "type": "object",
+              "required": [
+                "definition"
+              ],
+              "properties": {
+                "definition": {
+                  "type": "string"
+                }
+              }
+            },
+            "qualifying_returning_external_challengers": {
+              "type": "object",
+              "required": [
+                "definition",
+                "minimum_gap_days"
+              ],
+              "properties": {
+                "definition": {
+                  "type": "string"
+                },
+                "minimum_gap_days": {
+                  "const": 7
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "secondary_metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "load_bearing"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "load_bearing": {
+            "const": false
+          },
+          "definition": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "minimum_success",
+        "strong_success",
+        "failure"
+      ],
+      "properties": {
+        "minimum_success": {
+          "type": "object",
+          "required": [
+            "unique_substantive_external_challengers_gte",
+            "qualifying_returning_external_challengers_gte",
+            "deadline_day"
+          ],
+          "properties": {
+            "unique_substantive_external_challengers_gte": {
+              "const": 5
+            },
+            "qualifying_returning_external_challengers_gte": {
+              "const": 2
+            },
+            "deadline_day": {
+              "const": 90
+            }
+          }
+        },
+        "strong_success": {
+          "type": "object",
+          "required": [
+            "unique_substantive_external_challengers_gte",
+            "qualifying_returning_external_challengers_gte",
+            "instrument_coverage_pct_gte"
+          ],
+          "properties": {
+            "unique_substantive_external_challengers_gte": {
+              "const": 10
+            },
+            "qualifying_returning_external_challengers_gte": {
+              "const": 4
+            },
+            "instrument_coverage_pct_gte": {
+              "const": 25
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "required": [
+            "condition"
+          ],
+          "properties": {
+            "condition": {
+              "const": "minimum_success not met by deadline_day"
+            }
+          }
+        }
+      }
+    },
+    "kill_pivot_rule": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "day",
+        "condition",
+        "early_success_permitted"
+      ],
+      "properties": {
+        "day": {
+          "const": 45
+        },
+        "condition": {
+          "type": "string"
+        },
+        "early_success_permitted": {
+          "const": false
+        }
+      }
+    },
+    "accuracy_non_load_bearing": {
+      "const": true
+    },
+    "privacy_rules": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "authoritative_evidence_source",
+        "prohibited_methods",
+        "citation_metric_if_unavailable"
+      ],
+      "properties": {
+        "authoritative_evidence_source": {
+          "const": "challenge_behavior"
+        },
+        "prohibited_methods": {
+          "type": "array",
+          "allOf": [
+            {
+              "contains": {
+                "const": "fingerprinting"
+              }
+            },
+            {
+              "contains": {
+                "const": "cross_site_profiling"
+              }
+            },
+            {
+              "contains": {
+                "const": "covert_identity_correlation"
+              }
+            },
+            {
+              "contains": {
+                "const": "invasive_identity_collection"
+              }
+            }
+          ]
+        },
+        "citation_metric_if_unavailable": {
+          "const": "NOT_MEASURED"
+        }
+      }
+    },
+    "affiliation_rules": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "test_type",
+        "known_affiliation_baseline_ref",
+        "timing_cases"
+      ],
+      "properties": {
+        "test_type": {
+          "const": "behavioral_not_formal_title"
+        },
+        "known_affiliation_baseline_ref": {
+          "type": "string"
+        },
+        "timing_cases": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "new_affiliation_during_experiment",
+            "previously_existing_discovered_later"
+          ],
+          "properties": {
+            "new_affiliation_during_experiment": {
+              "type": "object",
+              "required": [
+                "exclusion_applies"
+              ],
+              "properties": {
+                "exclusion_applies": {
+                  "const": "prospective_from_actual_start_date"
+                }
+              }
+            },
+            "previously_existing_discovered_later": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "correction_required",
+                "historical_counts_removed_silently",
+                "correction_publicly_recorded"
+              ],
+              "properties": {
+                "correction_required": {
+                  "const": "retroactive_to_true_affiliation_start"
+                },
+                "historical_counts_removed_silently": {
+                  "const": false
+                },
+                "correction_publicly_recorded": {
+                  "const": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "promotion_methodology": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "equal_visibility_rule"
+      ],
+      "properties": {
+        "equal_visibility_rule": {
+          "const": true
+        }
+      }
+    },
+    "candidate_selection_methodology": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "RATIFIED_AND_APPLIED",
+            "RATIFIED_AWAITING_CUTOFF",
+            "AWAITING_OWNER_RESEARCH_DECISION",
+            "EPOCH_CLOSED_INFEASIBLE",
+            "EPOCH_CLOSED_SUPPLY_SHORTAGE"
+          ]
+        },
+        "named_source_list": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "mechanical_procedure_text": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "cutoff_gate_ref": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "ratification_record": {
+          "type": "string"
+        },
+        "supersession_record": {
+          "type": "string"
+        }
+      }
+    },
+    "experiment_dates": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "start_utc",
+        "end_utc",
+        "status"
+      ],
+      "properties": {
+        "start_utc": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "end_utc": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "PENDING_FROZEN_IMMEDIATELY_BEFORE_LAUNCH",
+            "FROZEN"
+          ]
+        }
+      }
+    },
+    "candidate_slate_ref": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "path",
+        "sha256",
+        "slate_version"
+      ],
+      "properties": {
+        "path": {
+          "pattern": "^candidate-slate\\.v[0-9]+\\.json$",
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "slate_version": {
+          "type": "integer",
+          "minimum": 2
+        }
+      }
+    },
+    "freeze_status": {
+      "enum": [
+        "INCOMPLETE",
+        "BLOCKED",
+        "VALID",
+        "CLOSED"
+      ]
+    },
+    "freeze_status_reason": {
+      "type": "string"
+    },
+    "freeze_version": {
+      "const": 2
+    },
+    "epoch": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "supersedes": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}

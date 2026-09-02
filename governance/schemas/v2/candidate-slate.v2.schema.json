@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fcc-record/governance/schemas/v2/candidate-slate.schema.json",
+  "title": "FCC Stage 0 Candidate Slate Structure (v2 \u2014 Epoch 2 lineage; DRAFT)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_class",
+    "not_a_capital_instrument",
+    "total_slots",
+    "all_slots_populated",
+    "fabrication_prohibited",
+    "slots",
+    "epoch",
+    "slate_version",
+    "supersedes",
+    "methodology",
+    "slate_control"
+  ],
+  "properties": {
+    "artifact_class": {
+      "const": "CANDIDATE_SLATE_STRUCTURE"
+    },
+    "not_a_capital_instrument": {
+      "const": true
+    },
+    "total_slots": {
+      "const": 15
+    },
+    "all_slots_populated": {
+      "type": "boolean"
+    },
+    "fabrication_prohibited": {
+      "const": true
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "slot_id",
+          "horizon_bucket",
+          "source_class",
+          "observable_type",
+          "status"
+        ],
+        "properties": {
+          "slot_id": {
+            "type": "string",
+            "pattern": "^SLOT-[0-9]{2}$"
+          },
+          "horizon_bucket": {
+            "enum": [
+              "short",
+              "medium",
+              "long",
+              null
+            ]
+          },
+          "status": {
+            "enum": [
+              "AWAITING_CANDIDATE_SELECTION",
+              "SELECTED_PENDING_ELIGIBILITY",
+              "ELIGIBLE_PENDING_FILING"
+            ]
+          },
+          "source_class": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E",
+              "F",
+              null
+            ]
+          },
+          "observable_type": {
+            "enum": [
+              "OBS_SOURCE_NATIVE_DATE",
+              "OBS_SOURCE_NATIVE_EXECUTION_DATE",
+              "OBS_RULE_DERIVED_DATE",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "epoch": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "slate_version": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "supersedes": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "methodology": {
+      "type": "object",
+      "required": [
+        "document",
+        "sha256"
+      ],
+      "properties": {
+        "document": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      }
+    },
+    "slate_control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "H1_band_max",
+        "H2_band_min",
+        "H3_non_short_min",
+        "S1_class_max",
+        "S2_min_classes",
+        "S3_governance_vote_max",
+        "bands"
+      ],
+      "properties": {
+        "H1_band_max": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "H2_band_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "H3_non_short_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "S1_class_max": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "S2_min_classes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "S3_governance_vote_max": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bands": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "short",
+            "medium",
+            "long"
+          ],
+          "properties": {
+            "short": {
+              "const": "<=14 days"
+            },
+            "medium": {
+              "const": "15-45 days"
+            },
+            "long": {
+              "const": "46-90 days"
+            }
+          }
+        }
+      }
+    }
+  }
+}
