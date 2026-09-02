@@ -72,4 +72,17 @@ const decision = guardDecision({
   authRecordPresent,
 });
 console.log(`GUARD CASE ${decision.caseId}: ${decision.pass ? 'PASS' : 'FAIL'} — ${decision.why}`);
-process.exit(decision.pass ? 0 : 1);
+
+// ---- EPOCH 2 / v0.3 GUARD (additive) ------------------------------------
+// Cutoff computability/arrival must NEVER read as Epoch 2 authorization, and
+// until a v2 authorization gate module exists, ANY intake-execution-002.json
+// on disk hard-fails CI (its preconditions cannot be machine-verified yet).
+const { computeEpoch2CutoffFromRepo } = require('./lib/intake-cutoff.js');
+const e2 = computeEpoch2CutoffFromRepo(ROOT);
+let e2pass = true; let e2why = [];
+if (e2.epoch2IntakeAuthorized !== false) { e2pass = false; e2why.push('epoch2IntakeAuthorized must be hard false'); }
+if (fs.readdirSync(gatesDir).some((f) => f === 'intake-execution-002.json')) {
+  e2pass = false; e2why.push('intake-execution-002.json present but the v2 authorization gate module does not exist — BLOCKED until it does');
+}
+console.log(`GUARD CASE E2: ${e2pass ? 'PASS' : 'FAIL'} — Epoch 2 ${e2.defined ? 'cutoff ' + e2.cutoffTimestamp + (e2.reached ? ' reached' : ' not reached') : 'cutoff undefined'}; intake NOT authorized by cutoff${e2why.length ? '; ' + e2why.join('; ') : ''}`);
+process.exit(decision.pass && e2pass ? 0 : 1);

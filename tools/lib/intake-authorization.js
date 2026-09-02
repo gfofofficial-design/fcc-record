@@ -44,10 +44,18 @@ function evaluateExecutionPreconditions({
   tallyKeyPresent,           // boolean (presence only; the value is never handled)
   readinessAggregate,        // 'READY' | 'BLOCKED' | null — from THIS environment's live run
   supervisedMode,            // boolean — explicit flag + owner env marker
+  supersededMethodologyShas, // string[] — sha256s of superseded methodology docs (from methodology-supersession-001.json); optional, default []
 }) {
   const failures = [];
   if (!cutoff || cutoff.defined !== true || cutoff.reached !== true) failures.push('A: frozen cutoff not reached — execution prohibited before ' + (cutoff && cutoff.cutoffTimestamp));
   const valid = (authRecords || []).filter((r) => validateAuthorizationShape(r.record).length === 0);
+  // SUPERSESSION ENFORCEMENT (v0.3): an authorization pinned to a superseded
+  // methodology is PRESERVED / UNSPENT / UNUSABLE — refuse it mechanically.
+  const superseded = Array.isArray(supersededMethodologyShas) ? supersededMethodologyShas : [];
+  for (const r of valid) {
+    const pin = r.record && r.record.pins && r.record.pins.methodology && r.record.pins.methodology.sha256;
+    if (pin && superseded.includes(pin)) failures.push(`S: ${r.name} pins methodology ${pin.slice(0, 12)}… which methodology-supersession-001.json records as SUPERSEDED — authorization is UNUSABLE FOR SUPERSEDED METHODOLOGY`);
+  }
   if (valid.length === 0) failures.push('B: no valid CANDIDATE_INTAKE_EXECUTION authorization record exists');
   if (valid.length > 1) failures.push('C: conflicting authorization records exist (' + valid.map((r) => r.name).join(', ') + ')');
   const auth = valid.length === 1 ? valid[0].record : null;
@@ -87,6 +95,16 @@ function evaluateFromRepo(repoRoot, { nowMs, env, readinessAggregate, supervised
     tallyKeyPresent: !!(env || process.env).TALLY_API_KEY,
     readinessAggregate: readinessAggregate || null,
     supervisedMode: supervisedMode === true,
+    supersededMethodologyShas: (() => {
+      const sp = path.join(gates, 'methodology-supersession-001.json');
+      if (!fs.existsSync(sp)) return [];
+      try {
+        const s = JSON.parse(fs.readFileSync(sp, 'utf8'));
+        const out = [];
+        if (s.supersedes && s.supersedes.candidate_selection_method && /^[0-9a-f]{64}$/.test(s.supersedes.candidate_selection_method.sha256 || '')) out.push(s.supersedes.candidate_selection_method.sha256);
+        return out;
+      } catch (e) { return []; } // unreadable supersession never LOOSENS anything; it simply adds no extra refusal
+    })(),
   });
 }
 

@@ -73,7 +73,10 @@ ok(supervisedModeRequested([SUPERVISED_FLAG], { [SUPERVISED_ENV]: 'true' }) === 
 // ── real repo, real runner ───────────────────────────────────────────────
 {
   const pre = evaluateFromRepo(ROOT, { nowMs: Date.parse('2026-08-31T00:00:00Z'), env: { TALLY_API_KEY: 'x' }, readinessAggregate: 'READY', supervisedMode: true });
-  ok(pre.allowed === true, 'R1: real repo state at the cutoff instant, with key+readiness+supervision, satisfies every precondition (WOULD_EXECUTE)');
+  // POST-SUPERSESSION (v0.3): the recorded methodology-supersession-001.json makes the
+  // v0.2-pinned intake-execution-001 UNUSABLE — the ONLY failure must be the S: refusal,
+  // proving every other precondition still holds exactly as before.
+  ok(pre.allowed === false && (pre.failures || []).length === 1 && /UNUSABLE FOR SUPERSEDED METHODOLOGY/.test(pre.failures[0]), 'R1: real repo state at the cutoff instant is refused SOLELY by the recorded methodology supersession (v0.2 authorization unusable; all other preconditions still satisfied)');
   const pre2 = evaluateFromRepo(ROOT, { nowMs: Date.parse('2026-08-31T00:00:00Z'), env: {}, readinessAggregate: 'READY', supervisedMode: true });
   ok(pre2.allowed === false, 'R2: same instant without the key => refused');
   const r = spawnSync(process.execPath, [path.join(__dirname, 'run-candidate-intake.js')], { encoding: 'utf8' });
