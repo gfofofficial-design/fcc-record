@@ -1,0 +1,42 @@
+{
+  "artifact_class": "APPEND_ONLY_CLARIFICATION",
+  "not_a_capital_instrument": true,
+  "clarification_id": "v03-ratification-input2-clarification-001",
+  "clarifies": {
+    "path": "governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.v2.json",
+    "public_commit": "254fd2e82cddf7a84a7e3a8cdff423bd958822e4",
+    "sha256_recomputed_from_public_main": "89042bb801ccd8a4446e9eda14691ba39ac891cd6f86e812f542fd0b0f61f71c",
+    "immutability": "The clarified file was committed alone by the owner and is permanent. It is NOT edited, replaced, amended or rewritten by this or any future artifact — append-only correction semantics, exactly as the Epoch 1 evidence corrections."
+  },
+  "ratification_validity": "The owner ratification act is VALID and COMPLETED: candidate-selection-ratification.v2.json exists on public main at the pinned commit with top-level ratified:true and top-level ratified_at 2026-09-01T23:23:02Z (full ISO-8601 UTC, satisfying ratified_at_format_required). FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md (ab6be2c5d25ffdf147a162794ee282bfa84605ca53d8179f6580df0eff1df865) and FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md (4e50a3ab68c9fbaa5e5e5d13278ae289c33aa6578d6b81a023c1e82cd26a376f) are ratified as pinned in ratifies[].",
+  "authoritative_temporal_input_2": {
+    "rule_id": "EPOCH2_CUTOFF_RULE_CANONICAL_V03",
+    "statement": "The authoritative temporal input (2) of EPOCH2_CUTOFF_RULE_CANONICAL_V03 is the recorded top-level ratified_at:",
+    "ratified_at": "2026-09-01T23:23:02Z",
+    "source": "top-level field of the clarified file at the pinned commit — never any nested descriptive field, never the git commit timestamp"
+  },
+  "stale_field_classification": {
+    "fields": [
+      "cutoff_rule.input_2.value",
+      "cutoff_rule.input_2.state"
+    ],
+    "classification": "STALE_PRE_RECORDING_DESCRIPTIVE_FIELDS",
+    "recorded_values": {
+      "value": "NOT_YET_AVAILABLE — ratification.v2 is not recorded",
+      "state": "PENDING owner ratification act"
+    },
+    "explanation": "The canonical cutoff_rule object was carried byte-identically in every draft carrier before recording; these two nested fields DESCRIBED the pre-recording world and were not transitioned in the recording template. At the moment of recording they became self-referentially false. They are descriptive status text only.",
+    "no_authority": "These stale descriptive fields have NO authority to override (a) top-level ratified, (b) top-level ratified_at, or (c) cutoff_rule.prerequisite_vs_temporal_input, which already states that file existence and ratified:true are prerequisites and that the explicit ratified_at is the SOLE temporal input of (2). Any tooling or reader computing the Epoch 2 cutoff MUST read the top-level ratified_at and MUST ignore cutoff_rule.input_2.value/state in the clarified file."
+  },
+  "explicitly_not_done_here": [
+    "no Epoch 2 cutoff is computed by this clarification",
+    "no candidate discovery",
+    "no slate population",
+    "no freeze activation",
+    "no Addendum 002 activation (it remains DRAFT / separately gated / ZERO CONTRIBUTION when absent)",
+    "no intake authorization"
+  ],
+  "correction_semantics": "Append-only. The original bytes are preserved permanently at the pinned commit; this artifact adds interpretation on top and never rewrites history.",
+  "recorded_at": "2026-09-02T00:38:47Z",
+  "owner_recording_required": true
+}
