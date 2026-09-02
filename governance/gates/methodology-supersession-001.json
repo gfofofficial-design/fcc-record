@@ -1,0 +1,137 @@
+{
+  "artifact_class": "GOVERNANCE_METHODOLOGY_SUPERSESSION",
+  "not_a_capital_instrument": true,
+  "record_id": "methodology-supersession-001",
+  "supersedes": {
+    "candidate_selection_method": {
+      "version": "v0.2",
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_2.md",
+      "sha256": "751953212fa1f17d0041fc6f3d36c570dae66d25c62d4ac16ed4f9849aaf5927",
+      "disposition": "PRESERVED — history; not in force for Epoch 2"
+    },
+    "public_experiment_spec": {
+      "version": "v0.2",
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_2.md",
+      "sha256": "ef9dab7654e48ec18867706168ea640e46910814923193674fb847160ca89ec6",
+      "disposition": "PRESERVED — history; superseded only in the sections listed in v0.3 delta"
+    }
+  },
+  "supersededBy": {
+    "candidate_selection_method": {
+      "version": "v0.3",
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md",
+      "sha256": "ab6be2c5d25ffdf147a162794ee282bfa84605ca53d8179f6580df0eff1df865"
+    },
+    "public_experiment_spec": {
+      "version": "v0.3",
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md",
+      "sha256": "4e50a3ab68c9fbaa5e5e5d13278ae289c33aa6578d6b81a023c1e82cd26a376f"
+    }
+  },
+  "reason": {
+    "record": "governance/gates/stage0-epoch1-infeasibility-001.json",
+    "sha256": "d93aaa52d424f48dca63226738b0fa172b879c2b2d3adcda739e2c38a3530fef",
+    "public_closure_commit": "35c5ae93d452b8943e0f3cedecbda89aea6ae9c6",
+    "public_closure_commit_subject": "Record Stage 0 Epoch 1 methodology infeasibility",
+    "classification": "STRUCTURAL_METHODOLOGY_INFEASIBILITY",
+    "disposition": "EPOCH CLOSED / NO INTAKE EXECUTED",
+    "authoritative_evidence": {
+      "role": "AUTHORITATIVE — corrected bounded reconstruction; the final Epoch 1 empirical result",
+      "path": "governance/evidence/a1a2-epoch1-reconstruction-2026-09-01.txt",
+      "sha256": "541f45161c8f779f7e3c4c486050fff881252adc2b41c498b6dfa9554aa5e908",
+      "byte_length": 58986,
+      "result": "SHORT 14 / MEDIUM 0 / LONG 0 at both 21d and 42d lookback; fifteenAchievableUnderFrozenLaw:false",
+      "produced_by": {
+        "tool": "tools/diagnose-a1a2-scope.js",
+        "public_commit": "9c42f81d0d6bb877f139b15fe38a5ba77a433618",
+        "tool_sha256": "a615f17ff03d9ec418288cdd973ea439459e4b985471d8d2437a36201dc54a94"
+      }
+    },
+    "historical_evidence": {
+      "role": "HISTORICAL — original diagnostic; preserved byte-exact; A2 activity evaluation known defective (RFC3339 string vs numeric seconds); NOT the final Epoch 1 empirical result",
+      "path": "governance/evidence/a1a2-scope-diagnostic-2026-08-31.txt",
+      "sha256": "73e73bacd785ffb575fbe1a96c4541e9e8c9bdb4669798e7a046fbefc76b8694",
+      "byte_length": 31012,
+      "result": "SHORT 7 / MEDIUM 0 / LONG 0 (defective A2 contribution of zero)",
+      "produced_by": {
+        "tool": "tools/diagnose-a1a2-scope.js",
+        "public_commit": "ab414bf8b8704b4257fceaf13780be966d154755"
+      }
+    },
+    "metadata_evidence": "governance/evidence/a1a2-scope-diagnostic-2026-08-31.json",
+    "metadata_sha256": "20308a3dee696f3d9fdf46bb95036e579863187a4b862f3bca786f9591ee9a82",
+    "observed_scope_set": "governance/evidence/stage0-epoch1-observed-scope-set-001.json",
+    "observed_scope_set_sha256": "51320e7a4742f1c0c404e54ed761e56bcb29d2d7fd6a62d7e1bfa46ab7a4cf41",
+    "summary": "Epoch 1 exact 5/5/5 horizon quota structurally unsatisfiable over the registered source classes: authoritative corrected A1+A2 reconstruction yields SHORT 14 / MEDIUM 0 / LONG 0 at both 21d and 42d (fifteenAchievableUnderFrozenLaw:false); lookback extension is ineffective for a forward-horizon shortage. The historical original diagnostic (7/0/0) is preserved as history only; its A2 defect was resolved by the bounded reconstruction. A methodology-design infeasibility, not an investment-performance or intake-execution failure."
+  },
+  "epoch_semantics": {
+    "epoch_1": {
+      "status": "CLOSED — STRUCTURAL_METHODOLOGY_INFEASIBILITY",
+      "terminal_record_sha256": "d93aaa52d424f48dca63226738b0fa172b879c2b2d3adcda739e2c38a3530fef",
+      "recorded_at_public_commit": "35c5ae93d452b8943e0f3cedecbda89aea6ae9c6",
+      "empirical_result_authoritative": "SHORT 14 / MEDIUM 0 / LONG 0 (corrected bounded reconstruction, sha 541f4516…e908)",
+      "empirical_result_historical_original": "SHORT 7 / MEDIUM 0 / LONG 0 (original diagnostic, sha 73e73bac…8694; A2 defective; preserved, not final)",
+      "cutoff": "2026-08-31T00:00:00.000Z",
+      "slate": "candidate-slate.json (placeholders, preserved)",
+      "freeze": "experiment-freeze.json (v1, BLOCKED, preserved)",
+      "intake_authorization": "intake-execution-001.json — unspent, preserved, self-voiding by hash preconditions"
+    },
+    "epoch_2": {
+      "status": "PROSPECTIVE — begins only at the formula-derived CUTOFF_TIMESTAMP, which requires candidate-selection-ratification.v2.json on public main with ratified:true and an explicit ratified_at, plus experiment-freeze.v2.json recorded",
+      "cutoff": "FORMULA-DERIVED per cutoff_rule below — never owner-selected; NOT COMPUTED in this draft",
+      "cutoff_rule": {
+        "rule_id": "EPOCH2_CUTOFF_RULE_CANONICAL_V03",
+        "formula": "CUTOFF_TIMESTAMP = 00:00:00 UTC exactly 2 calendar days after the LATER of (1) and (2)",
+        "input_1": {
+          "name": "AD-3 VERIFIED timestamp",
+          "record": "governance/gates/build03-1-ad3-status.v2.json",
+          "field": "verified_at",
+          "value": "2026-08-29T23:27:52Z",
+          "state": "PUBLIC, satisfied"
+        },
+        "input_2": {
+          "name": "v0.3 ratification timestamp",
+          "record": "governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.v2.json",
+          "prerequisites": [
+            "exists on public main",
+            "ratified == true"
+          ],
+          "field": "ratified_at",
+          "field_format": "full ISO-8601 UTC with seconds (YYYY-MM-DDTHH:MM:SSZ); date-only is NOT accepted for v2",
+          "value": "NOT_YET_AVAILABLE — ratification.v2 is not recorded",
+          "state": "PENDING owner ratification act"
+        },
+        "prerequisite_vs_temporal_input": "File existence and ratified:true are PREREQUISITES of input (2), never its timestamp. The explicit ratified_at value is the SOLE temporal input of (2). No other event (commit time, freeze recording, file creation) substitutes for ratified_at.",
+        "computation": "By tooling only (intake-cutoff lineage-aware), reading both inputs from public main; never typed by hand; never owner-selected. NOT COMPUTED in this draft.",
+        "epoch_1_boundary": "Anti-carry-over (Method v0.3 §2 Step 1′) excludes any item with source-native opening timestamp <= 2026-08-31T00:00:00.000Z regardless of the Epoch 2 cutoff value."
+      },
+      "slate": "candidate-slate.v2.json",
+      "freeze": "experiment-freeze.v2.json",
+      "intake_authorization": "intake-execution-002.json (required; issued only after all prerequisites are frozen)"
+    }
+  },
+  "anti_post_hoc_clauses": [
+    "No Epoch 1 candidate carries into Epoch 2: Method v0.3 §2 Step 1' excludes every item with opening timestamp <= 2026-08-31T00:00:00.000Z, which by the diagnostic tool's own acquisition bound (created_lte = cutoff) covers every Epoch 1 observed item; a per-item exclusion set is additionally applied wherever a diagnostic prints per-item ids (required of all future epochs). For Epoch 1 the public observed-scope set (sha 51320e7a4742f1c0c404e54ed761e56bcb29d2d7fd6a62d7e1bfa46ab7a4cf41) supplies the identity prong where identity exists (A1 space ids; A2 included, fetched-inactive and excluded governor ids).",
+    "No manual grandfathering path exists.",
+    "v0.3 observable whitelist, formulas, authority hierarchy and slate-control constants are ratified before any Epoch 2 cutoff and immutable during an epoch.",
+    "Epoch 2 discovery begins only after the formula-derived cutoff instant.",
+    "The Epoch 1 evidence remains public permanently at commit 35c5ae93d452b8943e0f3cedecbda89aea6ae9c6: the historical original diagnostic (7/0/0, sha 73e73bac…8694) and the authoritative corrected reconstruction (14/0/0, sha 541f4516…e908). The historical figure is never represented as the final Epoch 1 empirical result.",
+    "No v0.3 threshold is calibrated to the Epoch 1 observed set. The authoritative Epoch 1 eligible set (14 SHORT governance-vote items, a single source class) fails v0.3 §4A′ H1, H2, H3, S1, S2 and S3; the historical 7-item set fails H2, H3 and S2. Constants were not changed between REV1 (drafted against 7/0/0) and REV2 (rebased onto 14/0/0).",
+    "Any surface added after inspecting a specific candidate is prohibited. The only contemplated addition — the Federal Register / SEC SRO surface for RD-19b4 — is statute-justified (15 U.S.C. 78s(b)(2)), drafted prospectively and candidate-independently as governance/experiments/stage0-public-experiment-v1/source-registry-addendum-002.json (DRAFT), and contributes ZERO unless separately ratified BEFORE the Epoch 2 CUTOFF_TIMESTAMP; it can never be ratified during an epoch."
+  ],
+  "recorded_at": "2026-09-02T00:50:25Z",
+  "owner_ratification_required": true,
+  "recording_order": "REV5 chain: this record is recorded AFTER candidate-selection-ratification.v2.json (step C), so it states an ACCOMPLISHED supersession of ratified v0.3 law — never a prospective supersession of unratified bytes. Its Method/Spec pins were fixed at step A and must equal ratification.v2's ratifies[] pins byte-for-byte.",
+  "ratification_recorded": {
+    "public_commit": "254fd2e82cddf7a84a7e3a8cdff423bd958822e4",
+    "record": "governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.v2.json",
+    "sha256": "89042bb801ccd8a4446e9eda14691ba39ac891cd6f86e812f542fd0b0f61f71c",
+    "ratified_at": "2026-09-01T23:23:02Z",
+    "note": "Recorded BEFORE this supersession, satisfying recording_order. This record's own cutoff_rule block is the canonical draft-era object carried byte-identically from the ratified lineage; per the pinned clarification, its input_2.value/state are STALE_PRE_RECORDING_DESCRIPTIVE_FIELDS with no authority — the authoritative temporal input (2) is the ratified_at pinned here.",
+    "clarification_ref": {
+      "path": "governance/evidence/v03-ratification-input2-clarification-001.json",
+      "requirement": "must exist on public main BEFORE this supersession is recorded",
+      "sha256_note": "the clarification's recorded sha256 is fixed by its own recording commit; it is referenced by path to avoid a circular placeholder — the append-only law and the pinned commit history make the reference unambiguous"
+    }
+  }
+}
