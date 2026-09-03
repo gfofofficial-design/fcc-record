@@ -1,4 +1,4 @@
-// FCC STAGE 0 — EPOCH 2 (v0.3) INTAKE EXECUTION AUTHORIZATION GATE (REV3).
+// FCC STAGE 0 — EPOCH 2 (v0.3) INTAKE EXECUTION AUTHORIZATION GATE (REV6).
 //
 // Layered, fail-closed, append-only:
 //   1. evaluateEpoch2GovernancePrerequisites  — UNCONDITIONAL public-byte integrity
@@ -40,17 +40,27 @@ const RECORDED_COMMITS = {
   verified_against_public_main: '96920ebac95d2b48c7470282863e789b893ff00a',
   epoch_1_closure: '35c5ae93d452b8943e0f3cedecbda89aea6ae9c6',
 };
-// Execution infrastructure that must be separately RECORDED and hash-pinned here before
-// any final 002 can be shape-valid for execution and before any evaluator may return
-// SUPERVISED_DISCOVERY_ALLOWED (R5-6). null = not yet recorded.
+// Execution infrastructure reviewed in PR #5 and recorded at its merge commit.
+// These are the exact bytes at execution_head. The gate verifies the five named
+// components and every additional critical-tooling pin against disk before it can
+// return READY_FOR_OWNER_AUTHORIZATION or accept a final 002 (R5-6).
 const EXECUTION_INFRASTRUCTURE = Object.freeze({
-  selected_slate_schema: { path: 'governance/schemas/v2/candidate-slate.v2.selected.schema.json', sha256: null },
-  v2_discovery_runner: { path: 'tools/run-epoch2-candidate-intake.js', sha256: null },
-  deterministic_selection: { path: 'tools/lib/epoch2-selection.js', sha256: null },
-  selected_slate_writer: { path: 'tools/lib/epoch2-selected-slate-writer.js', sha256: null },
-  completion_marker_writer_verifier: { path: 'tools/lib/epoch2-completion.js', sha256: null },
-  execution_critical_tooling_hashes: null,   // { 'tools/...': sha256 }
-  execution_head: null,                       // 40-hex public commit at which execution is authorized
+  selected_slate_schema: { path: 'governance/schemas/v2/candidate-slate.v2.selected.schema.json', sha256: '4e4f08db961fde928188af8f7058b978c82eec44f17f22071f4d0e8f20acbd0d' },
+  v2_discovery_runner: { path: 'tools/run-epoch2-candidate-intake.js', sha256: 'cafc66017130589a885b2ae9407b40e700a9ff641dba6e5444d1e638c26379ee' },
+  deterministic_selection: { path: 'tools/lib/epoch2-selection.js', sha256: '1804375734d5a76a465d54050d0803adcff288108a6dcbe990352e8c5050ebcd' },
+  selected_slate_writer: { path: 'tools/lib/epoch2-selected-slate-writer.js', sha256: '139d94537ceaffbe0567ea2e7de4c4cf3a42dd256810066dbd3030ebac4423ee' },
+  completion_marker_writer_verifier: { path: 'tools/lib/epoch2-completion.js', sha256: '990d71f2b6910eaa3403e99a63143b66c29b52718951463dcfabd607acc0a3a5' },
+  execution_critical_tooling_hashes: {
+    'tools/verify-acquisition-readiness.js': 'd3dcf45406aa3c5deee65865d32201c8e4d76a236d9f04379affb0ae0e33695e',
+    'tools/lib/acquisition-adapters.js': '889c4f44753997f798b929e6ebb6ddfc0534be0832326222458a3563ee79ac3e',
+    'tools/lib/intake-cutoff.js': 'ba1a56e1cfffbfbffdccaed1162dc37b5b34d1194b7cc54e61f549da19957807',
+    'tools/lib/intake-authorization.js': '8ff3173fadf218457734177f3e2eaf92d1bcbe5eca67c037ad064d96dbd445ff',
+    'tools/lib/epoch2-readiness-probe.js': '62d0e03fae05fdd0d50be974319162ed9ad7b60199107388260aa186843108bc',
+    'tools/lib/intake-final-write.js': '30df101ce371a10e7bee4a69a44055e7dae58efc800a1e30b398e259cc322675',
+    'tools/lib/live-acquisition-provider.js': '07c21feaafefd0905a0de08d11e598afe3f698f7dff549e3ae1ec422135e7036',
+    'tools/ci-intake-guard.js': 'd44d40895e34c00cd718bf66e76a79e8b2c3c0064a3633cca5b270b81133c22b',
+  },
+  execution_head: 'a0e3eb2507b91fdbb76faa28169a9cacaa30297c',
 });
 function executionInfrastructureStatus(infra) {
   const i = infra || EXECUTION_INFRASTRUCTURE; const missing = [];
@@ -60,6 +70,22 @@ function executionInfrastructureStatus(infra) {
   return { complete: missing.length === 0, missing };
 }
 const sha256 = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
+function verifyExecutionInfrastructureFiles(repoRoot, infra = EXECUTION_INFRASTRUCTURE) {
+  const problems = [];
+  const named = ['selected_slate_schema', 'v2_discovery_runner', 'deterministic_selection', 'selected_slate_writer', 'completion_marker_writer_verifier'];
+  const pins = named.map((k) => [infra[k] && infra[k].path, infra[k] && infra[k].sha256, k]);
+  for (const [rel, expected, label] of pins) {
+    if (typeof rel !== 'string' || !HEX64.test(expected || '')) { problems.push(label + ': pin incomplete'); continue; }
+    try { if (sha256(fs.readFileSync(path.join(repoRoot, rel))) !== expected) problems.push(label + ': bytes differ from recorded pin'); }
+    catch (e) { problems.push(label + ': pinned file missing'); }
+  }
+  for (const [rel, expected] of Object.entries(infra.execution_critical_tooling_hashes || {})) {
+    if (!HEX64.test(expected || '')) { problems.push(rel + ': critical-tooling pin incomplete'); continue; }
+    try { if (sha256(fs.readFileSync(path.join(repoRoot, rel))) !== expected) problems.push(rel + ': bytes differ from recorded pin'); }
+    catch (e) { problems.push(rel + ': pinned file missing'); }
+  }
+  return { valid: problems.length === 0, problems };
+}
 // Format AND real calendar time: the string must round-trip through Date exactly.
 const isRealUtcSec = (s) => UTC_SEC_RE.test(s || '') && !Number.isNaN(Date.parse(s)) && new Date(Date.parse(s)).toISOString().replace(/\.\d{3}Z$/, 'Z') === s;
 const isRealUtcMs = (s) => UTC_MS_RE.test(s || '') && !Number.isNaN(Date.parse(s)) && new Date(Date.parse(s)).toISOString() === s;
@@ -92,15 +118,15 @@ const OWNER_AUTH_SCOPE = 'EXACTLY ONE supervised Epoch 2 candidate-intake execut
 // ---------------------------------------------------------------- schema reuse
 // Same validator stack as tools/verify-schemas.js (ajv 2020 + formats); never a weaker copy.
 // Recorded schema identities (public bytes at schemas/v2; F-1 naming carried as recorded).
-// RECORDED schema bytes are pinned (commit 2a24e57 "Add Epoch 2 v2 governance schemas").
+// Freeze/slate input schemas were pinned at commit 2a24e57; the selected-slate
+// output schema was reviewed and pinned at the Phase 1 merge execution_head.
 // A weakened schema that keeps its identity strings refuses on sha256. The selected-
-// slate schema is NOT recorded/pinned: any file at its path is refused, so no
-// completion can validate until that schema is separately reviewed, recorded and
-// pinned here (RV4-3/RV4-4).
+// slate schema was separately reviewed in PR #5 and is now pinned by exact bytes
+// and identity here (RV4-3/RV4-4).
 const SCHEMA_IDENTITY = {
   [P.freezeSchema]: { $id: 'https://fcc-record/governance/schemas/v2/experiment-freeze.schema.json', $schema: 'https://json-schema.org/draft/2020-12/schema', sha256: '99f95dcd439360c0d76853df89cedf6a0398be952c6ecbec9ae65a17992c177b' },
   [P.slateSchema]: { $id: 'https://fcc-record/governance/schemas/v2/candidate-slate.schema.json', $schema: 'https://json-schema.org/draft/2020-12/schema', sha256: '362e12266e0ee8a644d4c23399a441e3d4dd89214015f7b463e68f0b36b6112f' },
-  [P.selectedSchema]: { unpinned: true },
+  [P.selectedSchema]: { $id: 'https://fcc-record/governance/schemas/v2/candidate-slate.v2.selected.schema.json', $schema: 'https://json-schema.org/draft/2020-12/schema', sha256: EXECUTION_INFRASTRUCTURE.selected_slate_schema.sha256 },
 };
 function freshAjv() { const Ajv2020 = require('ajv/dist/2020'); const addFormats = require('ajv-formats'); const a = new Ajv2020({ strict: false, allErrors: true }); addFormats(a); return a; }
 function validateAgainstSchemaFile(repoRoot, schemaRel, doc) {
@@ -160,6 +186,7 @@ function readRepoFacts(repoRoot, infrastructure) {
     selectedSchemaErrors: (d) => validateAgainstSchemaFile(repoRoot, P.selectedSchema, d),
     authRecords, selectedLookalikes,
     infrastructure: infrastructure || EXECUTION_INFRASTRUCTURE,
+    infrastructureIntegrity: infrastructure ? { valid: true, problems: [] } : verifyExecutionInfrastructureFiles(repoRoot, EXECUTION_INFRASTRUCTURE),
     selectedExists: fs.existsSync(abs(P.selected)),
     blockedRecordsPresent: gateNames.some((n) => /^intake-blocked-.*\.json$/.test(n)),
     markerExists: fs.existsSync(abs(P.marker002)),
@@ -292,8 +319,9 @@ function evaluateEpoch2GovernancePrerequisites({ cutoff, repo }) {
   if (repo.selectedLookalikes && repo.selectedLookalikes.length) F.push('P12: noncanonical selected-slate lookalike artifact(s) present: ' + repo.selectedLookalikes.join(', '));
   // 13 execution infrastructure (R5-6): the transaction must be able to FINISH lawfully.
   const infra = executionInfrastructureStatus(repo.infrastructure);
-  facts.infrastructure = repo.infrastructure || EXECUTION_INFRASTRUCTURE; facts.infrastructureComplete = infra.complete;
+  facts.infrastructure = repo.infrastructure || EXECUTION_INFRASTRUCTURE; facts.infrastructureComplete = infra.complete && repo.infrastructureIntegrity && repo.infrastructureIntegrity.valid === true;
   if (!infra.complete) F.push('P13: EXECUTION_INFRASTRUCTURE_INCOMPLETE — not yet recorded/hash-pinned: ' + infra.missing.join(', '));
+  else if (!repo.infrastructureIntegrity || repo.infrastructureIntegrity.valid !== true) F.push('P13: EXECUTION_INFRASTRUCTURE_DRIFT — ' + ((repo.infrastructureIntegrity && repo.infrastructureIntegrity.problems) || ['integrity result absent']).join(', '));
   // 11 completion / blockers
   if (repo.markerExists) F.push('P11: Epoch 2 completion marker exists — the single execution is spent or requires reconciliation');
   if (repo.blockedRecordsPresent) F.push('P11: intake-blocked record present');
@@ -495,6 +523,10 @@ function validateEpoch2CompletionMarker(repoRoot, repo, cutoff, nowMs) {
   else if (d.selected_slate && repo.sha.selected !== d.selected_slate.sha256) pr.push('selected artifact hash drift');
   else {
     const se = repo.selectedSchemaErrors(repo.selected.doc); if (se.length) pr.push('selected artifact fails recorded selected-slate schema: ' + se.slice(0, 2).join('; '));
+    else {
+      const semantic = require('./epoch2-selected-slate-writer.js').validateSelectedSlate(repoRoot, repo.selected.doc);
+      if (!semantic.valid) pr.push('selected artifact fails recorded semantic controls: ' + semantic.problems.slice(0, 2).join('; '));
+    }
     const s = repo.selected.doc || {};
     if (s.authorization_ref && d.authorization_record && s.authorization_ref.sha256 !== d.authorization_record.sha256) pr.push('selected artifact and marker bind to different authorizations');
     if (s.pre_intake_shell && d.pristine_shell && s.pre_intake_shell.sha256 !== d.pristine_shell.sha256) pr.push('selected artifact and marker bind to different pristine shells');
@@ -535,7 +567,7 @@ function deriveEpoch2StateWith(repoRoot, { nowMs, readinessAggregate, supervised
   if (!has002) return { state: 'READY_FOR_OWNER_AUTHORIZATION', detail: 'governance prerequisites verified from public bytes (Method/Spec vs ratification pins, ratification.v2, clarification, supersession, freeze.v2 schema+lineage, Epoch 1 terminal, N/H/S controls); pristine empty slate verified against the frozen hash and path; cutoff reached; owner authorization record intake-execution-002.json ABSENT. Live acquisition readiness is NOT required for this state and is NOT asserted here — it MUST be READY at execution time for SUPERVISED_DISCOVERY_ALLOWED (gate letter R hard-refuses otherwise).', cutoff };
   const ev = evaluateEpoch2ExecutionPreconditions({ preflight, authRecords: repo.authRecords, supervisedMode: supervisedMode === true, readinessAggregate: readinessAggregate || null, nowMs });
   if (ev.failures.some((f) => !/^M: |^R: /.test(f))) return { state: 'CUTOFF_REACHED_GATE_INCOMPLETE', detail: ev.failures.join(' | '), cutoff };
-  if (ev.allowed) return { state: 'SUPERVISED_DISCOVERY_ALLOWED', detail: 'every precondition verified under supervised invocation with live READY readiness — the (not yet wired) runner may proceed to exactly one supervised execution', cutoff };
+  if (ev.allowed) return { state: 'SUPERVISED_DISCOVERY_ALLOWED', detail: 'every precondition verified under supervised invocation with live READY readiness — the pinned runner may proceed to exactly one supervised execution', cutoff };
   return { state: 'OWNER_AUTHORIZED', detail: 'final owner authorization recorded and verified; execution additionally requires supervised invocation (' + SUPERVISED_FLAG + ' + ' + SUPERVISED_ENV + '=' + SUPERVISED_ENV_VALUE + ') and live READY readiness', cutoff };
 }
 function deriveEpoch2State(repoRoot, opts = {}) { return deriveEpoch2StateWith(repoRoot, opts, undefined); }
@@ -545,8 +577,9 @@ function deriveEpoch2State(repoRoot, opts = {}) { return deriveEpoch2StateWith(r
 // It reads process.argv/process.env itself, runs the readiness TRANSACTION itself, then
 // re-reads HEAD and time AFTER the probe and validates provenance against those. No
 // caller-supplied readiness, run time, stdout, supervision flag or clock is accepted.
-// Readiness may be REPORTED, but until the execution infrastructure is recorded and
-// pinned (P13) the result is allowed:false / executable:false by construction.
+// Readiness may be REPORTED, but executable becomes true only for the production
+// entry after the complete pinned gate returns allowed:true. Fixture helpers can
+// never report executable:true.
 const READINESS_SOURCE = PROBE.READINESS_SOURCE;
 function evaluateForProcessCore(repoRoot, { argv, env, probeResult, headAfterProbe, nowAfterProbe }) {
   const supervised = supervisedModeRequested(argv || [], env || {});
@@ -560,7 +593,7 @@ function evaluateEpoch2ForProcess(repoRoot) {
   const headAfterProbe = PROBE.currentHead(repoRoot);            // re-read AFTER the probe
   const nowAfterProbe = Date.now();                              // re-read AFTER the probe
   const r = evaluateForProcessCore(repoRoot, { argv: process.argv.slice(2), env: process.env, probeResult, headAfterProbe, nowAfterProbe });
-  return { ...r, production: true, note: 'process-bound evaluation; no v2 runner or writer is wired — this result cannot start anything' };
+  return { ...r, executable: r.allowed === true && r.readinessProvenance.valid === true, production: true, note: 'process-bound evaluation; executable only after final owner authorization, exact supervision pair, fresh READY probe, clean HEAD-bound tree and pinned infrastructure verification' };
 }
 // FIXTURE HELPERS — non-authoritative. Exported ONLY under __testOnly (R5-8).
 function parseReadinessOutput(stdout, runAtIso) {
@@ -597,6 +630,6 @@ function decideEpoch2GuardCase(repoRoot, { nowMs } = {}) {
   return { pass, caseId: 'E2', why: `Epoch 2 ${e2.defined ? 'cutoff ' + e2.cutoffTimestamp + (e2.reached ? ' reached' : ' not reached') : 'cutoff undefined'}; intake NOT authorized by cutoff${why.length ? '; ' + why.join('; ') : ''}` };
 }
 
-module.exports = { P, safeCutoff, isRealUtcSec, isRealUtcMs, CANONICAL_CUTOFF_RULE_ID, SCHEMA_IDENTITY, RECORDED_FREEZE_SHA, RECORDED_COMMITS, EXECUTION_INFRASTRUCTURE, executionInfrastructureStatus, EPOCH2_CONTROLS, OWNER_AUTH_STATE, OWNER_AUTH_SCOPE, READINESS_SOURCE, readRepoFacts, validateAgainstSchemaFile, evaluateEpoch2GovernancePrerequisites, evaluateEpoch2ExecutionPreconditions, evaluateEpoch2FromRepo, validateAuthorizationShapeV2, validateEpoch2CompletionMarker, deriveEpoch2State, evaluateEpoch2ForProcess, decideEpoch2GuardCase, supervisedModeRequested, SUPERVISED_FLAG, SUPERVISED_ENV, SUPERVISED_ENV_VALUE,
+module.exports = { P, safeCutoff, isRealUtcSec, isRealUtcMs, CANONICAL_CUTOFF_RULE_ID, SCHEMA_IDENTITY, RECORDED_FREEZE_SHA, RECORDED_COMMITS, EXECUTION_INFRASTRUCTURE, executionInfrastructureStatus, verifyExecutionInfrastructureFiles, EPOCH2_CONTROLS, OWNER_AUTH_STATE, OWNER_AUTH_SCOPE, READINESS_SOURCE, readRepoFacts, validateAgainstSchemaFile, evaluateEpoch2GovernancePrerequisites, evaluateEpoch2ExecutionPreconditions, evaluateEpoch2FromRepo, validateAuthorizationShapeV2, validateEpoch2CompletionMarker, deriveEpoch2State, evaluateEpoch2ForProcess, decideEpoch2GuardCase, supervisedModeRequested, SUPERVISED_FLAG, SUPERVISED_ENV, SUPERVISED_ENV_VALUE,
   // Non-authoritative fixture surfaces. No production module imports these.
   __testOnly: { test_only: true, parseReadinessOutput, evaluateForProcessWithDeps, evaluateEpoch2FromRepoWith, deriveEpoch2StateWith, readRepoFactsWith: readRepoFacts } };

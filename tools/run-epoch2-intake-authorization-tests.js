@@ -3,12 +3,15 @@
 // performs discovery, spawns the runner, calls a network adapter, calls the final-write
 // executor, or writes to the real repository. Positive execution paths are reachable ONLY
 // through __testOnly fixture surfaces that inject a COMPLETE (fictional) execution
-// infrastructure; every production entry stays blocked (P13) until real pins are recorded.
+// infrastructure. Production pins are verified here, but no test records owner
+// authorization or invokes the real runner.
 'use strict';
 const fs = require('fs'); const path = require('path'); const os = require('os'); const crypto = require('crypto');
 const G = require('./lib/epoch2-intake-authorization.js');
 const PROBE = require('./lib/epoch2-readiness-probe.js');
 const FW = require('./lib/intake-final-write.js');
+const SEL = require('./lib/epoch2-selection.js');
+const WRITER = require('./lib/epoch2-selected-slate-writer.js');
 const TO = G.__testOnly;
 const ROOT = path.join(__dirname, '..');
 const H = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
@@ -17,7 +20,11 @@ const has = (r, re) => (r.failures || r.problems || []).some((f) => re.test(f));
 const CUT = '2026-09-03T00:00:00.000Z';
 const PRE = Date.parse(CUT) - 1, AT = Date.parse(CUT), POST = Date.parse('2026-09-04T12:00:00Z');
 const P = G.P;
-const COPY = [P.method, P.spec, P.ratification, P.freeze, P.slate, P.clarification, P.supersession, P.epoch1Terminal, P.freezeSchema, P.slateSchema, 'governance/gates/build03-1-ad3-status.v2.json', 'governance/gates/intake-execution-001.json', 'governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.json'];
+const INFRA_COPY = [
+  ...['selected_slate_schema', 'v2_discovery_runner', 'deterministic_selection', 'selected_slate_writer', 'completion_marker_writer_verifier'].map((k) => G.EXECUTION_INFRASTRUCTURE[k].path),
+  ...Object.keys(G.EXECUTION_INFRASTRUCTURE.execution_critical_tooling_hashes),
+];
+const COPY = [...new Set([P.method, P.spec, P.ratification, P.freeze, P.slate, P.clarification, P.supersession, P.epoch1Terminal, P.freezeSchema, P.slateSchema, ...INFRA_COPY, 'governance/gates/build03-1-ad3-status.v2.json', 'governance/gates/intake-execution-001.json', 'governance/experiments/stage0-public-experiment-v1/candidate-selection-ratification.json'])];
 function mkRepo(mut) { const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'e2r5-')); for (const rel of COPY) { fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true }); fs.copyFileSync(path.join(ROOT, rel), path.join(tmp, rel)); } if (mut) mut(tmp); return tmp; }
 const rm = (t) => fs.rmSync(t, { recursive: true, force: true });
 const del = (t, rel) => fs.rmSync(path.join(t, rel));
@@ -25,18 +32,19 @@ const appendByte = (t, rel) => fs.appendFileSync(path.join(t, rel), '\n');
 const editJson = (t, rel, fn) => { const p = path.join(t, rel); const d = JSON.parse(fs.readFileSync(p, 'utf8')); fn(d); fs.writeFileSync(p, JSON.stringify(d, null, 2)); };
 const writeJson = (t, rel, d) => { fs.mkdirSync(path.dirname(path.join(t, rel)), { recursive: true }); fs.writeFileSync(path.join(t, rel), typeof d === 'string' ? d : JSON.stringify(d, null, 2)); };
 const SH = { method: H(path.join(ROOT, P.method)), spec: H(path.join(ROOT, P.spec)), freeze: H(path.join(ROOT, P.freeze)), slate: H(path.join(ROOT, P.slate)), supersession: H(path.join(ROOT, P.supersession)), e1: H(path.join(ROOT, P.epoch1Terminal)) };
-// FICTIONAL complete infrastructure — test fixture only; production constant stays null-pinned.
+// FICTIONAL complete infrastructure — test fixture only; production has separately recorded pins.
 const INFRA = { selected_slate_schema: { path: G.EXECUTION_INFRASTRUCTURE.selected_slate_schema.path, sha256: '1'.repeat(64) }, v2_discovery_runner: { path: G.EXECUTION_INFRASTRUCTURE.v2_discovery_runner.path, sha256: '2'.repeat(64) }, deterministic_selection: { path: G.EXECUTION_INFRASTRUCTURE.deterministic_selection.path, sha256: '3'.repeat(64) }, selected_slate_writer: { path: G.EXECUTION_INFRASTRUCTURE.selected_slate_writer.path, sha256: '4'.repeat(64) }, completion_marker_writer_verifier: { path: G.EXECUTION_INFRASTRUCTURE.completion_marker_writer_verifier.path, sha256: '5'.repeat(64) }, execution_critical_tooling_hashes: { 'tools/verify-acquisition-readiness.js': '6'.repeat(64) }, execution_head: 'ab'.repeat(20) };
-const finalRec = () => ({ artifact_class: 'GOVERNANCE_EXECUTION_AUTHORIZATION', not_a_capital_instrument: true, gate: 'CANDIDATE_INTAKE_EXECUTION', authorization_id: 'intake-execution-002', authorized: true, epoch: 2,
+const finalRec = (infrastructure = INFRA) => ({ artifact_class: 'GOVERNANCE_EXECUTION_AUTHORIZATION', not_a_capital_instrument: true, gate: 'CANDIDATE_INTAKE_EXECUTION', authorization_id: 'intake-execution-002', authorized: true, epoch: 2,
   predecessor: { record: 'governance/gates/intake-execution-001.json', state: 'PRESERVED, UNSPENT and UNUSABLE for Epoch 2 (v0.2 lineage); never amended, never marked spent' },
   scope: { what_is_authorized: G.OWNER_AUTH_SCOPE, single_use: true, completion_marker_path: P.marker002 },
   owner_authorization: { state: G.OWNER_AUTH_STATE, authorized_at: '2026-09-03T01:00:00Z', scope: G.OWNER_AUTH_SCOPE },
   pins: { methodology: { path: P.method, sha256: SH.method }, experiment_spec: { path: P.spec, sha256: SH.spec }, experiment_freeze: { path: P.freeze, sha256: SH.freeze }, pre_intake_candidate_slate: { path: P.slate, sha256: SH.slate }, supersession_record: { path: P.supersession, sha256: SH.supersession }, epoch_1_terminal_record: { path: P.epoch1Terminal, sha256: SH.e1, public_commit: G.RECORDED_COMMITS.epoch_1_closure },
     source_registry_addendum_002: { path: P.addendum, sha256: 'ABSENT', required: false }, frozen_cutoff: CUT,
     cutoff_rule_ref: { rule_id: G.CANONICAL_CUTOFF_RULE_ID, source_path: P.freeze, source_sha256: G.RECORDED_FREEZE_SHA, source_field: 'candidate_selection_methodology.cutoff_gate_ref', computed_cutoff: CUT },
-    execution_infrastructure: JSON.parse(JSON.stringify(INFRA)) },
+    execution_infrastructure: JSON.parse(JSON.stringify(infrastructure)) },
   recorded_at: '2026-09-03T01:00:05Z', owner_ratification_required: false });
 const withAuth = (mut) => mkRepo((t) => { writeJson(t, P.auth002, finalRec()); if (mut) mut(t); });
+const withProductionAuth = (mut) => mkRepo((t) => { writeJson(t, P.auth002, finalRec(G.EXECUTION_INFRASTRUCTURE)); if (mut) mut(t); });
 const SUPR = { supervisedMode: true, readinessAggregate: 'READY', nowMs: POST };
 const evalI = (t, o = SUPR) => TO.evaluateEpoch2FromRepoWith(t, o, INFRA);           // fixture-infrastructure evaluation
 const stateI = (t, o = { nowMs: POST }) => TO.deriveEpoch2StateWith(t, o, INFRA).state;
@@ -136,7 +144,7 @@ t = mkRepo((tt) => writeJson(tt, P.marker002, '{}')); ok(stateI(t) === 'RECONCIL
 
 console.log('== R5-2 / R5-3 / MV-1 / RV4-2: closed FINAL 002 ==');
 ok(shape(finalRec()).length === 0, 'closed finalized shape (with fixture infrastructure pins) => accepted');
-ok(G.validateAuthorizationShapeV2(finalRec(), 'intake-execution-002.json').length > 0 && /not yet recorded\/pinned/.test(G.validateAuthorizationShapeV2(finalRec(), 'intake-execution-002.json').join()), 'R5-6: the SAME record under PRODUCTION infrastructure => unfinalizable (infrastructure not recorded)');
+ok(G.validateAuthorizationShapeV2(finalRec(), 'intake-execution-002.json').length > 0 && /does not equal the recorded pin|recorded execution HEAD/.test(G.validateAuthorizationShapeV2(finalRec(), 'intake-execution-002.json').join()), 'R5-6: the SAME fixture record under PRODUCTION infrastructure => refused because its pins differ');
 for (const [label, mut, re] of [
   ['status DRAFT_NOT_AUTHORIZED field', (d) => { d.status = 'DRAFT_NOT_AUTHORIZED'; }, /unexpected top-level|non-authority word/],
   ['revoked:true field', (d) => { d.revoked = true; }, /unexpected top-level/],
@@ -203,16 +211,20 @@ for (const [label, mut, re, expectRefuse] of [
 ]) { const r = withAuth((tt) => editJson(tt, P.auth002, mut)); const e = evalI(r); ok(expectRefuse ? has(e, re) : (!has(e, re) && e.allowed === true), `chronology: ${label} => ${expectRefuse ? 'REFUSE' : 'accepted'}`); rm(r); }
 
 console.log('== MV-3 / RV4-4 / R5-1: completion ==');
-const SELECTED_SCHEMA_FIXTURE = { $schema: 'https://json-schema.org/draft/2020-12/schema', $id: 'fcc-record/governance/schemas/v2/candidate-slate.v2.selected.schema.json', type: 'object' };
-const selDoc = (authSha) => ({ artifact_class: 'EPOCH2_SELECTED_CANDIDATE_SLATE', epoch: 2, authorization_ref: { path: P.auth002, sha256: authSha }, pre_intake_shell: { path: P.slate, sha256: SH.slate }, total_slots: 15, all_slots_populated: true, slots: [], selection_completed_at: '2026-09-03T02:00:00Z' });
+function completionSelection() {
+  const src = [['A1', 5], ['B2', 25], ['E1', 60]], pool = [];
+  for (const [sourceId, days] of src) for (let i = 0; i < 5; i++) pool.push({ sourceId, canonicalId: `${sourceId}-${i}`, openedAt: '2026-09-02T00:00:00.000Z', resolutionDate: new Date(Date.parse(CUT) + (days + i) * 86400000).toISOString(), observableType: 'OBS_SOURCE_NATIVE_DATE', assetId: `${sourceId}-asset-${i}`, title: `${sourceId} candidate ${i}`, qualificationStanceShaped: true, subjectTouchesFederation: false, materialRisk: i === 0, possibleDuplicateRefs: [] });
+  return SEL.selectEpoch2(pool, { cutoff: CUT });
+}
+const selDoc = (authSha) => WRITER.buildSelectedSlate({ result: completionSelection(), authorizationSha: authSha, shellSha: SH.slate, lineage: { methodology: SH.method, experiment_spec: SH.spec, experiment_freeze: SH.freeze, supersession_record: SH.supersession }, completedAt: '2026-09-03T02:00:00Z' });
 function completeRepo(mutMarker, mutOther) {
   return withAuth((tt) => {
-    const authSha = H(path.join(tt, P.auth002)); writeJson(tt, FW.EPOCH2_SELECTED_SLATE_PATH, selDoc(authSha)); writeJson(tt, P.selectedSchema, SELECTED_SCHEMA_FIXTURE);
+    const authSha = H(path.join(tt, P.auth002)); writeJson(tt, FW.EPOCH2_SELECTED_SLATE_PATH, selDoc(authSha));
     const marker = { artifact_class: 'GOVERNANCE_EXECUTION_COMPLETION', gate: 'CANDIDATE_INTAKE_EXECUTION', authorization_id: 'intake-execution-002', completed_at: '2026-09-03T02:00:05Z', single_use_consumed: true, selected_slate: { path: P.selected, sha256: H(path.join(tt, FW.EPOCH2_SELECTED_SLATE_PATH)) }, authorization_record: { path: P.auth002, sha256: authSha }, cutoff: CUT, pristine_shell: { path: P.slate, sha256: SH.slate }, lineage: { methodology: SH.method, experiment_spec: SH.spec, experiment_freeze: SH.freeze, supersession_record: SH.supersession } };
     if (mutMarker) mutMarker(marker, tt); writeJson(tt, P.marker002, marker); if (mutOther) mutOther(tt);
   });
 }
-t = completeRepo(); { const cst = TO.deriveEpoch2StateWith(t, { nowMs: POST }, INFRA); ok(cst.state === 'RECONCILIATION_REQUIRED' && /not recorded\/pinned/.test(cst.detail), 'otherwise fully bound completion => RECONCILIATION_REQUIRED (selected schema unpinned) — SPENT unreachable'); }
+t = completeRepo(); { const cst = TO.deriveEpoch2StateWith(t, { nowMs: POST }, INFRA); ok(cst.state === 'EXECUTION_COMPLETE_SPENT', 'fully bound completion under the recorded schema => EXECUTION_COMPLETE_SPENT'); }
 ok(has(evalI(t), /^P11: .*completion marker/), 'completion marker present => execution permanently REFUSED'); rm(t);
 for (const [label, mm, mo] of [
   ['empty {} marker', (m) => { for (const k of Object.keys(m)) delete m[k]; }], ['wrong authorization_id', (m) => { m.authorization_id = 'intake-execution-001'; }], ['malformed completed_at', (m) => { m.completed_at = 'now'; }], ['impossible completed_at', (m) => { m.completed_at = '2026-99-99T99:99:99Z'; }],
@@ -223,12 +235,17 @@ for (const [label, mm, mo] of [
 t = completeRepo(null, (tt) => editJson(tt, P.auth002, (d) => { d.authorized = false; })); { const st = TO.deriveEpoch2StateWith(t, { nowMs: POST }, INFRA); ok(/authorization: B: /.test(st.detail), 'unauthorized 002 named explicitly in the reconciliation detail'); } rm(t);
 t = completeRepo((m) => { m.completed_at = '2026-09-03T00:30:00Z'; }); { const v = G.validateEpoch2CompletionMarker(t, G.readRepoFacts(t, INFRA), G.safeCutoff(t, POST), POST); ok(v.problems.some((p) => /completed_at precedes recorded_at/.test(p)), 'R5-1: completion chronology recorded_at <= completed_at enforced'); } rm(t);
 
-console.log('== R5-6: execution-infrastructure hard block (PRODUCTION surfaces) ==');
-t = mkRepo(); ok(G.deriveEpoch2State(t, { nowMs: POST }).state === 'EXECUTION_INFRASTRUCTURE_INCOMPLETE', 'production deriver, governance-valid, post-cutoff, no 002 => EXECUTION_INFRASTRUCTURE_INCOMPLETE (never READY)');
-ok(/withheld until/.test(G.deriveEpoch2State(t, { nowMs: POST }).detail), 'state detail names the withheld READY and the missing pins'); rm(t);
-t = withAuth(); { const r = G.evaluateEpoch2FromRepo(t, { nowMs: POST, supervisedMode: true, readinessAggregate: 'READY' }); ok(r.allowed === false && has(r, /^P13: EXECUTION_INFRASTRUCTURE_INCOMPLETE/) && has(r, /^B: /), 'production evaluator with a would-be-final 002 + supervised + READY => allowed:false (P13 + record unfinalizable)'); }
-ok(G.deriveEpoch2State(t, { nowMs: POST, supervisedMode: true, readinessAggregate: 'READY' }).state === 'EXECUTION_INFRASTRUCTURE_INCOMPLETE', 'production deriver never emits SUPERVISED_DISCOVERY_ALLOWED before infrastructure pins'); rm(t);
-ok(G.executionInfrastructureStatus().complete === false && G.executionInfrastructureStatus().missing.length === 7, 'production EXECUTION_INFRASTRUCTURE has all seven components unrecorded');
+console.log('== R5-6: recorded execution infrastructure (PRODUCTION surfaces) ==');
+t = mkRepo(); ok(G.deriveEpoch2State(t, { nowMs: POST }).state === 'READY_FOR_OWNER_AUTHORIZATION', 'production deriver, governance-valid, post-cutoff, no 002 => READY_FOR_OWNER_AUTHORIZATION');
+ok(/owner authorization record.*ABSENT/.test(G.deriveEpoch2State(t, { nowMs: POST }).detail), 'state detail names the absent owner authorization and does not imply execution'); rm(t);
+t = withAuth(); { const r = G.evaluateEpoch2FromRepo(t, { nowMs: POST, supervisedMode: true, readinessAggregate: 'READY' }); ok(r.allowed === false && !has(r, /^P13: /) && has(r, /^B: /), 'production rejects a 002 carrying fictional fixture pins while recorded infrastructure remains valid'); }
+ok(G.deriveEpoch2State(t, { nowMs: POST, supervisedMode: true, readinessAggregate: 'READY' }).state === 'CUTOFF_REACHED_GATE_INCOMPLETE', 'production never accepts a 002 whose infrastructure pins differ from the recorded set'); rm(t);
+t = withProductionAuth(); { const r = G.evaluateEpoch2FromRepo(t, { nowMs: POST, supervisedMode: true, readinessAggregate: 'READY' }); ok(r.allowed === true && r.failures.length === 0, 'production pure evaluator accepts an exactly pinned FINAL 002 only with supervised + READY inputs'); }
+ok(G.deriveEpoch2State(t, { nowMs: POST, supervisedMode: true, readinessAggregate: 'READY' }).state === 'SUPERVISED_DISCOVERY_ALLOWED', 'fully pinned production state can reach SUPERVISED_DISCOVERY_ALLOWED after separate owner authorization'); rm(t);
+ok(G.executionInfrastructureStatus().complete === true && G.executionInfrastructureStatus().missing.length === 0, 'production EXECUTION_INFRASTRUCTURE has all seven components recorded');
+ok(G.verifyExecutionInfrastructureFiles(ROOT).valid, 'production infrastructure files match every recorded hash');
+t = mkRepo((tt) => appendByte(tt, G.EXECUTION_INFRASTRUCTURE.deterministic_selection.path)); ok(has(G.evaluateEpoch2FromRepo(t, { nowMs: POST }), /^P13: EXECUTION_INFRASTRUCTURE_DRIFT/), 'one-byte drift in a named execution component => P13 REFUSE'); rm(t);
+t = mkRepo((tt) => del(tt, 'tools/lib/live-acquisition-provider.js')); ok(has(G.evaluateEpoch2FromRepo(t, { nowMs: POST }), /^P13: EXECUTION_INFRASTRUCTURE_DRIFT/), 'missing pinned acquisition provider => P13 REFUSE'); rm(t);
 ok(G.executionInfrastructureStatus(INFRA).complete === true, 'fixture infrastructure is complete (test surface only)');
 for (const k of ['selected_slate_schema', 'v2_discovery_runner', 'deterministic_selection', 'selected_slate_writer', 'completion_marker_writer_verifier']) { const i = JSON.parse(JSON.stringify(INFRA)); i[k].sha256 = null; ok(!G.executionInfrastructureStatus(i).complete && TO.deriveEpoch2StateWith(mkRepo(), { nowMs: POST }, i).state === 'EXECUTION_INFRASTRUCTURE_INCOMPLETE', `missing ${k} pin => EXECUTION_INFRASTRUCTURE_INCOMPLETE`); }
 { const i = JSON.parse(JSON.stringify(INFRA)); i.execution_head = null; ok(TO.deriveEpoch2StateWith(mkRepo(), { nowMs: POST }, i).state === 'EXECUTION_INFRASTRUCTURE_INCOMPLETE', 'missing execution_head => EXECUTION_INFRASTRUCTURE_INCOMPLETE'); }
@@ -263,12 +280,12 @@ ok(!prov(TO.parseReadinessOutput('AGGREGATE INTAKE_READINESS: READY', '2026-09-0
 ok(!prov('READY').valid && !prov({ aggregate: 'READY' }).valid, 'bare strings/objects => invalid');
 // process entry
 t = withAuth();
-{ const cleanProbe = () => run({ stdout: 'AGGREGATE INTAKE_READINESS: READY\n' }); const pr = TO.evaluateForProcessWithDeps(t, { argv: [G.SUPERVISED_FLAG], env: { [G.SUPERVISED_ENV]: G.SUPERVISED_ENV_VALUE }, probe: cleanProbe, nowMs: NOW, headSha: HEAD }); ok(pr.test_only === true && pr.production === false && pr.executable === false, 'R5-8: injected process helper reports test_only:true / production:false / executable:false'); ok(!has(pr, /^M: /) && !has(pr, /^R: /) && has(pr, /^P13: /), 'injected valid provenance: no M/R; still blocked by P13 (infrastructure)'); }
+{ const cleanProbe = () => run({ stdout: 'AGGREGATE INTAKE_READINESS: READY\n' }); const pr = TO.evaluateForProcessWithDeps(t, { argv: [G.SUPERVISED_FLAG], env: { [G.SUPERVISED_ENV]: G.SUPERVISED_ENV_VALUE }, probe: cleanProbe, nowMs: NOW, headSha: HEAD }); ok(pr.test_only === true && pr.production === false && pr.executable === false, 'R5-8: injected process helper reports test_only:true / production:false / executable:false'); ok(!has(pr, /^M: /) && !has(pr, /^R: /) && has(pr, /^B: /) && !has(pr, /^P13: /), 'injected valid provenance: no M/R/P13; fictional authorization pins still refused on B'); }
 { const pr = TO.evaluateForProcessWithDeps(t, { argv: [G.SUPERVISED_FLAG], env: { [G.SUPERVISED_ENV]: G.SUPERVISED_ENV_VALUE }, probe: () => run({ porcelain: ' M x\n' }), nowMs: NOW, headSha: HEAD }); ok(has(pr, /^R: .*not clean/), 'dirty-tree probe through the process core => R with provenance detail'); }
 ok(has(TO.evaluateForProcessWithDeps(t, { argv: [G.SUPERVISED_FLAG], env: {}, probe: () => run(), nowMs: NOW, headSha: HEAD }), /^M: /) && has(TO.evaluateForProcessWithDeps(t, { argv: [], env: { [G.SUPERVISED_ENV]: G.SUPERVISED_ENV_VALUE }, probe: () => run(), nowMs: NOW, headSha: HEAD }), /^M: /) && has(TO.evaluateForProcessWithDeps(t, { argv: [G.SUPERVISED_FLAG], env: { [G.SUPERVISED_ENV]: 'true' }, probe: () => run(), nowMs: NOW, headSha: HEAD }), /^M: /), 'process core: flag-only / env-only / generic-truthy => M');
 rm(t);
 const prodSrc = G.evaluateEpoch2ForProcess.toString();
-ok(G.evaluateEpoch2ForProcess.length === 1 && /process\.argv/.test(prodSrc) && /process\.env/.test(prodSrc) && /runReadinessProbe/.test(prodSrc) && prodSrc.indexOf('runReadinessProbe') < prodSrc.indexOf('currentHead') && prodSrc.indexOf('currentHead') < prodSrc.indexOf('Date.now()') && /production: true/.test(prodSrc), 'PRODUCTION entry: single arg, reads process.argv/env, runs the probe, then re-reads HEAD and time AFTER it, reports production:true');
+ok(G.evaluateEpoch2ForProcess.length === 1 && /process\.argv/.test(prodSrc) && /process\.env/.test(prodSrc) && /runReadinessProbe/.test(prodSrc) && prodSrc.indexOf('runReadinessProbe') < prodSrc.indexOf('currentHead') && prodSrc.indexOf('currentHead') < prodSrc.indexOf('Date.now()') && /executable: r\.allowed === true && r\.readinessProvenance\.valid === true/.test(prodSrc) && /production: true/.test(prodSrc), 'PRODUCTION entry: single arg, runs the probe, re-reads HEAD/time, and exposes executable only when allowed + provenance-valid');
 ok(!('parseReadinessOutput' in G) && !('_evaluateEpoch2ForProcessWithDeps' in G) && !('evaluateForProcessWithDeps' in G) && TO.test_only === true, 'R5-8: fixture helpers exist only under __testOnly');
 const guardSrc = fs.readFileSync(path.join(__dirname, 'ci-intake-guard.js'), 'utf8'); const modSrc = fs.readFileSync(path.join(__dirname, 'lib', 'epoch2-intake-authorization.js'), 'utf8'); const probeSrc = fs.readFileSync(path.join(__dirname, 'lib', 'epoch2-readiness-probe.js'), 'utf8'); const fwSrc = fs.readFileSync(path.join(__dirname, 'lib', 'intake-final-write.js'), 'utf8');
 ok(![guardSrc, probeSrc, fwSrc, modSrc].some((x) => /\.__testOnly\b/.test(x)), 'no production module uses a __testOnly surface (member access absent everywhere in production code)');
@@ -280,8 +297,8 @@ ok(!modForbidden.test(modSrc), 'gate module never spawns or invokes discovery/fi
 
 console.log('== MV-6 / RV4-1 / R5-7: CI guard decision, selected artifacts, conflict boundaries ==');
 t = mkRepo(); ok(G.decideEpoch2GuardCase(t, { nowMs: PRE }).pass === true, 'guard: no 002 => E2 PASS');
-ok(G.decideEpoch2GuardCase(t, { nowMs: POST }).pass === true, 'guard: post-cutoff, no 002, infrastructure incomplete => E2 PASS (nothing to verify; intake unauthorized)'); rm(t);
-t = withAuth(); { const d = G.decideEpoch2GuardCase(t, { nowMs: POST }); ok(d.pass === false && /P13: EXECUTION_INFRASTRUCTURE_INCOMPLETE/.test(d.why), 'guard: would-be-final 002 recorded before infrastructure pins => E2 FAIL (unfinalizable)'); } rm(t);
+ok(G.decideEpoch2GuardCase(t, { nowMs: POST }).pass === true, 'guard: post-cutoff, no 002, infrastructure pinned => E2 PASS (nothing to verify; intake unauthorized)'); rm(t);
+t = withAuth(); { const d = G.decideEpoch2GuardCase(t, { nowMs: POST }); ok(d.pass === false && /fails integrity verification: B:/.test(d.why), 'guard: 002 carrying fictional infrastructure pins => E2 FAIL'); } rm(t);
 t = withAuth((tt) => editJson(tt, P.auth002, (x) => { x.pins.experiment_freeze.sha256 = 'e'.repeat(64); })); ok(G.decideEpoch2GuardCase(t, { nowMs: POST }).pass === false, 'guard: drifted pin => FAIL'); rm(t);
 t = withAuth((tt) => fs.writeFileSync(path.join(tt, P.auth002), '{')); ok(/malformed/.test(G.decideEpoch2GuardCase(t, { nowMs: POST }).why), 'guard: malformed 002 => FAIL naming malformed'); rm(t);
 ok(/decideEpoch2GuardCase\(ROOT\)/.test(guardSrc), 'ci-intake-guard.js calls decideEpoch2GuardCase(ROOT) with the real clock');
