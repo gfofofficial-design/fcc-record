@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 // EPOCH 2 v2 INTAKE-AUTHORIZATION GATE TESTS (REV5). Dry-run evaluation ONLY — no test
 // performs discovery, spawns the runner, calls a network adapter, calls the final-write
-// executor, or writes to the real repository. Positive execution paths are reachable ONLY
-// through __testOnly fixture surfaces that inject a COMPLETE (fictional) execution
-// infrastructure. Production pins are verified here, but no test records owner
-// authorization or invokes the real runner.
+// executor, or writes to the real repository. Fixture paths remain non-executable, and
+// the production authorization record is only read and validated. No test invokes the
+// real runner or supplies the owner-present supervision pair.
 'use strict';
 const fs = require('fs'); const path = require('path'); const os = require('os'); const crypto = require('crypto');
 const G = require('./lib/epoch2-intake-authorization.js');
@@ -326,5 +325,10 @@ ok(!('addendum_002' in JSON.parse(fs.readFileSync(path.join(ROOT, P.freeze), 'ut
 const src = fs.readFileSync(__filename, 'utf8');
 const forbidden = [new RegExp('require\\([^)]*candidate-' + 'intake'), new RegExp('spawn' + 'Sync|child_' + 'process'), new RegExp('executeFinal' + 'Write\\s*\\('), new RegExp('acquire' + '-live|require\\([\'"]https?[\'"]\\)|fet' + 'ch\\(|axi' + 'os')];
 ok(forbidden.every((re) => !re.test(src)), 'no test invokes the runner, spawns a process, calls the final-write executor, or touches the network');
-ok(fs.readdirSync(path.join(ROOT, 'governance/gates')).every((f) => !/intake-execution-002|completed/.test(f)) && !fs.existsSync(path.join(ROOT, FW.EPOCH2_SELECTED_SLATE_PATH)), 'real repository untouched: no 002, no marker, no selected artifact');
+const real002 = JSON.parse(fs.readFileSync(path.join(ROOT, P.auth002), 'utf8'));
+ok(G.validateAuthorizationShapeV2(real002, 'intake-execution-002.json').length === 0, 'real production 002 is exact-shape valid against the recorded infrastructure pins');
+ok(G.deriveEpoch2State(ROOT, { nowMs: Date.now() }).state === 'OWNER_AUTHORIZED', 'real production state is OWNER_AUTHORIZED without supervision or live readiness');
+const realEval = G.evaluateEpoch2FromRepo(ROOT, { nowMs: Date.now(), supervisedMode: false, readinessAggregate: null });
+ok(realEval.allowed === false && has(realEval, /^M: /) && has(realEval, /^R: /), 'real production authorization remains refused without owner-present supervision and live READY provenance');
+ok(!fs.existsSync(path.join(ROOT, P.marker002)) && !fs.existsSync(path.join(ROOT, FW.EPOCH2_SELECTED_SLATE_PATH)), 'real repository untouched by tests: no marker and no selected artifact');
 console.log(`\nEPOCH2 AUTHORIZATION GATE SUITE (REV5): ${n - fails} passed, ${fails} failed`); process.exit(fails ? 1 : 0);
