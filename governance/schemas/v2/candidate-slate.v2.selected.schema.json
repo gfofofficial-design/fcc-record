@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fcc-record/governance/schemas/v2/candidate-slate.v2.selected.schema.json",
+  "title": "FCC Stage 0 Epoch 2 Selected Candidate Slate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_class",
+    "not_a_capital_instrument",
+    "epoch",
+    "slate_version",
+    "authorization_ref",
+    "pre_intake_shell",
+    "lineage",
+    "cutoff",
+    "selection_completed_at",
+    "selection_algorithm",
+    "total_slots",
+    "all_slots_populated",
+    "slate_control",
+    "difficulty_control",
+    "observed_pool",
+    "slots"
+  ],
+  "properties": {
+    "artifact_class": { "const": "EPOCH2_SELECTED_CANDIDATE_SLATE" },
+    "not_a_capital_instrument": { "const": true },
+    "epoch": { "const": 2 },
+    "slate_version": { "const": 2 },
+    "authorization_ref": { "$ref": "#/$defs/pinnedArtifact", "properties": { "path": { "const": "governance/gates/intake-execution-002.json" } } },
+    "pre_intake_shell": { "$ref": "#/$defs/pinnedArtifact", "properties": { "path": { "const": "governance/experiments/stage0-public-experiment-v1/candidate-slate.v2.json" } } },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["methodology", "experiment_spec", "experiment_freeze", "supersession_record"],
+      "properties": {
+        "methodology": { "$ref": "#/$defs/sha256" },
+        "experiment_spec": { "$ref": "#/$defs/sha256" },
+        "experiment_freeze": { "$ref": "#/$defs/sha256" },
+        "supersession_record": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "cutoff": { "type": "string", "format": "date-time" },
+    "selection_completed_at": { "type": "string", "format": "date-time" },
+    "selection_algorithm": { "const": "LEXICOGRAPHIC_FIRST_FEASIBLE_V1" },
+    "total_slots": { "const": 15 },
+    "all_slots_populated": { "const": true },
+    "slate_control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["H1_band_max", "H2_band_min", "H3_non_short_min", "S1_class_max", "S2_min_classes", "S3_governance_vote_max", "verified"],
+      "properties": {
+        "H1_band_max": { "const": 7 },
+        "H2_band_min": { "const": 2 },
+        "H3_non_short_min": { "const": 5 },
+        "S1_class_max": { "const": 7 },
+        "S2_min_classes": { "const": 3 },
+        "S3_governance_vote_max": { "const": 7 },
+        "verified": { "const": true }
+      }
+    },
+    "difficulty_control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum_material_count", "actual_material_count", "verified"],
+      "properties": {
+        "minimum_material_count": { "const": 3 },
+        "actual_material_count": { "type": "integer", "minimum": 3, "maximum": 15 },
+        "verified": { "const": true }
+      }
+    },
+    "observed_pool": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_class", "source_id", "canonical_id", "opened_at", "disposition"],
+        "properties": {
+          "source_class": { "anyOf": [{ "$ref": "#/$defs/sourceClass" }, { "type": "null" }] },
+          "source_id": { "type": "string", "minLength": 1 },
+          "canonical_id": { "type": "string", "minLength": 1 },
+          "opened_at": { "type": ["string", "null"], "format": "date-time" },
+          "disposition": { "enum": ["ELIGIBLE", "INELIGIBLE", "EXACT_DUPLICATE"] },
+          "reason": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slot_id", "horizon_bucket", "source_class", "source_id", "observable_type", "standing_adversary_counter_thesis_risk", "status", "subject", "possible_duplicate_refs"],
+        "properties": {
+          "slot_id": { "type": "string", "pattern": "^SLOT-(0[1-9]|1[0-5])$" },
+          "horizon_bucket": { "enum": ["short", "medium", "long"] },
+          "source_class": { "$ref": "#/$defs/sourceClass" },
+          "source_id": { "$ref": "#/$defs/sourceId" },
+          "observable_type": { "$ref": "#/$defs/observableType" },
+          "standing_adversary_counter_thesis_risk": { "type": "boolean" },
+          "status": { "const": "SELECTED_PENDING_FILING" },
+          "subject": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["canonical_id", "title", "asset_id", "opened_at", "resolution_date", "days_to_resolution"],
+            "properties": {
+              "canonical_id": { "type": "string", "minLength": 1 },
+              "title": { "type": ["string", "null"] },
+              "asset_id": { "type": ["string", "null"] },
+              "opened_at": { "type": "string", "format": "date-time" },
+              "resolution_date": { "type": "string", "format": "date-time" },
+              "days_to_resolution": { "type": "number", "minimum": 3, "maximum": 90 }
+            }
+          },
+          "possible_duplicate_refs": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "pinnedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "sourceClass": { "enum": ["A", "B", "C", "D", "E", "F"] },
+    "sourceId": { "enum": ["A1", "A2", "B1", "B2", "C1", "C2", "D1", "D2", "E1", "F1"] },
+    "observableType": { "enum": ["OBS_SOURCE_NATIVE_DATE", "OBS_SOURCE_NATIVE_EXECUTION_DATE", "OBS_RULE_DERIVED_DATE"] }
+  }
+}
