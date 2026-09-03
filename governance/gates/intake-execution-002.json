@@ -1,0 +1,97 @@
+{
+  "artifact_class": "GOVERNANCE_EXECUTION_AUTHORIZATION",
+  "not_a_capital_instrument": true,
+  "gate": "CANDIDATE_INTAKE_EXECUTION",
+  "authorization_id": "intake-execution-002",
+  "authorized": true,
+  "epoch": 2,
+  "predecessor": {
+    "record": "governance/gates/intake-execution-001.json",
+    "state": "PRESERVED, UNSPENT and UNUSABLE for Epoch 2 (v0.2 lineage); never amended, never marked spent"
+  },
+  "scope": {
+    "what_is_authorized": "EXACTLY ONE supervised Epoch 2 candidate-intake execution",
+    "single_use": true,
+    "completion_marker_path": "governance/gates/intake-execution-002.completed.json"
+  },
+  "owner_authorization": {
+    "state": "OWNER_AUTHORIZED_EXECUTION",
+    "authorized_at": "2026-09-03T10:20:45Z",
+    "scope": "EXACTLY ONE supervised Epoch 2 candidate-intake execution"
+  },
+  "pins": {
+    "methodology": {
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md",
+      "sha256": "ab6be2c5d25ffdf147a162794ee282bfa84605ca53d8179f6580df0eff1df865"
+    },
+    "experiment_spec": {
+      "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md",
+      "sha256": "4e50a3ab68c9fbaa5e5e5d13278ae289c33aa6578d6b81a023c1e82cd26a376f"
+    },
+    "experiment_freeze": {
+      "path": "governance/experiments/stage0-public-experiment-v1/experiment-freeze.v2.json",
+      "sha256": "f2db0398983e125580a80fadd5e281170d950be9863770b260da78c63cf684fe"
+    },
+    "pre_intake_candidate_slate": {
+      "path": "governance/experiments/stage0-public-experiment-v1/candidate-slate.v2.json",
+      "sha256": "647a0ae9194f24127432648c170f5510b9571eeb5d53407062eaaab721fca66c"
+    },
+    "supersession_record": {
+      "path": "governance/gates/methodology-supersession-001.json",
+      "sha256": "7fdf5c2352d5bfe99d16305405b9b79a78478b6d5de2305a57a82050c5c8535d"
+    },
+    "epoch_1_terminal_record": {
+      "path": "governance/gates/stage0-epoch1-infeasibility-001.json",
+      "sha256": "d93aaa52d424f48dca63226738b0fa172b879c2b2d3adcda739e2c38a3530fef",
+      "public_commit": "35c5ae93d452b8943e0f3cedecbda89aea6ae9c6"
+    },
+    "source_registry_addendum_002": {
+      "path": "governance/experiments/stage0-public-experiment-v1/source-registry-addendum-002.json",
+      "sha256": "ABSENT",
+      "required": false
+    },
+    "frozen_cutoff": "2026-09-03T00:00:00.000Z",
+    "cutoff_rule_ref": {
+      "rule_id": "EPOCH2_CUTOFF_RULE_CANONICAL_V03",
+      "source_path": "governance/experiments/stage0-public-experiment-v1/experiment-freeze.v2.json",
+      "source_sha256": "f2db0398983e125580a80fadd5e281170d950be9863770b260da78c63cf684fe",
+      "source_field": "candidate_selection_methodology.cutoff_gate_ref",
+      "computed_cutoff": "2026-09-03T00:00:00.000Z"
+    },
+    "execution_infrastructure": {
+      "selected_slate_schema": {
+        "path": "governance/schemas/v2/candidate-slate.v2.selected.schema.json",
+        "sha256": "4e4f08db961fde928188af8f7058b978c82eec44f17f22071f4d0e8f20acbd0d"
+      },
+      "v2_discovery_runner": {
+        "path": "tools/run-epoch2-candidate-intake.js",
+        "sha256": "cafc66017130589a885b2ae9407b40e700a9ff641dba6e5444d1e638c26379ee"
+      },
+      "deterministic_selection": {
+        "path": "tools/lib/epoch2-selection.js",
+        "sha256": "1804375734d5a76a465d54050d0803adcff288108a6dcbe990352e8c5050ebcd"
+      },
+      "selected_slate_writer": {
+        "path": "tools/lib/epoch2-selected-slate-writer.js",
+        "sha256": "139d94537ceaffbe0567ea2e7de4c4cf3a42dd256810066dbd3030ebac4423ee"
+      },
+      "completion_marker_writer_verifier": {
+        "path": "tools/lib/epoch2-completion.js",
+        "sha256": "990d71f2b6910eaa3403e99a63143b66c29b52718951463dcfabd607acc0a3a5"
+      },
+      "execution_critical_tooling_hashes": {
+        "tools/verify-acquisition-readiness.js": "d3dcf45406aa3c5deee65865d32201c8e4d76a236d9f04379affb0ae0e33695e",
+        "tools/lib/acquisition-adapters.js": "889c4f44753997f798b929e6ebb6ddfc0534be0832326222458a3563ee79ac3e",
+        "tools/lib/intake-cutoff.js": "ba1a56e1cfffbfbffdccaed1162dc37b5b34d1194b7cc54e61f549da19957807",
+        "tools/lib/intake-authorization.js": "8ff3173fadf218457734177f3e2eaf92d1bcbe5eca67c037ad064d96dbd445ff",
+        "tools/lib/epoch2-readiness-probe.js": "62d0e03fae05fdd0d50be974319162ed9ad7b60199107388260aa186843108bc",
+        "tools/lib/intake-final-write.js": "30df101ce371a10e7bee4a69a44055e7dae58efc800a1e30b398e259cc322675",
+        "tools/lib/live-acquisition-provider.js": "07c21feaafefd0905a0de08d11e598afe3f698f7dff549e3ae1ec422135e7036",
+        "tools/ci-intake-guard.js": "d44d40895e34c00cd718bf66e76a79e8b2c3c0064a3633cca5b270b81133c22b"
+      },
+      "execution_head": "a0e3eb2507b91fdbb76faa28169a9cacaa30297c"
+    }
+  },
+  "recorded_at": "2026-09-03T10:20:45Z",
+  "owner_ratification_required": false
+}

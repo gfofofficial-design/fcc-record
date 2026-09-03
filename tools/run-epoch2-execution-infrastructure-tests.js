@@ -100,16 +100,16 @@ const vm = completion.validateCompletionMarker(tx.marker, { selectedBytes: targe
 ok(vm.valid, 'completion marker binds selected bytes, authorization, shell, cutoff and lineage');
 ok(!completion.validateCompletionMarker({ ...tx.marker, cutoff: '2026-09-04T00:00:00.000Z' }, { selectedBytes: target.selected, authorizationBytes: authBytes, shellBytes, cutoff: CUT, lineage }).valid, 'completion verifier rejects cutoff drift');
 
-console.log('== Phase 2 pins recorded; production remains inert without owner authorization ==');
+console.log('== Phase 3 owner authorization recorded; production remains inert without supervision and readiness ==');
 const runner = fs.readFileSync(path.join(ROOT, 'tools/run-epoch2-candidate-intake.js'), 'utf8');
 ok(runner.indexOf('evaluateEpoch2ForProcess(ROOT)') < runner.indexOf("require('./lib/live-acquisition-provider.js')"), 'runner evaluates the process-bound gate before loading acquisition code');
-ok(!fs.existsSync(path.join(ROOT, completion.SELECTED_PATH)) && !fs.existsSync(path.join(ROOT, completion.MARKER_PATH)) && !fs.existsSync(path.join(ROOT, completion.AUTH_PATH)), 'real repository untouched: no 002, selected slate or completion marker');
-const state = require('./lib/epoch2-intake-authorization.js').deriveEpoch2State(ROOT, { nowMs: Date.parse('2026-09-03T02:00:00Z') });
+ok(fs.existsSync(path.join(ROOT, completion.AUTH_PATH)) && !fs.existsSync(path.join(ROOT, completion.SELECTED_PATH)) && !fs.existsSync(path.join(ROOT, completion.MARKER_PATH)), 'authorization exists; no selected slate or completion marker exists');
+const state = require('./lib/epoch2-intake-authorization.js').deriveEpoch2State(ROOT, { nowMs: Date.now() });
 const gateModule = require('./lib/epoch2-intake-authorization.js');
 ok(gateModule.executionInfrastructureStatus().complete, 'all seven infrastructure components carry recorded pins');
 ok(gateModule.verifyExecutionInfrastructureFiles(ROOT).valid, 'every recorded infrastructure hash matches the repository bytes');
 ok(gateModule.EXECUTION_INFRASTRUCTURE.execution_head === 'a0e3eb2507b91fdbb76faa28169a9cacaa30297c', 'execution HEAD is the exact public merge commit of Phase 1 PR #5');
-ok(state.state === 'READY_FOR_OWNER_AUTHORIZATION', 'production advances only to READY_FOR_OWNER_AUTHORIZATION; no 002 means no execution');
+ok(state.state === 'OWNER_AUTHORIZED', 'production records owner authorization but remains non-executable without supervision and live READY provenance');
 
 console.log(`\nEPOCH 2 EXECUTION INFRASTRUCTURE: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
