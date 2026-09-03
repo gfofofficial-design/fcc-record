@@ -181,7 +181,7 @@ console.log('\n=== 11. Filing Log foundation battery ===');
 try { execSync('node tools/run-filing-log-tests.js', { stdio: 'inherit' }); ok(true, 'Filing Log battery (A-K incl. concurrency/collision)'); }
 catch { ok(false, 'Filing Log battery (A-K incl. concurrency/collision)'); }
 
-console.log('\n=== 12. Epoch 2 execution infrastructure (Phase 1, no network) ===');
+console.log('\n=== 12. Epoch 2 execution infrastructure (pinned, no network) ===');
 try { execSync('node tools/run-epoch2-execution-infrastructure-tests.js', { stdio: 'inherit' }); ok(true, 'Epoch 2 schema/selection/write-once/completion battery'); }
 catch { ok(false, 'Epoch 2 schema/selection/write-once/completion battery'); }
 
