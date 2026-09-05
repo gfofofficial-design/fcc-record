@@ -185,7 +185,11 @@ console.log('\n=== 12. Epoch 2 execution infrastructure (pinned, no network) ===
 try { execSync('node tools/run-epoch2-execution-infrastructure-tests.js', { stdio: 'inherit' }); ok(true, 'Epoch 2 schema/selection/write-once/completion battery'); }
 catch { ok(false, 'Epoch 2 schema/selection/write-once/completion battery'); }
 
-console.log('\n=== 13. GIT HISTORY / WORKTREE IMMUTABILITY PROOF (caller repo) ===');
+console.log('\n=== 13. Epoch 2 C1-C3 rerun persistence and gate (no network) ===');
+try { execSync('node tools/run-epoch2-shortage-result-tests.js', { stdio: 'inherit' }); execSync('node tools/run-epoch2-rerun-integration-tests.js', { stdio: 'inherit' }); ok(true, 'Epoch 2 rerun success/shortage/write-once/gate battery'); }
+catch { ok(false, 'Epoch 2 rerun success/shortage/write-once/gate battery'); }
+
+console.log('\n=== 14. GIT HISTORY / WORKTREE IMMUTABILITY PROOF (caller repo) ===');
 const newHead = sh('git rev-parse HEAD', REPO_ROOT).trim();
 const newBranch = sh('git rev-parse --abbrev-ref HEAD', REPO_ROOT).trim();
 const newStatus = sh('git status --porcelain', REPO_ROOT).trim();

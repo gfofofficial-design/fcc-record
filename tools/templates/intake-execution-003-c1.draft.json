@@ -14,33 +14,46 @@
     "reconciliation_record": "governance/gates/epoch2-c0-shortage-reconciliation-001.json"
   },
   "scope": {
-    "what_may_later_be_authorized": "EXACTLY ONE supervised Epoch 2 C1 candidate-intake rerun under the unchanged ratified Candidate Selection Method v0.3",
+    "what_is_authorized": "EXACTLY ONE supervised Epoch 2 C1 candidate-intake rerun",
     "single_use": true,
-    "may_run_before_schedule": false,
+    "completion_marker_path": "governance/gates/intake-execution-003.completed.json",
     "may_reuse_intake_execution_002": false,
     "may_change_sources_or_thresholds": false,
-    "may_reduce_n": false,
-    "may_relax_constraints": false,
     "may_create_capital_activity": false
   },
-  "mandatory_public_inputs_before_finalization": [
-    "governance/gates/epoch2-c0-shortage-reconciliation-001.json",
-    "a reviewed schema for a full hashed observed-pool plus SHORTAGE_EVENT or selected-slate result",
-    "a write-once result transaction that persists both successful and shortage outcomes",
-    "a process-bound C1 gate that verifies the exact C1 timestamp, clean Git state, current HEAD, live READY acquisition, owner supervision, and single-use status",
-    "a CI guard that permanently refuses reuse of intake-execution-002",
-    "exact sha256 pins for every C1 execution-critical file",
-    "the reviewed public infrastructure commit SHA"
-  ],
-  "required_outcome_behavior": {
-    "if_constraints_pass": "Write and verify the selected slate, full observed pool, and C1 completion marker once.",
-    "if_constraints_fail": "Write and verify the full hashed observed pool, exact constraint deficits, SHORTAGE_EVENT result, and C1 completion marker once; advance only to the already-declared C2 checkpoint.",
-    "on_partial_write_or_hash_mismatch": "RECONCILIATION_REQUIRED; never rerun under the same authorization."
+  "pins": {
+    "methodology": { "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+    "experiment_spec": { "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+    "experiment_freeze": { "path": "governance/experiments/stage0-public-experiment-v1/experiment-freeze.v2.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+    "pre_intake_candidate_slate": { "path": "governance/experiments/stage0-public-experiment-v1/candidate-slate.v2.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+    "supersession_record": { "path": "governance/gates/methodology-supersession-001.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+    "c0_reconciliation": { "path": "governance/gates/epoch2-c0-shortage-reconciliation-001.json", "sha256": "WITHHELD_UNTIL_SEPARATELY_AUTHORIZED_AND_RECORDED" },
+    "frozen_c0_cutoff": "2026-09-03T00:00:00.000Z",
+    "checkpoint_timestamp": "2026-09-10T00:00:00.000Z",
+    "execution_infrastructure": {
+      "public_commit": "WITHHELD_UNTIL_INFRASTRUCTURE_IS_PUBLIC",
+      "files": {
+        "readiness_verifier": { "path": "tools/verify-acquisition-readiness.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "acquisition_adapters": { "path": "tools/lib/acquisition-adapters.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "live_acquisition_provider": { "path": "tools/lib/live-acquisition-provider.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "deterministic_selection": { "path": "tools/lib/epoch2-selection.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "shortage_event_schema": { "path": "governance/schemas/v2/epoch2-shortage-event.schema.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "rerun_selected_schema": { "path": "governance/schemas/v2/candidate-slate.v2.rerun-selected.schema.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "completion_marker_writer_verifier": { "path": "tools/lib/epoch2-rerun-completion.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "shortage_result_writer": { "path": "tools/lib/epoch2-shortage-result.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "selected_result_writer": { "path": "tools/lib/epoch2-rerun-selected-result.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "rerun_authorization_gate": { "path": "tools/lib/epoch2-rerun-authorization.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "rerun_readiness_transaction": { "path": "tools/lib/epoch2-rerun-readiness-probe.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "rerun_runner": { "path": "tools/run-epoch2-rerun-intake.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+        "ci_rerun_guard": { "path": "tools/ci-epoch2-rerun-guard.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" }
+      }
+    }
   },
-  "pins": "WITHHELD_UNTIL_REVIEWED_INFRASTRUCTURE_IS_PUBLIC",
   "owner_authorization": {
     "state": "NOT_REQUESTED",
-    "authorized_at": null
+    "authorized_at": null,
+    "scope": "EXACTLY ONE supervised Epoch 2 C1 candidate-intake rerun"
   },
-  "prepared_at": "2026-09-05T15:55:56Z"
+  "recorded_at": null,
+  "owner_ratification_required": true
 }

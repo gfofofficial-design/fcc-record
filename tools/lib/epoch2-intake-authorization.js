@@ -30,6 +30,11 @@ const UTC_MS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/; // cutoff for
 const PLACEHOLDER_RE = /TO_BE_SET|TO_BE_PINNED|COMPUTED_BY_FORMULA|PLACEHOLDER|INSERT_FULL_UTC|NOT_YET|NOT COMPUTED|NOT_COMPUTED/i;
 // Words that can never appear in any string of a FINAL authority object (R5-2).
 const NON_AUTHORITY_RE = /\bDRAFT\b|\bPENDING\b|\bREVOKED\b|\bDENIED\b|\bUNSIGNED\b|\bUNAUTHORIZED\b|\bNOT[_ ]AUTHORIZED\b/i;
+// The owner invoked authorization 002 once at C0. The public C0 reconciliation
+// preparation records the persistence defect and the conservative single-use
+// disposition. Production can therefore never enter the historical 002 path
+// again, even while the final reconciliation record is awaiting separate review.
+const C0_EXECUTION_PERMANENTLY_CONSUMED = true;
 // RECORDED Epoch 2 pre-cutoff freeze — exact bytes and the exact public commits it carries
 // (commit 66dc2f6 "Record blocked Epoch 2 experiment freeze"). Any other freeze fails before READY.
 const RECORDED_FREEZE_SHA = 'f2db0398983e125580a80fadd5e281170d950be9863770b260da78c63cf684fe';
@@ -589,6 +594,15 @@ function evaluateForProcessCore(repoRoot, { argv, env, probeResult, headAfterPro
   return { ...result, executable: false, readinessProvenance: prov, readinessReported: probeResult && probeResult.aggregate ? probeResult.aggregate : null };
 }
 function evaluateEpoch2ForProcess(repoRoot) {
+  if (C0_EXECUTION_PERMANENTLY_CONSUMED) return {
+    allowed: false,
+    failures: ['C0: intake-execution-002 is permanently consumed by the owner-observed C0 attempt; reuse is prohibited'],
+    executable: false,
+    production: true,
+    readinessProvenance: { valid: false, aggregate: null, problems: ['readiness not run because authorization 002 is spent'] },
+    readinessReported: null,
+    note: 'permanent production refusal for the consumed historical C0 authorization',
+  };
   const probeResult = PROBE.runReadinessProbe(repoRoot);          // transaction: clean tree, HEAD-bound, HEAD-blob tooling
   const headAfterProbe = PROBE.currentHead(repoRoot);            // re-read AFTER the probe
   const nowAfterProbe = Date.now();                              // re-read AFTER the probe
@@ -630,6 +644,6 @@ function decideEpoch2GuardCase(repoRoot, { nowMs } = {}) {
   return { pass, caseId: 'E2', why: `Epoch 2 ${e2.defined ? 'cutoff ' + e2.cutoffTimestamp + (e2.reached ? ' reached' : ' not reached') : 'cutoff undefined'}; intake NOT authorized by cutoff${why.length ? '; ' + why.join('; ') : ''}` };
 }
 
-module.exports = { P, safeCutoff, isRealUtcSec, isRealUtcMs, CANONICAL_CUTOFF_RULE_ID, SCHEMA_IDENTITY, RECORDED_FREEZE_SHA, RECORDED_COMMITS, EXECUTION_INFRASTRUCTURE, executionInfrastructureStatus, verifyExecutionInfrastructureFiles, EPOCH2_CONTROLS, OWNER_AUTH_STATE, OWNER_AUTH_SCOPE, READINESS_SOURCE, readRepoFacts, validateAgainstSchemaFile, evaluateEpoch2GovernancePrerequisites, evaluateEpoch2ExecutionPreconditions, evaluateEpoch2FromRepo, validateAuthorizationShapeV2, validateEpoch2CompletionMarker, deriveEpoch2State, evaluateEpoch2ForProcess, decideEpoch2GuardCase, supervisedModeRequested, SUPERVISED_FLAG, SUPERVISED_ENV, SUPERVISED_ENV_VALUE,
+module.exports = { P, safeCutoff, isRealUtcSec, isRealUtcMs, CANONICAL_CUTOFF_RULE_ID, SCHEMA_IDENTITY, RECORDED_FREEZE_SHA, RECORDED_COMMITS, EXECUTION_INFRASTRUCTURE, executionInfrastructureStatus, verifyExecutionInfrastructureFiles, EPOCH2_CONTROLS, OWNER_AUTH_STATE, OWNER_AUTH_SCOPE, READINESS_SOURCE, C0_EXECUTION_PERMANENTLY_CONSUMED, readRepoFacts, validateAgainstSchemaFile, evaluateEpoch2GovernancePrerequisites, evaluateEpoch2ExecutionPreconditions, evaluateEpoch2FromRepo, validateAuthorizationShapeV2, validateEpoch2CompletionMarker, deriveEpoch2State, evaluateEpoch2ForProcess, decideEpoch2GuardCase, supervisedModeRequested, SUPERVISED_FLAG, SUPERVISED_ENV, SUPERVISED_ENV_VALUE,
   // Non-authoritative fixture surfaces. No production module imports these.
   __testOnly: { test_only: true, parseReadinessOutput, evaluateForProcessWithDeps, evaluateEpoch2FromRepoWith, deriveEpoch2StateWith, readRepoFactsWith: readRepoFacts } };
