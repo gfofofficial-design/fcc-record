@@ -96,10 +96,13 @@
       "timestamp": "2026-09-24T00:00:00.000Z"
     }
   ],
-  "next_state": "C1 remains schedule-declared but execution-unauthorized until this reconciliation is recorded, corrected rerun infrastructure is reviewed and hash-pinned, and a new single-use owner authorization is separately recorded.",
+  "next_state": "C1 remains schedule-declared with execution authority absent until this reconciliation is recorded, corrected rerun infrastructure is reviewed and hash-pinned, and a new single-use owner authorization is separately recorded.",
   "prepared_at": "2026-09-05T15:55:56Z",
   "owner_authorization": {
     "state": "AWAITING_EXPLICIT_OWNER_AUTHORIZATION",
-    "required_scope": "Record the C0 reconciliation facts and evidence limitation exactly as written; permanently treat intake-execution-002 as consumed; grant no C1 execution authority."
-  }
+    "authorized_at": null,
+    "scope": "Record the C0 reconciliation facts and evidence limitation exactly as written; permanently treat intake-execution-002 as consumed; grant no C1 execution authority."
+  },
+  "recorded_at": null,
+  "owner_ratification_required": true
 }

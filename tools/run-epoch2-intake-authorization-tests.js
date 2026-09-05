@@ -328,7 +328,7 @@ ok(forbidden.every((re) => !re.test(src)), 'no test invokes the runner, spawns a
 const real002 = JSON.parse(fs.readFileSync(path.join(ROOT, P.auth002), 'utf8'));
 ok(G.validateAuthorizationShapeV2(real002, 'intake-execution-002.json').length === 0, 'real production 002 is exact-shape valid against the recorded infrastructure pins');
 ok(G.deriveEpoch2State(ROOT, { nowMs: Date.now() }).state === 'OWNER_AUTHORIZED', 'real production state is OWNER_AUTHORIZED without supervision or live readiness');
-const realEval = G.evaluateEpoch2FromRepo(ROOT, { nowMs: Date.now(), supervisedMode: false, readinessAggregate: null });
-ok(realEval.allowed === false && has(realEval, /^M: /) && has(realEval, /^R: /), 'real production authorization remains refused without owner-present supervision and live READY provenance');
+const realEval = G.evaluateEpoch2ForProcess(ROOT);
+ok(realEval.allowed === false && realEval.executable === false && G.C0_EXECUTION_PERMANENTLY_CONSUMED === true && has(realEval, /^C0: /), 'real production authorization 002 is permanently refused after the owner-observed C0 attempt');
 ok(!fs.existsSync(path.join(ROOT, P.marker002)) && !fs.existsSync(path.join(ROOT, FW.EPOCH2_SELECTED_SLATE_PATH)), 'real repository untouched by tests: no marker and no selected artifact');
 console.log(`\nEPOCH2 AUTHORIZATION GATE SUITE (REV5): ${n - fails} passed, ${fails} failed`); process.exit(fails ? 1 : 0);

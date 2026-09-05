@@ -63,11 +63,13 @@ function memoryTarget(over = {}) {
   };
 }
 const authorizationBytes = Buffer.from('auth-003'), reconciliationBytes = Buffer.from('c0-reconciliation');
+const executionHead = '1'.repeat(40), readinessOutputSha256 = '2'.repeat(64);
 const boundDoc = shortage.buildShortageEvent({ run: 'C1', result, authorizationSha: shortage.sha256(authorizationBytes), reconciliationSha: shortage.sha256(reconciliationBytes), lineage, completedAt: '2026-09-10T00:05:00Z' });
-const args = { run: 'C1', document: boundDoc, authorizationBytes, reconciliationBytes, completedAt: '2026-09-10T00:05:00Z', validateDocument: (d) => shortage.validateShortageEvent(ROOT, d) };
+const args = { run: 'C1', document: boundDoc, authorizationBytes, reconciliationBytes, completedAt: '2026-09-10T00:05:00Z', executionHead, readinessOutputSha256, validateDocument: (d) => shortage.validateShortageEvent(ROOT, d) };
 const target = memoryTarget(); const tx = shortage.runWriteOnceTransaction({ ...args, target });
 ok(tx.ok && target.resultBytes && target.marker && target.marker.single_use_consumed === true, 'verified result bytes precede a single-use completion marker');
 ok(target.marker.result_artifact.sha256 === shortage.sha256(target.resultBytes), 'completion marker binds the exact shortage artifact bytes');
+ok(target.marker.execution_head === executionHead && target.marker.readiness_output_sha256 === readinessOutputSha256, 'completion marker binds the exact execution HEAD and readiness output');
 ok(shortage.runWriteOnceTransaction({ ...args, target }).state === 'REFUSED_ALREADY_STARTED', 'the same authorization cannot write twice');
 ok(shortage.runWriteOnceTransaction({ ...args, target: memoryTarget({ failResult: true }) }).state === 'RESULT_WRITE_FAILED_NO_MARKER', 'result write failure creates no completion marker');
 ok(shortage.runWriteOnceTransaction({ ...args, target: memoryTarget({ driftRead: true }) }).state === 'RECONCILIATION_REQUIRED', 'read-back mismatch requires reconciliation and forbids retry');

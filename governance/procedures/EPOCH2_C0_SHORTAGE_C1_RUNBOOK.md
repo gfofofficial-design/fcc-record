@@ -45,6 +45,14 @@ Before C1 may be authorized, reviewed code must make shortage and success equall
 9. On a partial write, hash mismatch, malformed artifact, or stale HEAD, enter `RECONCILIATION_REQUIRED`; never retry with the same authorization.
 10. Pin the reviewed schema, runner, gate, selection code, result writer, readiness tooling, CI guard, and public infrastructure commit in the separate C1 authorization.
 
+### Prepared implementation boundary
+
+The infrastructure change set keeps the historical C0 functions available for verification while permanently refusing authorization `002` at its production process entry. C1-C3 use a separate runner, gate, readiness transaction, selected-result schema, and shared completion-marker verifier.
+
+The rerun gate performs no live probe unless the finalized C0 reconciliation and the exact run-specific authorization already pass every non-runtime check. A success and a shortage both persist the complete deterministically ordered observed pool, verify the result bytes after writing, then write and verify one completion marker that binds the result, authorization, reconciliation, execution HEAD, and readiness-output hash. Any partial state requires reconciliation and cannot be retried under the same authorization.
+
+All execution hashes and the public infrastructure commit remain deliberately withheld in the C1 template until this infrastructure is reviewed and merged. This implementation therefore grants no C1 authority by itself.
+
 ## 5. C1 authorization boundary
 
 The template `tools/templates/intake-execution-003-c1.draft.json` is deliberately non-executable. A final `intake-execution-003.json` must not be created until all infrastructure requirements above pass adversarial tests and exact public hashes are available.

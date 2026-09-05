@@ -9,6 +9,7 @@ const addFormats = require('ajv-formats');
 const fs = require('fs');
 const path = require('path');
 const selection = require('./epoch2-selection.js');
+const completion = require('./epoch2-rerun-completion.js');
 
 const SCHEMA_PATH = 'governance/schemas/v2/epoch2-shortage-event.schema.json';
 const C0_CUTOFF = '2026-09-03T00:00:00.000Z';
@@ -17,11 +18,11 @@ const CHECKPOINTS = Object.freeze({
   C2: { authorization: 'intake-execution-004', days_after_c0: 14, timestamp: '2026-09-17T00:00:00.000Z' },
   C3: { authorization: 'intake-execution-005', days_after_c0: 21, timestamp: '2026-09-24T00:00:00.000Z' },
 });
-const RECONCILIATION_PATH = 'governance/gates/epoch2-c0-shortage-reconciliation-001.json';
+const RECONCILIATION_PATH = completion.RECONCILIATION_PATH;
 const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
-const authPath = (run) => `governance/gates/${CHECKPOINTS[run].authorization}.json`;
-const shortagePath = (run) => `governance/experiments/stage0-public-experiment-v1/epoch2-${run.toLowerCase()}-shortage-event.json`;
-const markerPath = (run) => `governance/gates/${CHECKPOINTS[run].authorization}.completed.json`;
+const authPath = completion.authPath;
+const shortagePath = completion.shortagePath;
+const markerPath = completion.markerPath;
 
 function observedPool(result) {
   const rows = [];
@@ -192,50 +193,10 @@ function validateShortageEvent(repoRoot, doc) {
   return { valid: problems.length === 0, problems };
 }
 
-function buildCompletionMarker({ run, outcome, completedAt, resultSha, authorizationSha, reconciliationSha }) {
-  if (!CHECKPOINTS[run]) throw new Error('run must be C1, C2, or C3');
-  if (!['SHORTAGE_EVENT', 'DIFFICULTY_QUOTA_UNSATISFIED'].includes(outcome)) throw new Error('completion outcome is not a recognized non-writable result');
-  return {
-    artifact_class: 'GOVERNANCE_EXECUTION_COMPLETION',
-    not_a_capital_instrument: true,
-    gate: 'CANDIDATE_INTAKE_RERUN_EXECUTION',
-    authorization_id: CHECKPOINTS[run].authorization,
-    epoch: 2,
-    run,
-    outcome,
-    completed_at: completedAt,
-    single_use_consumed: true,
-    result_artifact: { path: shortagePath(run), sha256: resultSha },
-    authorization_record: { path: authPath(run), sha256: authorizationSha },
-    c0_reconciliation_record: { path: RECONCILIATION_PATH, sha256: reconciliationSha },
-    checkpoint_timestamp: CHECKPOINTS[run].timestamp,
-  };
-}
+const buildCompletionMarker = completion.buildCompletionMarker;
+const validateCompletionMarker = completion.validateCompletionMarker;
 
-function validateCompletionMarker(marker, { run, outcome, completedAt, resultBytes, authorizationBytes, reconciliationBytes }) {
-  const problems = [], d = marker || {}, cp = CHECKPOINTS[run];
-  const keys = ['artifact_class', 'not_a_capital_instrument', 'gate', 'authorization_id', 'epoch', 'run', 'outcome', 'completed_at', 'single_use_consumed', 'result_artifact', 'authorization_record', 'c0_reconciliation_record', 'checkpoint_timestamp'];
-  const actualKeys = Object.keys(d);
-  for (const k of keys) if (!(k in d)) problems.push('missing ' + k);
-  for (const k of actualKeys) if (!keys.includes(k)) problems.push('unexpected ' + k);
-  if (!cp) problems.push('unknown run');
-  if (d.artifact_class !== 'GOVERNANCE_EXECUTION_COMPLETION' || d.not_a_capital_instrument !== true || d.gate !== 'CANDIDATE_INTAKE_RERUN_EXECUTION' || d.epoch !== 2) problems.push('completion identity');
-  if (!cp || d.authorization_id !== cp.authorization || d.run !== run || d.checkpoint_timestamp !== cp.timestamp) problems.push('run binding');
-  if (d.outcome !== outcome || !['SHORTAGE_EVENT', 'DIFFICULTY_QUOTA_UNSATISFIED'].includes(d.outcome)) problems.push('outcome binding');
-  if (d.completed_at !== completedAt || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(d.completed_at || '') || Number.isNaN(Date.parse(d.completed_at))) problems.push('completed_at');
-  if (d.single_use_consumed !== true) problems.push('single_use_consumed');
-  const bound = (obj, expectedPath, bytes, label) => {
-    if (!obj || Object.keys(obj).sort().join(',') !== 'path,sha256' || obj.path !== expectedPath || obj.sha256 !== sha256(bytes)) problems.push(label);
-  };
-  if (cp) {
-    bound(d.result_artifact, shortagePath(run), resultBytes, 'result_artifact');
-    bound(d.authorization_record, authPath(run), authorizationBytes, 'authorization_record');
-    bound(d.c0_reconciliation_record, RECONCILIATION_PATH, reconciliationBytes, 'c0_reconciliation_record');
-  }
-  return { valid: problems.length === 0, problems };
-}
-
-function runWriteOnceTransaction({ run, target, document, authorizationBytes, reconciliationBytes, completedAt, validateDocument }) {
+function runWriteOnceTransaction({ run, target, document, authorizationBytes, reconciliationBytes, completedAt, executionHead, readinessOutputSha256, validateDocument }) {
   if (!CHECKPOINTS[run]) return { ok: false, state: 'REFUSED_UNKNOWN_RUN' };
   if (target.resultExists() || target.markerExists()) return { ok: false, state: 'REFUSED_ALREADY_STARTED' };
   if (!document || document.run !== run || document.selection_completed_at !== completedAt) return { ok: false, state: 'REFUSED_BINDING_MISMATCH', problems: ['run/completedAt does not match document'] };
@@ -245,10 +206,11 @@ function runWriteOnceTransaction({ run, target, document, authorizationBytes, re
   if (!vd.valid) return { ok: false, state: 'REFUSED_INVALID_SHORTAGE_EVENT', problems: vd.problems };
   const resultBytes = Buffer.from(JSON.stringify(document, null, 2) + '\n');
   try { target.writeResult(resultBytes); } catch (e) { return { ok: false, state: 'RESULT_WRITE_FAILED_NO_MARKER', problems: [e.message] }; }
-  const reread = target.readResult();
+  let reread;
+  try { reread = target.readResult(); } catch (e) { return { ok: false, state: 'RECONCILIATION_REQUIRED', problems: ['result artifact read-back failed: ' + e.message, 'do not rerun'] }; }
   if (!reread.equals(resultBytes)) return { ok: false, state: 'RECONCILIATION_REQUIRED', problems: ['result artifact read-back mismatch; do not rerun'] };
-  const marker = buildCompletionMarker({ run, outcome: document.state, completedAt, resultSha: sha256(reread), authorizationSha: sha256(authorizationBytes), reconciliationSha: sha256(reconciliationBytes) });
-  const mv = validateCompletionMarker(marker, { run, outcome: document.state, completedAt, resultBytes: reread, authorizationBytes, reconciliationBytes });
+  const marker = buildCompletionMarker({ run, outcome: document.state, completedAt, resultBytes: reread, authorizationBytes, reconciliationBytes, executionHead, readinessOutputSha256 });
+  const mv = validateCompletionMarker(marker, { run, outcome: document.state, completedAt, resultBytes: reread, authorizationBytes, reconciliationBytes, executionHead, readinessOutputSha256 });
   if (!mv.valid) return { ok: false, state: 'RECONCILIATION_REQUIRED', problems: mv.problems };
   const markerBytes = Buffer.from(JSON.stringify(marker, null, 2) + '\n');
   try { target.writeMarker(markerBytes); } catch (e) { return { ok: false, state: 'RECONCILIATION_REQUIRED', problems: ['marker write failed after verified result artifact: ' + e.message, 'do not rerun'] }; }
@@ -257,9 +219,44 @@ function runWriteOnceTransaction({ run, target, document, authorizationBytes, re
   if (!markerReread.equals(markerBytes)) return { ok: false, state: 'RECONCILIATION_REQUIRED', problems: ['completion marker read-back mismatch; do not rerun'] };
   let parsed;
   try { parsed = JSON.parse(markerReread); } catch (e) { return { ok: false, state: 'RECONCILIATION_REQUIRED', problems: ['completion marker became malformed after write; do not rerun'] }; }
-  const rereadValidation = validateCompletionMarker(parsed, { run, outcome: document.state, completedAt, resultBytes: reread, authorizationBytes, reconciliationBytes });
+  const rereadValidation = validateCompletionMarker(parsed, { run, outcome: document.state, completedAt, resultBytes: reread, authorizationBytes, reconciliationBytes, executionHead, readinessOutputSha256 });
   if (!rereadValidation.valid) return { ok: false, state: 'RECONCILIATION_REQUIRED', problems: rereadValidation.problems };
   return { ok: true, state: 'SHORTAGE_RECORDED_AUTHORIZATION_SPENT', resultSha: sha256(reread), marker: parsed };
 }
 
-module.exports = { SCHEMA_PATH, C0_CUTOFF, CHECKPOINTS, RECONCILIATION_PATH, sha256, authPath, shortagePath, markerPath, observedPool, availabilityFor, availabilityFromObserved, supplyDeficitsFromAvailability, supplyDeficits, remainingSchedule, buildShortageEvent, validateShortageEvent, buildCompletionMarker, validateCompletionMarker, runWriteOnceTransaction };
+function fsTarget(repoRoot, run) {
+  const result = path.join(repoRoot, shortagePath(run));
+  const marker = path.join(repoRoot, markerPath(run));
+  const writeOnce = (target, bytes) => { const fd = fs.openSync(target, 'wx', 0o644); try { fs.writeFileSync(fd, bytes); fs.fsyncSync(fd); } finally { fs.closeSync(fd); } };
+  return {
+    resultExists: () => fs.existsSync(result), markerExists: () => fs.existsSync(marker),
+    writeResult: (bytes) => writeOnce(result, bytes), readResult: () => fs.readFileSync(result),
+    writeMarker: (bytes) => writeOnce(marker, bytes), readMarker: () => fs.readFileSync(marker),
+  };
+}
+
+function lineageFromRepo(repoRoot) {
+  const rel = {
+    methodology: 'governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md',
+    experiment_spec: 'governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md',
+    experiment_freeze: 'governance/experiments/stage0-public-experiment-v1/experiment-freeze.v2.json',
+    supersession_record: 'governance/gates/methodology-supersession-001.json',
+  };
+  return Object.fromEntries(Object.entries(rel).map(([k, v]) => [k, sha256(fs.readFileSync(path.join(repoRoot, v)))]));
+}
+
+function executeShortageWrite(repoRoot, run, document) {
+  const gate = require('./epoch2-rerun-authorization.js').evaluateRerunForProcess(repoRoot, run);
+  if (gate.allowed !== true || gate.executable !== true || gate.production !== true) {
+    const e = new Error('EPOCH2_RERUN_WRITE_REFUSED: process-bound authorization is not executable; ' + (gate.failures || []).join(' | '));
+    e.code = 'EPOCH2_RERUN_WRITE_REFUSED';
+    throw e;
+  }
+  const authorizationBytes = fs.readFileSync(path.join(repoRoot, authPath(run)));
+  const reconciliationBytes = fs.readFileSync(path.join(repoRoot, RECONCILIATION_PATH));
+  const lineage = lineageFromRepo(repoRoot);
+  if (document.authorization_ref.sha256 !== sha256(authorizationBytes) || document.c0_reconciliation_ref.sha256 !== sha256(reconciliationBytes) || canonicalize(document.lineage) !== canonicalize(lineage) || document.checkpoint_timestamp !== gate.checkpointTimestamp) throw new Error('EPOCH2_RERUN_WRITE_REFUSED: shortage document bindings do not equal current authorized bytes');
+  return runWriteOnceTransaction({ run, target: fsTarget(repoRoot, run), document, authorizationBytes, reconciliationBytes, completedAt: document.selection_completed_at, executionHead: gate.executionHead, readinessOutputSha256: gate.readinessOutputSha256, validateDocument: (d) => validateShortageEvent(repoRoot, d) });
+}
+
+module.exports = { SCHEMA_PATH, C0_CUTOFF, CHECKPOINTS, RECONCILIATION_PATH, sha256, authPath, shortagePath, markerPath, observedPool, availabilityFor, availabilityFromObserved, supplyDeficitsFromAvailability, supplyDeficits, remainingSchedule, buildShortageEvent, validateShortageEvent, buildCompletionMarker, validateCompletionMarker, runWriteOnceTransaction, fsTarget, lineageFromRepo, executeShortageWrite };
