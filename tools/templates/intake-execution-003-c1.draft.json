@@ -1,0 +1,46 @@
+{
+  "_DRAFT_NOTICE": "DESIGN TEMPLATE ONLY. This is not an authorization, must not be placed in governance/gates, and contains no executable pins. A final C1 authorization may be generated only after the C0 reconciliation and the corrected rerun infrastructure are public, reviewed, and hash-pinned.",
+  "artifact_class": "GOVERNANCE_EXECUTION_AUTHORIZATION_DRAFT",
+  "not_a_capital_instrument": true,
+  "gate": "CANDIDATE_INTAKE_RERUN_EXECUTION",
+  "authorization_id": "intake-execution-003",
+  "authorized": false,
+  "epoch": 2,
+  "run": "C1",
+  "scheduled_not_before": "2026-09-10T00:00:00.000Z",
+  "predecessor": {
+    "authorization": "governance/gates/intake-execution-002.json",
+    "required_disposition": "CONSUMED_BY_C0_SHORTAGE_ATTEMPT",
+    "reconciliation_record": "governance/gates/epoch2-c0-shortage-reconciliation-001.json"
+  },
+  "scope": {
+    "what_may_later_be_authorized": "EXACTLY ONE supervised Epoch 2 C1 candidate-intake rerun under the unchanged ratified Candidate Selection Method v0.3",
+    "single_use": true,
+    "may_run_before_schedule": false,
+    "may_reuse_intake_execution_002": false,
+    "may_change_sources_or_thresholds": false,
+    "may_reduce_n": false,
+    "may_relax_constraints": false,
+    "may_create_capital_activity": false
+  },
+  "mandatory_public_inputs_before_finalization": [
+    "governance/gates/epoch2-c0-shortage-reconciliation-001.json",
+    "a reviewed schema for a full hashed observed-pool plus SHORTAGE_EVENT or selected-slate result",
+    "a write-once result transaction that persists both successful and shortage outcomes",
+    "a process-bound C1 gate that verifies the exact C1 timestamp, clean Git state, current HEAD, live READY acquisition, owner supervision, and single-use status",
+    "a CI guard that permanently refuses reuse of intake-execution-002",
+    "exact sha256 pins for every C1 execution-critical file",
+    "the reviewed public infrastructure commit SHA"
+  ],
+  "required_outcome_behavior": {
+    "if_constraints_pass": "Write and verify the selected slate, full observed pool, and C1 completion marker once.",
+    "if_constraints_fail": "Write and verify the full hashed observed pool, exact constraint deficits, SHORTAGE_EVENT result, and C1 completion marker once; advance only to the already-declared C2 checkpoint.",
+    "on_partial_write_or_hash_mismatch": "RECONCILIATION_REQUIRED; never rerun under the same authorization."
+  },
+  "pins": "WITHHELD_UNTIL_REVIEWED_INFRASTRUCTURE_IS_PUBLIC",
+  "owner_authorization": {
+    "state": "NOT_REQUESTED",
+    "authorized_at": null
+  },
+  "prepared_at": "2026-09-05T15:55:56Z"
+}

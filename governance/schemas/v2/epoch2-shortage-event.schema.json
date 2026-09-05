@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fcc-record/governance/schemas/v2/epoch2-shortage-event.schema.json",
+  "title": "FCC Stage 0 Epoch 2 Rerun Shortage Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_class",
+    "not_a_capital_instrument",
+    "epoch",
+    "run",
+    "state",
+    "authorization_ref",
+    "c0_reconciliation_ref",
+    "lineage",
+    "c0_cutoff",
+    "checkpoint_timestamp",
+    "selection_completed_at",
+    "selection_algorithm",
+    "target_slots",
+    "selected",
+    "provisional_selected",
+    "difficulty",
+    "observed_pool",
+    "observed_pool_sha256",
+    "availability",
+    "deficits",
+    "rerun_schedule_remaining"
+  ],
+  "properties": {
+    "artifact_class": { "const": "EPOCH2_RERUN_SHORTAGE_EVENT" },
+    "not_a_capital_instrument": { "const": true },
+    "epoch": { "const": 2 },
+    "run": { "enum": ["C1", "C2", "C3"] },
+    "state": { "enum": ["SHORTAGE_EVENT", "DIFFICULTY_QUOTA_UNSATISFIED"] },
+    "authorization_ref": { "$ref": "#/$defs/pinnedArtifact" },
+    "c0_reconciliation_ref": { "$ref": "#/$defs/pinnedArtifact" },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["methodology", "experiment_spec", "experiment_freeze", "supersession_record"],
+      "properties": {
+        "methodology": { "$ref": "#/$defs/sha256" },
+        "experiment_spec": { "$ref": "#/$defs/sha256" },
+        "experiment_freeze": { "$ref": "#/$defs/sha256" },
+        "supersession_record": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "c0_cutoff": { "const": "2026-09-03T00:00:00.000Z" },
+    "checkpoint_timestamp": { "type": "string", "format": "date-time" },
+    "selection_completed_at": { "type": "string", "format": "date-time" },
+    "selection_algorithm": { "const": "LEXICOGRAPHIC_FIRST_FEASIBLE_V1" },
+    "target_slots": { "const": 15 },
+    "selected": { "type": "array", "maxItems": 0 },
+    "provisional_selected": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 15,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "difficulty": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "actual", "shortfall"],
+          "properties": {
+            "target": { "const": 3 },
+            "actual": { "type": "integer", "minimum": 0, "maximum": 2 },
+            "shortfall": { "type": "integer", "minimum": 1, "maximum": 3 }
+          }
+        }
+      ]
+    },
+    "observed_pool": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_class", "source_id", "canonical_id", "opened_at", "resolution_date", "observable_type", "asset_id", "title", "qualification_stance_shaped", "subject_touches_federation", "standing_adversary_counter_thesis_risk", "horizon_bucket", "days_to_resolution", "possible_duplicate_refs", "disposition", "reason"],
+        "properties": {
+          "source_class": { "anyOf": [{ "$ref": "#/$defs/sourceClass" }, { "type": "null" }] },
+          "source_id": { "type": "string", "minLength": 1 },
+          "canonical_id": { "type": "string", "minLength": 1 },
+          "opened_at": { "type": ["string", "null"], "format": "date-time" },
+          "resolution_date": { "type": ["string", "null"], "format": "date-time" },
+          "observable_type": { "type": ["string", "null"] },
+          "asset_id": { "type": ["string", "null"] },
+          "title": { "type": ["string", "null"] },
+          "qualification_stance_shaped": { "type": ["boolean", "null"] },
+          "subject_touches_federation": { "type": ["boolean", "null"] },
+          "standing_adversary_counter_thesis_risk": { "type": ["boolean", "null"] },
+          "horizon_bucket": { "enum": ["short", "medium", "long", null] },
+          "days_to_resolution": { "type": ["number", "null"] },
+          "possible_duplicate_refs": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "disposition": { "enum": ["ELIGIBLE", "INELIGIBLE", "EXACT_DUPLICATE"] },
+          "reason": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "observed_pool_sha256": { "$ref": "#/$defs/sha256" },
+    "availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligible_total", "bands", "classes", "governance_votes", "non_governance", "non_short", "distinct_classes"],
+      "properties": {
+        "eligible_total": { "type": "integer", "minimum": 0 },
+        "bands": { "$ref": "#/$defs/bandCounts" },
+        "classes": { "$ref": "#/$defs/classCounts" },
+        "governance_votes": { "type": "integer", "minimum": 0 },
+        "non_governance": { "type": "integer", "minimum": 0 },
+        "non_short": { "type": "integer", "minimum": 0 },
+        "distinct_classes": { "type": "integer", "minimum": 0, "maximum": 6 }
+      }
+    },
+    "deficits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["control", "requirement", "available", "shortfall", "detail"],
+        "properties": {
+          "control": { "enum": ["N", "H1", "H2", "H3", "S1", "S2", "S3", "DIFFICULTY", "COMBINATION_FEASIBILITY"] },
+          "requirement": { "type": "string", "minLength": 1 },
+          "available": { "type": ["integer", "null"], "minimum": 0 },
+          "shortfall": { "type": ["integer", "null"], "minimum": 0 },
+          "detail": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "rerun_schedule_remaining": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["run", "days_after_c0", "timestamp"],
+        "properties": {
+          "run": { "enum": ["C2", "C3"] },
+          "days_after_c0": { "enum": [14, 21] },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "const": "SHORTAGE_EVENT" } }, "required": ["state"] },
+      "then": {
+        "properties": {
+          "provisional_selected": { "type": "array", "maxItems": 0 },
+          "difficulty": { "type": "null" }
+        }
+      },
+      "else": {
+        "properties": {
+          "provisional_selected": { "type": "array", "minItems": 1 },
+          "difficulty": { "type": "object" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "pinnedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "sourceClass": { "enum": ["A", "B", "C", "D", "E", "F"] },
+    "bandCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["short", "medium", "long"],
+      "properties": {
+        "short": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "long": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "classCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B", "C", "D", "E", "F"],
+      "properties": {
+        "A": { "type": "integer", "minimum": 0 },
+        "B": { "type": "integer", "minimum": 0 },
+        "C": { "type": "integer", "minimum": 0 },
+        "D": { "type": "integer", "minimum": 0 },
+        "E": { "type": "integer", "minimum": 0 },
+        "F": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
