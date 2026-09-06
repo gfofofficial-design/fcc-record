@@ -313,6 +313,10 @@ t = withAuth((tt) => writeJson(tt, 'governance/gates/note2.json', { scope: { com
 t = withAuth((tt) => fs.writeFileSync(path.join(tt, 'governance/gates/intake-execution-002-final.json'), '{ broken')); ok(has(evalI(t), /^B: conflicting.*malformed/), 'malformed file whose NAME claims the namespace => fails closed'); rm(t);
 t = withAuth((tt) => writeJson(tt, 'governance/gates/build07-report-authorization.json', { artifact_class: 'GOVERNANCE_EXECUTION_AUTHORIZATION', gate: 'REPORT_PUBLICATION', epoch: 1, authorization_id: 'report-publication-001', authorized: true }));
 { const r = evalI(t); ok(!has(r, /^B: /) && r.allowed === true, 'R5-7: unrelated GOVERNANCE_EXECUTION_AUTHORIZATION (other gate, epoch 1) does NOT conflict'); } rm(t);
+t = withAuth((tt) => writeJson(tt, 'governance/gates/epoch2-c0-shortage-reconciliation-001.json', { artifact_class: 'GOVERNANCE_EXECUTION_RECONCILIATION', record_id: 'epoch2-c0-shortage-reconciliation-001', epoch: 2, run: 'C0', authorization_id: 'intake-execution-002', authorization_disposition: { single_use_consumed_conservatively: true, reuse_prohibited: true, c1_authorized_here: false } }));
+{ const r = evalI(t); ok(!has(r, /^B: /) && r.allowed === true, 'final C0 reconciliation binds consumed 002 without becoming an authorization claimant'); } rm(t);
+t = withAuth((tt) => writeJson(tt, 'governance/gates/epoch2-c0-shortage-reconciliation-001.json', { artifact_class: 'GOVERNANCE_EXECUTION_RECONCILIATION', record_id: 'epoch2-c0-shortage-reconciliation-001', epoch: 2, run: 'C0', authorization_id: 'intake-execution-002', authorization_disposition: { single_use_consumed_conservatively: false, reuse_prohibited: true, c1_authorized_here: false } }));
+ok(has(evalI(t), /^B: conflicting\/noncanonical/), 'C0 reconciliation identity/disposition drift still fails closed as an authorization claimant'); rm(t);
 t = withAuth(); ok(!has(evalI(t), /^B: /), 'lawful gates dir raises no false conflict'); rm(t);
 
 console.log('== Addendum 002: permanent ZERO for Epoch 2 ==');

@@ -174,7 +174,20 @@ function readRepoFacts(repoRoot, infrastructure) {
     const canonical = /^intake-execution-\d{3}\.json$/.test(n);
     const r = json(`governance/gates/${n}`);
     const d = r.doc;
-    const contentClaim = !!(d && typeof d === 'object' && (d.authorization_id === 'intake-execution-002' || (d.gate === 'CANDIDATE_INTAKE_EXECUTION' && d.epoch === 2) || (d.scope && (d.scope.what_is_authorized === OWNER_AUTH_SCOPE || d.scope.completion_marker_path === P.marker002))));
+    // The finalized C0 reconciliation binds authorization 002 only to record its
+    // conservative single-use disposition. It is not a second authorization.
+    // Keep the exemption exact so any lookalike or identity drift still fails closed.
+    const lawfulC0Reconciliation = n === 'epoch2-c0-shortage-reconciliation-001.json'
+      && d && typeof d === 'object'
+      && d.artifact_class === 'GOVERNANCE_EXECUTION_RECONCILIATION'
+      && d.record_id === 'epoch2-c0-shortage-reconciliation-001'
+      && d.epoch === 2 && d.run === 'C0'
+      && d.authorization_id === 'intake-execution-002'
+      && d.authorization_disposition
+      && d.authorization_disposition.single_use_consumed_conservatively === true
+      && d.authorization_disposition.reuse_prohibited === true
+      && d.authorization_disposition.c1_authorized_here === false;
+    const contentClaim = !lawfulC0Reconciliation && !!(d && typeof d === 'object' && (d.authorization_id === 'intake-execution-002' || (d.gate === 'CANDIDATE_INTAKE_EXECUTION' && d.epoch === 2) || (d.scope && (d.scope.what_is_authorized === OWNER_AUTH_SCOPE || d.scope.completion_marker_path === P.marker002))));
     const nameClaim = NAME_CLAIM.test(n);
     const lawfulName = n === 'intake-execution-001.json' || n === 'intake-execution-002.json';
     if (canonical || contentClaim || nameClaim) authRecords.push({ name: n, record: d, parseError: r.parseError, claimant: !lawfulName && (canonical || contentClaim || nameClaim) });
