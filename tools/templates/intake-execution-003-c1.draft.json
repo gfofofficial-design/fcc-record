@@ -1,5 +1,5 @@
 {
-  "_DRAFT_NOTICE": "DESIGN TEMPLATE ONLY. This is not an authorization, must not be placed in governance/gates, and contains no executable pins. A final C1 authorization may be generated only after the C0 reconciliation and the corrected rerun infrastructure are public, reviewed, and hash-pinned.",
+  "_DRAFT_NOTICE": "REVIEW DRAFT ONLY. This is not an authorization and must not be placed in governance/gates. Public infrastructure pins are populated from merge commit 66b020a70ad068c82f03261b8c8f61ca40a0e432, but the C0 reconciliation pin remains unavailable until that record is separately authorized, recorded, reviewed, and merged.",
   "artifact_class": "GOVERNANCE_EXECUTION_AUTHORIZATION_DRAFT",
   "not_a_capital_instrument": true,
   "gate": "CANDIDATE_INTAKE_RERUN_EXECUTION",
@@ -22,30 +22,30 @@
     "may_create_capital_activity": false
   },
   "pins": {
-    "methodology": { "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-    "experiment_spec": { "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-    "experiment_freeze": { "path": "governance/experiments/stage0-public-experiment-v1/experiment-freeze.v2.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-    "pre_intake_candidate_slate": { "path": "governance/experiments/stage0-public-experiment-v1/candidate-slate.v2.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-    "supersession_record": { "path": "governance/gates/methodology-supersession-001.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
+    "methodology": { "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_CANDIDATE_SELECTION_METHOD_V0_3.md", "sha256": "ab6be2c5d25ffdf147a162794ee282bfa84605ca53d8179f6580df0eff1df865" },
+    "experiment_spec": { "path": "governance/experiments/stage0-public-experiment-v1/FCC_STAGE0_PUBLIC_EXPERIMENT_SPEC_V0_3.md", "sha256": "4e50a3ab68c9fbaa5e5e5d13278ae289c33aa6578d6b81a023c1e82cd26a376f" },
+    "experiment_freeze": { "path": "governance/experiments/stage0-public-experiment-v1/experiment-freeze.v2.json", "sha256": "f2db0398983e125580a80fadd5e281170d950be9863770b260da78c63cf684fe" },
+    "pre_intake_candidate_slate": { "path": "governance/experiments/stage0-public-experiment-v1/candidate-slate.v2.json", "sha256": "647a0ae9194f24127432648c170f5510b9571eeb5d53407062eaaab721fca66c" },
+    "supersession_record": { "path": "governance/gates/methodology-supersession-001.json", "sha256": "7fdf5c2352d5bfe99d16305405b9b79a78478b6d5de2305a57a82050c5c8535d" },
     "c0_reconciliation": { "path": "governance/gates/epoch2-c0-shortage-reconciliation-001.json", "sha256": "WITHHELD_UNTIL_SEPARATELY_AUTHORIZED_AND_RECORDED" },
     "frozen_c0_cutoff": "2026-09-03T00:00:00.000Z",
     "checkpoint_timestamp": "2026-09-10T00:00:00.000Z",
     "execution_infrastructure": {
-      "public_commit": "WITHHELD_UNTIL_INFRASTRUCTURE_IS_PUBLIC",
+      "public_commit": "66b020a70ad068c82f03261b8c8f61ca40a0e432",
       "files": {
-        "readiness_verifier": { "path": "tools/verify-acquisition-readiness.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "acquisition_adapters": { "path": "tools/lib/acquisition-adapters.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "live_acquisition_provider": { "path": "tools/lib/live-acquisition-provider.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "deterministic_selection": { "path": "tools/lib/epoch2-selection.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "shortage_event_schema": { "path": "governance/schemas/v2/epoch2-shortage-event.schema.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "rerun_selected_schema": { "path": "governance/schemas/v2/candidate-slate.v2.rerun-selected.schema.json", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "completion_marker_writer_verifier": { "path": "tools/lib/epoch2-rerun-completion.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "shortage_result_writer": { "path": "tools/lib/epoch2-shortage-result.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "selected_result_writer": { "path": "tools/lib/epoch2-rerun-selected-result.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "rerun_authorization_gate": { "path": "tools/lib/epoch2-rerun-authorization.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "rerun_readiness_transaction": { "path": "tools/lib/epoch2-rerun-readiness-probe.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "rerun_runner": { "path": "tools/run-epoch2-rerun-intake.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" },
-        "ci_rerun_guard": { "path": "tools/ci-epoch2-rerun-guard.js", "sha256": "WITHHELD_UNTIL_PUBLIC_REVIEW" }
+        "readiness_verifier": { "path": "tools/verify-acquisition-readiness.js", "sha256": "d3dcf45406aa3c5deee65865d32201c8e4d76a236d9f04379affb0ae0e33695e" },
+        "acquisition_adapters": { "path": "tools/lib/acquisition-adapters.js", "sha256": "889c4f44753997f798b929e6ebb6ddfc0534be0832326222458a3563ee79ac3e" },
+        "live_acquisition_provider": { "path": "tools/lib/live-acquisition-provider.js", "sha256": "07c21feaafefd0905a0de08d11e598afe3f698f7dff549e3ae1ec422135e7036" },
+        "deterministic_selection": { "path": "tools/lib/epoch2-selection.js", "sha256": "1804375734d5a76a465d54050d0803adcff288108a6dcbe990352e8c5050ebcd" },
+        "shortage_event_schema": { "path": "governance/schemas/v2/epoch2-shortage-event.schema.json", "sha256": "d2574e7bd83c14aa57b883b2d165db49ab6ec11f5d681e9163468006dba84079" },
+        "rerun_selected_schema": { "path": "governance/schemas/v2/candidate-slate.v2.rerun-selected.schema.json", "sha256": "bb532a84952e2a43614d2c7e110c3ea1c619f4c63a55049d0aa81c1241ea258d" },
+        "completion_marker_writer_verifier": { "path": "tools/lib/epoch2-rerun-completion.js", "sha256": "7031aa2fd2f634090e7381cefc877e4548f87f05379cd8ff7a1e274249d64a85" },
+        "shortage_result_writer": { "path": "tools/lib/epoch2-shortage-result.js", "sha256": "57bad1a5c709563b1e83c77afd9e3bc6af543f5af60a8b346efff10d61f48382" },
+        "selected_result_writer": { "path": "tools/lib/epoch2-rerun-selected-result.js", "sha256": "a72337fc478c048e266bf8523286d2dd3f376b624fcc069bb15333e09ffb68c3" },
+        "rerun_authorization_gate": { "path": "tools/lib/epoch2-rerun-authorization.js", "sha256": "0b1d4f89558d806161edc48693d6d9364f23b56e236d990d1579566197a22d20" },
+        "rerun_readiness_transaction": { "path": "tools/lib/epoch2-rerun-readiness-probe.js", "sha256": "12b0f2d4fd920da06cb813a2da0191c223f3e06cbf412b839b0877c6724eaeab" },
+        "rerun_runner": { "path": "tools/run-epoch2-rerun-intake.js", "sha256": "c059a9563e9f941874c983a390dff2f364af9c207f625d824cda50581f1aee91" },
+        "ci_rerun_guard": { "path": "tools/ci-epoch2-rerun-guard.js", "sha256": "4381c442c12351498928c0dacb2ea7eeae86a35a1877b835843134040ee411c5" }
       }
     }
   },
