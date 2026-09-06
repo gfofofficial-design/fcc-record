@@ -174,7 +174,11 @@ ok(!readiness.__testOnly.verifyPinnedCommitWith(readinessSys(), '/fixture', '7'.
 console.log('== production and CI refusal surfaces ==');
 ok(c0gate.C0_EXECUTION_PERMANENTLY_CONSUMED === true && c0gate.evaluateEpoch2ForProcess(ROOT).executable === false, 'historical authorization 002 is permanently non-executable in production');
 const processRefusal = gate.evaluateRerunForProcess(ROOT, 'C1');
-ok(processRefusal.executable === false && !processRefusal.readinessProvenance, 'missing final C0 reconciliation/C1 authorization refuses before any live readiness probe');
+ok(processRefusal.executable === false && !processRefusal.readinessProvenance, 'missing C1 authorization refuses before any live readiness probe');
+const c1Draft = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/templates/intake-execution-003-c1.draft.json'), 'utf8'));
+const publicReconciliationBytes = fs.readFileSync(path.join(ROOT, completion.RECONCILIATION_PATH));
+ok(c1Draft.pins.c0_reconciliation.path === completion.RECONCILIATION_PATH && c1Draft.pins.c0_reconciliation.sha256 === gate.sha256(publicReconciliationBytes), 'C1 review draft pins the exact finalized C0 reconciliation bytes');
+ok(c1Draft.artifact_class === 'GOVERNANCE_EXECUTION_AUTHORIZATION_DRAFT' && c1Draft.authorized === false && c1Draft.owner_authorization.state === 'NOT_REQUESTED' && c1Draft.recorded_at === null && c1Draft.owner_ratification_required === true && !fs.existsSync(path.join(ROOT, completion.authPath('C1'))), 'C1 review preparation remains non-executable and no final authorization exists');
 ok(ciGuard.decide(ROOT, Date.parse('2026-09-10T00:10:00Z')).pass, 'CI guard treats only absent future authority as lawful and never executes intake');
 ok(runner.parseRunArg(['--run=C1']) === 'C1' && runner.parseRunArg(['--run=C1', '--run=C2']) === null && runner.parseRunArg(['--run=C0']) === null, 'runner accepts exactly one declared C1-C3 run');
 ok(/buildLiveProvider\(\{ repoRoot: ROOT, nowMs: Date\.parse\(authorization\.checkpointTimestamp\) \}\)/.test(fs.readFileSync(path.join(ROOT, 'tools/run-epoch2-rerun-intake.js'), 'utf8')), 'rerun acquisition window is anchored to the frozen checkpoint, not invocation time');
