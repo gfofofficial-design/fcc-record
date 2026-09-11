@@ -4,12 +4,12 @@
 const canonicalizeNode = require('canonicalize');
 const { execFileSync } = require('child_process');
 
-// The standard Windows installer exposes the `py` launcher; Unix runners
-// expose `python3`.
+// Use the Python selected on PATH so CI setup and active virtual environments
+// share their installed dependencies with the independent oracle.
 // Keep the independent oracle mandatory while selecting the platform-native
 // executable without invoking a shell.
 const PYTHON = process.platform === 'win32'
-  ? { command: 'py', prefixArgs: ['-3'] }
+  ? { command: 'python', prefixArgs: [] }
   : { command: 'python3', prefixArgs: [] };
 
 function nodeCanonicalBytes(obj) {
