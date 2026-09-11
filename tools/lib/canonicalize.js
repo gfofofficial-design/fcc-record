@@ -4,18 +4,26 @@
 const canonicalizeNode = require('canonicalize');
 const { execFileSync } = require('child_process');
 
+// Use the Python selected on PATH so CI setup and active virtual environments
+// share their installed dependencies with the independent oracle.
+// Keep the independent oracle mandatory while selecting the platform-native
+// executable without invoking a shell.
+const PYTHON = process.platform === 'win32'
+  ? { command: 'python', prefixArgs: [] }
+  : { command: 'python3', prefixArgs: [] };
+
 function nodeCanonicalBytes(obj) {
   return Buffer.from(canonicalizeNode(obj), 'utf8');
 }
 function pythonCanonicalBytes(obj) {
-  return execFileSync('python3', [__dirname + '/../canonicalize_py.py'], {
+  return execFileSync(PYTHON.command, [...PYTHON.prefixArgs, __dirname + '/../canonicalize_py.py'], {
     input: JSON.stringify(obj),
     maxBuffer: 1024 * 1024 * 16,
   });
 }
 function nodeCanonicalizerVersion() { return require('canonicalize/package.json').version; }
 function pythonCanonicalizerVersion() {
-  return execFileSync('python3', ['-c', 'import rfc8785, importlib.metadata as m; print(m.version("rfc8785"))'], { encoding: 'utf8' }).trim();
+  return execFileSync(PYTHON.command, [...PYTHON.prefixArgs, '-c', 'import rfc8785, importlib.metadata as m; print(m.version("rfc8785"))'], { encoding: 'utf8' }).trim();
 }
 
 // BUILD 02.1 item 8 — TEST-ONLY dependency injection seam.

@@ -8,3 +8,4 @@ governance/keys/** -text
 *.ots binary
 *.ndjson -text
 *.json -text
+tools/** -text
