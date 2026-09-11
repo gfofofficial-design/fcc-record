@@ -13,7 +13,7 @@
 // This module is the single source of truth for both the adversarial test
 // battery and the CI enforcement script (item 3), so the two can never
 // silently diverge.
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 
 function isNdjson(path) { return /\.ndjson$/.test(path); }
 function isProtectedRoot(path) {
@@ -105,7 +105,7 @@ function correctionExcuses(records, path, baseRef, headRef) {
 
 // Returns an array of violation strings. Empty array = compliant.
 function checkAppendOnlyLaw(baseRef, headRef) {
-  const diff = execSync(`git diff --name-status ${baseRef} ${headRef} || true`, { encoding: 'utf8' });
+  const diff = execFileSync('git', ['diff', '--name-status', baseRef, headRef], { encoding: 'utf8' });
   const violations = [];
   const corrections = loadVerifiedCorrectionRecords(headRef);
   diff.split('\n').filter(Boolean).forEach(line => {

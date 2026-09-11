@@ -7,7 +7,7 @@
 //                     private-key bytes — only the offending blob sha and
 //                     (best-effort) the path it was first seen at.
 // No third-party secret-scanning dependency — deterministic git-object scan only.
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const PATTERNS = ['BEGIN PRIVATE KEY', 'BEGIN EC PRIVATE KEY', 'BEGIN RSA PRIVATE KEY', 'BEGIN OPENSSH PRIVATE KEY'];
 const historyMode = process.argv.includes('--history');
 
@@ -15,10 +15,13 @@ let found = false;
 
 if (!historyMode) {
   for (const p of PATTERNS) {
-    try {
-      const out = execSync(`git grep -l "${p}" -- . ':!tools/secret-scan.js' || true`, { encoding: 'utf8' });
-      if (out.trim()) { console.log('LEAK DETECTED (current tree) for pattern:', p, '\n', out); found = true; }
-    } catch (e) { /* exit 1 on no match — fine */ }
+    const result = spawnSync('git', ['grep', '-F', '-l', p, '--', '.', ':!tools/secret-scan.js'], { encoding: 'utf8' });
+    if (result.status === 0 && result.stdout.trim()) {
+      console.log('LEAK DETECTED (current tree) for pattern:', p, '\n', result.stdout);
+      found = true;
+    } else if (result.status !== 1) {
+      throw new Error(`secret scan git grep failed for pattern ${JSON.stringify(p)}: ${result.stderr || `exit ${result.status}`}`);
+    }
   }
   if (found) { console.error('SECRET SCAN (current tree) FAILED'); process.exit(1); }
   console.log('Secret scan (current tree) passed — no private key material in tracked files.');

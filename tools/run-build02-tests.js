@@ -12,6 +12,16 @@ const { evaluateExpiry, reconcileHold, assertSecondHashAllowed, LOCK_PUBLICATION
 let pass = 0, fail = 0;
 const ok = (cond, name) => { console.log((cond ? 'PASS ' : 'FAIL ') + name); cond ? pass++ : fail++; };
 
+function listJavaScriptFiles(dir) {
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...listJavaScriptFiles(full));
+    else if (entry.isFile() && entry.name.endsWith('.js')) files.push(full);
+  }
+  return files;
+}
+
 const semantic = JSON.parse(fs.readFileSync(path.join(__dirname, '../tests/fixtures/fixtureA-prelock.json'), 'utf8'));
 
 console.log('=== FIXTURE A: valid lock-run artifact ===');
@@ -133,8 +143,12 @@ console.log('\n=== FIXTURE K: real parity divergence (injected into the ACTUAL p
   ok(threw && /PARITY FAILURE/.test(errMsg), 'the ACTUAL pipeline (not a standalone fake) fails non-zero on forced Node/Python divergence');
   ok(runResult === undefined, 'no lock-run result object returned');
   ok(!fs.existsSync(path.join(__dirname, '../staging/candidates')), 'no candidate/prelock directory exists on disk (production Lock Run never writes to disk by construction)');
-  const grepOut = require('child_process').execSync(`grep -rn "_testOracles" tools/ --include=*.js | grep -v run-build02-tests.js`, { cwd: path.join(__dirname, '..'), encoding: 'utf8' });
-  const productionUsesSeam = grepOut.split('\n').filter(Boolean).some(l => !l.includes('canonicalize.js') && !l.includes('lock-run.js'));
+  const productionUsesSeam = listJavaScriptFiles(__dirname).some((file) => {
+    const relative = path.relative(path.join(__dirname, '..'), file).split(path.sep).join('/');
+    if (relative === 'tools/run-build02-tests.js') return false;
+    if (relative === 'tools/lib/canonicalize.js' || relative === 'tools/lock-run.js') return false;
+    return fs.readFileSync(file, 'utf8').includes('_testOracles');
+  });
   ok(!productionUsesSeam, 'the injection seam has no production call site outside its own definition and pass-through');
 }
 
