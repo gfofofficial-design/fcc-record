@@ -1,0 +1,484 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "FCC authenticated staging intake with retained DynamoDB receipts, SQS outbox notification, disabled dispatcher, telemetry, and a monthly budget alert. No production resources.",
+  "Parameters": {
+    "CodeS3Bucket": {
+      "Type": "String",
+      "AllowedPattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$",
+      "Description": "Bucket containing a commit-specific Lambda deployment zip."
+    },
+    "CodeS3Key": {
+      "Type": "String",
+      "MinLength": 1,
+      "MaxLength": 1024,
+      "Description": "Immutable, commit-specific object key for the Lambda deployment zip."
+    },
+    "SigningKeyArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-f0-9-]{36}$",
+      "Description": "Immutable ARN output by the dedicated staging signing-key stack; aliases are rejected."
+    },
+    "SigningPublicKeyPem": {
+      "Type": "String",
+      "MinLength": 80,
+      "MaxLength": 1024,
+      "Description": "PEM public key exported from SigningKeyArn and verified before deployment. This is public material."
+    },
+    "BudgetAlertEmail": {
+      "Type": "String",
+      "AllowedPattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "Description": "Address that must confirm AWS Budget alert subscription."
+    },
+    "MonthlyBudgetUsd": {
+      "Type": "Number",
+      "Default": 25,
+      "MinValue": 5,
+      "MaxValue": 250,
+      "Description": "Monthly staging budget in USD; alerts do not automatically shut down resources."
+    },
+    "OwnerTag": {
+      "Type": "String",
+      "Default": "GFOF-FCC",
+      "AllowedPattern": "^[A-Za-z0-9._:/=+@-]{1,64}$"
+    }
+  },
+  "Resources": {
+    "ReceiptTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "TableName": "fcc-staging-intake",
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          { "AttributeName": "pk", "AttributeType": "S" }
+        ],
+        "KeySchema": [
+          { "AttributeName": "pk", "KeyType": "HASH" }
+        ],
+        "DeletionProtectionEnabled": true,
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true
+        },
+        "SSESpecification": {
+          "SSEEnabled": true,
+          "SSEType": "KMS"
+        },
+        "Tags": [
+          { "Key": "Project", "Value": "FCC" },
+          { "Key": "Environment", "Value": "staging" },
+          { "Key": "Owner", "Value": { "Ref": "OwnerTag" } },
+          { "Key": "Production", "Value": "false" }
+        ]
+      }
+    },
+    "ReceiptQueue": {
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "QueueName": "fcc-staging-receipts",
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600,
+        "VisibilityTimeout": 60,
+        "ReceiveMessageWaitTimeSeconds": 10,
+        "Tags": [
+          { "Key": "Project", "Value": "FCC" },
+          { "Key": "Environment", "Value": "staging" },
+          { "Key": "Owner", "Value": { "Ref": "OwnerTag" } },
+          { "Key": "Production", "Value": "false" }
+        ]
+      }
+    },
+    "IntakeRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": "lambda.amazonaws.com" },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "fcc-staging-intake-least-privilege",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "WriteFunctionLogs",
+                  "Effect": "Allow",
+                  "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-intake:*"
+                  }
+                },
+                {
+                  "Sid": "ReadAndAtomicallyWriteReceipts",
+                  "Effect": "Allow",
+                  "Action": ["dynamodb:GetItem", "dynamodb:PutItem"],
+                  "Resource": { "Fn::GetAtt": ["ReceiptTable", "Arn"] }
+                },
+                {
+                  "Sid": "SignReceiptsOnly",
+                  "Effect": "Allow",
+                  "Action": "kms:Sign",
+                  "Resource": { "Ref": "SigningKeyArn" },
+                  "Condition": {
+                    "StringEquals": {
+                      "kms:SigningAlgorithm": "ED25519_SHA_512"
+                    }
+                  }
+                },
+                {
+                  "Sid": "NotifyReceiptQueue",
+                  "Effect": "Allow",
+                  "Action": "sqs:SendMessage",
+                  "Resource": { "Fn::GetAtt": ["ReceiptQueue", "Arn"] }
+                }
+              ]
+            }
+          }
+        ],
+        "Tags": [
+          { "Key": "Project", "Value": "FCC" },
+          { "Key": "Environment", "Value": "staging" },
+          { "Key": "Production", "Value": "false" }
+        ]
+      }
+    },
+    "DispatcherRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": "lambda.amazonaws.com" },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "fcc-staging-dispatcher-least-privilege",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "WriteFunctionLogs",
+                  "Effect": "Allow",
+                  "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-dispatcher:*"
+                  }
+                },
+                {
+                  "Sid": "ScanPendingOutbox",
+                  "Effect": "Allow",
+                  "Action": "dynamodb:Scan",
+                  "Resource": { "Fn::GetAtt": ["ReceiptTable", "Arn"] }
+                },
+                {
+                  "Sid": "NotifyReceiptQueue",
+                  "Effect": "Allow",
+                  "Action": "sqs:SendMessage",
+                  "Resource": { "Fn::GetAtt": ["ReceiptQueue", "Arn"] }
+                }
+              ]
+            }
+          }
+        ],
+        "Tags": [
+          { "Key": "Project", "Value": "FCC" },
+          { "Key": "Environment", "Value": "staging" },
+          { "Key": "Production", "Value": "false" }
+        ]
+      }
+    },
+    "IntakeLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": { "Fn::Sub": "/aws/lambda/${AWS::StackName}-intake" },
+        "RetentionInDays": 30
+      }
+    },
+    "DispatcherLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": { "Fn::Sub": "/aws/lambda/${AWS::StackName}-dispatcher" },
+        "RetentionInDays": 30
+      }
+    },
+    "ApiAccessLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": { "Fn::Sub": "/aws/apigateway/${AWS::StackName}" },
+        "RetentionInDays": 30
+      }
+    },
+    "IntakeFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": "IntakeLogGroup",
+      "Properties": {
+        "FunctionName": { "Fn::Sub": "${AWS::StackName}-intake" },
+        "Description": "FCC staging-only signed test receipt intake",
+        "Runtime": "nodejs24.x",
+        "Architectures": ["arm64"],
+        "Handler": "tools/aws-staging-intake.handler",
+        "Role": { "Fn::GetAtt": ["IntakeRole", "Arn"] },
+        "Code": {
+          "S3Bucket": { "Ref": "CodeS3Bucket" },
+          "S3Key": { "Ref": "CodeS3Key" }
+        },
+        "MemorySize": 256,
+        "Timeout": 10,
+        "ReservedConcurrentExecutions": 2,
+        "Environment": {
+          "Variables": {
+            "FCC_ENVIRONMENT": "staging",
+            "FCC_INTAKE_TABLE": { "Ref": "ReceiptTable" },
+            "FCC_RECEIPT_QUEUE_URL": { "Ref": "ReceiptQueue" },
+            "FCC_INTAKE_KEY_ARN": { "Ref": "SigningKeyArn" },
+            "FCC_INTAKE_PUBLIC_KEY_PEM": { "Ref": "SigningPublicKeyPem" },
+            "FCC_INTAKE_KEY_VERSION": "FCC-TEST-KEY-1",
+            "NODE_OPTIONS": "--enable-source-maps"
+          }
+        },
+        "Tags": [
+          { "Key": "Project", "Value": "FCC" },
+          { "Key": "Environment", "Value": "staging" },
+          { "Key": "Production", "Value": "false" }
+        ]
+      }
+    },
+    "DispatcherFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": "DispatcherLogGroup",
+      "Properties": {
+        "FunctionName": { "Fn::Sub": "${AWS::StackName}-dispatcher" },
+        "Description": "FCC staging-only pending outbox dispatcher; schedule disabled by default",
+        "Runtime": "nodejs24.x",
+        "Architectures": ["arm64"],
+        "Handler": "tools/aws-staging-intake.dispatch",
+        "Role": { "Fn::GetAtt": ["DispatcherRole", "Arn"] },
+        "Code": {
+          "S3Bucket": { "Ref": "CodeS3Bucket" },
+          "S3Key": { "Ref": "CodeS3Key" }
+        },
+        "MemorySize": 256,
+        "Timeout": 30,
+        "ReservedConcurrentExecutions": 1,
+        "Environment": {
+          "Variables": {
+            "FCC_ENVIRONMENT": "staging",
+            "FCC_INTAKE_TABLE": { "Ref": "ReceiptTable" },
+            "FCC_RECEIPT_QUEUE_URL": { "Ref": "ReceiptQueue" },
+            "FCC_INTAKE_KEY_ARN": { "Ref": "SigningKeyArn" },
+            "FCC_INTAKE_PUBLIC_KEY_PEM": { "Ref": "SigningPublicKeyPem" },
+            "FCC_INTAKE_KEY_VERSION": "FCC-TEST-KEY-1",
+            "NODE_OPTIONS": "--enable-source-maps"
+          }
+        },
+        "Tags": [
+          { "Key": "Project", "Value": "FCC" },
+          { "Key": "Environment", "Value": "staging" },
+          { "Key": "Production", "Value": "false" }
+        ]
+      }
+    },
+    "IntakeApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": { "Fn::Sub": "${AWS::StackName}-api" },
+        "Description": "Authenticated FCC staging test intake",
+        "ProtocolType": "HTTP",
+        "DisableExecuteApiEndpoint": false,
+        "Tags": {
+          "Project": "FCC",
+          "Environment": "staging",
+          "Production": "false"
+        }
+      }
+    },
+    "IntakeIntegration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": { "Ref": "IntakeApi" },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationMethod": "POST",
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 10000,
+        "IntegrationUri": {
+          "Fn::Sub": [
+            "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionArn}/invocations",
+            { "FunctionArn": { "Fn::GetAtt": ["IntakeFunction", "Arn"] } }
+          ]
+        }
+      }
+    },
+    "IntakeRoute": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": { "Ref": "IntakeApi" },
+        "RouteKey": "POST /staging/intake",
+        "AuthorizationType": "AWS_IAM",
+        "Target": {
+          "Fn::Join": ["", ["integrations/", { "Ref": "IntakeIntegration" }]]
+        }
+      }
+    },
+    "IntakeStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "DependsOn": "IntakeRoute",
+      "Properties": {
+        "ApiId": { "Ref": "IntakeApi" },
+        "StageName": "staging",
+        "AutoDeploy": true,
+        "DefaultRouteSettings": {
+          "DetailedMetricsEnabled": true,
+          "ThrottlingBurstLimit": 5,
+          "ThrottlingRateLimit": 2
+        },
+        "AccessLogSettings": {
+          "DestinationArn": { "Fn::GetAtt": ["ApiAccessLogGroup", "Arn"] },
+          "Format": "{\"requestId\":\"$context.requestId\",\"routeKey\":\"$context.routeKey\",\"status\":\"$context.status\",\"responseLength\":\"$context.responseLength\",\"integrationError\":\"$context.integrationErrorMessage\"}"
+        },
+        "Tags": {
+          "Project": "FCC",
+          "Environment": "staging",
+          "Production": "false"
+        }
+      }
+    },
+    "AllowApiInvoke": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": { "Ref": "IntakeFunction" },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${IntakeApi}/staging/POST/staging/intake"
+        }
+      }
+    },
+    "DisabledDispatcherSchedule": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Name": { "Fn::Sub": "${AWS::StackName}-dispatcher-disabled" },
+        "Description": "Deliberately disabled until a bounded staging test window with a queue consumer",
+        "ScheduleExpression": "rate(15 minutes)",
+        "State": "DISABLED",
+        "Targets": [
+          {
+            "Arn": { "Fn::GetAtt": ["DispatcherFunction", "Arn"] },
+            "Id": "StagingDispatcher"
+          }
+        ]
+      }
+    },
+    "AllowScheduleInvoke": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": { "Ref": "DispatcherFunction" },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": { "Fn::GetAtt": ["DisabledDispatcherSchedule", "Arn"] }
+      }
+    },
+    "IntakeErrorAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "FCC staging intake returned a Lambda error",
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          { "Name": "FunctionName", "Value": { "Ref": "IntakeFunction" } }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching"
+      }
+    },
+    "MonthlyCostBudget": {
+      "Type": "AWS::Budgets::Budget",
+      "Properties": {
+        "Budget": {
+          "BudgetName": { "Fn::Sub": "${AWS::StackName}-monthly-cost-guardrail" },
+          "BudgetLimit": {
+            "Amount": { "Ref": "MonthlyBudgetUsd" },
+            "Unit": "USD"
+          },
+          "BudgetType": "COST",
+          "CostFilters": {
+            "TagKeyValue": ["user:Environment$staging"]
+          },
+          "TimeUnit": "MONTHLY"
+        },
+        "NotificationsWithSubscribers": [
+          {
+            "Notification": {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 80,
+              "ThresholdType": "PERCENTAGE"
+            },
+            "Subscribers": [
+              { "Address": { "Ref": "BudgetAlertEmail" }, "SubscriptionType": "EMAIL" }
+            ]
+          },
+          {
+            "Notification": {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "FORECASTED",
+              "Threshold": 100,
+              "ThresholdType": "PERCENTAGE"
+            },
+            "Subscribers": [
+              { "Address": { "Ref": "BudgetAlertEmail" }, "SubscriptionType": "EMAIL" }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "AuthenticatedIntakeEndpoint": {
+      "Description": "IAM-authenticated staging endpoint; SigV4 credentials are required.",
+      "Value": {
+        "Fn::Sub": "https://${IntakeApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/staging/staging/intake"
+      }
+    },
+    "ReceiptTableName": {
+      "Description": "Retained source of truth for staging submissions, receipts, and outbox entries.",
+      "Value": { "Ref": "ReceiptTable" }
+    },
+    "ReceiptQueueUrl": {
+      "Description": "Staging notification queue; not a receipt-retention authority.",
+      "Value": { "Ref": "ReceiptQueue" }
+    },
+    "DispatcherScheduleState": {
+      "Description": "Safety assertion: dispatcher automation is not activated by this stack.",
+      "Value": "DISABLED"
+    },
+    "ProductionActivated": {
+      "Description": "Safety assertion: this stack is staging-only.",
+      "Value": "false"
+    }
+  }
+}

@@ -5,6 +5,7 @@
   "description": "FCC Stage-0 CI foundation tooling (Node primary)",
   "scripts": {
     "test:aws": "node --test tests/aws-staging-intake.test.js",
+    "test:infra": "node --test tests/aws-staging-infrastructure.test.js",
     "test": "node tools/run-ci-foundation-tests.js",
     "test:app": "node --test tests/stage0-app.test.js",
     "verify:app": "node tools/verify-stage0.js",

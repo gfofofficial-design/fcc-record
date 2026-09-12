@@ -10,7 +10,20 @@ The service hashes RFC 8785 submission bytes, requests an Ed25519 signature from
 
 SQS receives only the receipt ID. Queue failure does not remove the durable outbox entry or move the original receipt timestamp. `tools/aws-staging-intake.dispatch` scans pending entries, including every pagination page, and retries delivery. Repeated dispatch intentionally permits duplicates. Sending to SQS never marks an entry publicly admitted. No TTL, deletion, public publisher, or consumer is implemented; pending entries remain pending. The scan is suitable for bounded staging volume only and needs indexing/checkpointing before production scale.
 
-## Staging deployment contract — not yet provisioned
+## Reviewable staging infrastructure — not yet provisioned
+
+The deployment configuration is now defined in two CloudFormation templates:
+
+- `infrastructure/aws-staging-signing-key.template.json` creates the retained, single-region Ed25519 signing key.
+- `infrastructure/aws-staging-intake.template.json` creates the retained DynamoDB table and SQS queue, separate least-privilege Lambda roles, bounded Lambda functions, one IAM-authenticated HTTP route, retained 30-day logs, an error alarm, and a monthly budget alert. Its dispatcher schedule is created in `DISABLED` state.
+
+Two templates are intentional. AWS KMS exports the public key only after the signing key exists, while the intake process refuses to start unless its configured PEM exactly verifies KMS signatures. The operator must therefore deploy and inspect the key first, export its public key, and then supply both the immutable key ARN and public PEM to the intake stack. This prevents a template from silently substituting an unrelated verification key.
+
+The service template creates no caller identity or access key. Even after deployment, no caller can use the `AWS_IAM` route until a separately reviewed principal receives `execute-api:Invoke`. It also creates no queue consumer, public publisher, production resource, or automatic dispatcher execution.
+
+See `infrastructure/README.md` for the review and deployment sequence. Run `npm run test:infra` for the portable static guardrail battery.
+
+## Staging deployment contract
 
 - Dedicated FCC AWS account, selected region, and an authenticated staging endpoint. Do not expose this handler as unauthenticated public intake; identity validation and abuse controls are not implemented.
 - Node.js Lambda with the repository's pinned npm dependencies included. Handler: `tools/aws-staging-intake.handler`; separate scheduled dispatcher: `tools/aws-staging-intake.dispatch`.
