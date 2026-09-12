@@ -15,6 +15,7 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - run: npm run test:app
       - run: npm run test:production
+      - run: npm run test:aws
       - run: npm run build
 
   foundation-battery:

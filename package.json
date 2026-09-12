@@ -4,6 +4,7 @@
   "private": true,
   "description": "FCC Stage-0 CI foundation tooling (Node primary)",
   "scripts": {
+    "test:aws": "node --test tests/aws-staging-intake.test.js",
     "test": "node tools/run-ci-foundation-tests.js",
     "test:app": "node --test tests/stage0-app.test.js",
     "verify:app": "node tools/verify-stage0.js",
@@ -13,8 +14,12 @@
     "start": "node tools/stage0-server.js"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.1131.0",
+    "@aws-sdk/client-kms": "3.1131.0",
+    "@aws-sdk/client-sqs": "3.1131.0",
+    "@aws-sdk/lib-dynamodb": "3.1131.0",
     "ajv": "8.17.1",
-    "canonicalize": "2.1.0",
-    "ajv-formats": "3.0.1"
+    "ajv-formats": "3.0.1",
+    "canonicalize": "2.1.0"
   }
 }
