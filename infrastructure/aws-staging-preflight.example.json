@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "environment": "staging",
+  "expectedAccountId": "000000000000",
+  "region": "us-east-2",
+  "deploymentBucket": "replace-with-private-versioned-bucket",
+  "budgetAlertEmail": "replace@example.com",
+  "monthlyBudgetUsd": 25,
+  "ownerTag": "GFOF-FCC",
+  "sourceCommit": "0000000000000000000000000000000000000000"
+}
