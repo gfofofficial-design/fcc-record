@@ -33,6 +33,8 @@ The current application validates commercial `arn:aws:kms:...` ARNs and the comm
 
 ## Review locally
 
+See `STAGING_REHEARSAL.md` for the local rehearsal, read-only quota gate, bounded smoke tests, draft caller permission, and failed-deployment recovery procedure. Run the quota gate before recreating a change set after a quota-related failure.
+
 ```sh
 npm ci
 npm run test:aws
