@@ -17,6 +17,7 @@ jobs:
       - run: npm run test:production
       - run: npm run test:aws
       - run: npm run test:infra
+      - run: npm run test:aws-bundle
       - run: npm run build
 
   foundation-battery:
