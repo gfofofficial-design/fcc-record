@@ -74,6 +74,9 @@ console.log('\n=== FIXTURE E: cross-language parity ===');
 {
   const { bytes } = dualCanonicalize({ z: 1, a: { b: 2, a: 1 }, list: [3, 1, 2] });
   ok(Buffer.isBuffer(bytes) && bytes.length > 0, 'Node/Python agree (would have thrown otherwise)');
+  const unicode = { text: '\u2014 caf\u00e9 \u65e5\u672c\u8a9e \ud83d\ude80' };
+  const result = dualCanonicalize(unicode);
+  ok(JSON.parse(result.bytes.toString('utf8')).text === unicode.text, 'Node/Python preserve non-ASCII JSON through the oracle input pipe');
 }
 
 console.log('\n=== FIXTURE F: event chain ===');
