@@ -23,6 +23,12 @@ function createServer({ root = path.join(__dirname,'..'), workspace = path.join(
         if(assets[url.pathname]) { const [file,type] = assets[url.pathname]; return send(res,200,fs.readFileSync(path.join(root,'site',file)),type); }
         if(url.pathname === '/api/state') return send(res,200,store.publicState());
         if(url.pathname === '/api/record') return send(res,200,records.projection());
+        if(url.pathname === '/api/production-readback') {
+          const file=path.join(root,'.fcc-local','production-readback.json');
+          if(!fs.existsSync(file)) return send(res,200,{status:'NOT_RUN'});
+          const report=JSON.parse(fs.readFileSync(file,'utf8'));
+          return send(res,200,{...report,matches_current_commit:report.commit===records.projection().commit});
+        }
         if(url.pathname === '/api/document') return send(res,200,records.document(url.searchParams.get('key')));
         if(url.pathname === '/api/artifact') return send(res,200,records.artifact(url.searchParams.get('path')));
         return send(res,404,{error:'Not found'});
