@@ -37,6 +37,7 @@ The current application validates commercial `arn:aws:kms:...` ARNs and the comm
 npm ci
 npm run test:aws
 npm run test:infra
+npm run test:aws-bundle
 aws cloudformation validate-template --template-body file://infrastructure/aws-staging-signing-key.template.json
 aws cloudformation validate-template --template-body file://infrastructure/aws-staging-intake.template.json
 ```
@@ -59,9 +60,18 @@ Export the returned DER public-key bytes as a PEM public key. Keep the PEM with 
 
 ### 2. Build a commit-specific Lambda zip
 
-From a clean checkout of the approved commit, install the pinned lockfile and create a zip whose root contains `tools/`, `node_modules/`, `package.json`, and `package-lock.json`. Upload it to the versioned deployment bucket under a key containing the full commit SHA. Do not reuse or overwrite a prior object key.
+From a clean checkout of the approved commit, install the pinned lockfile and build the deterministic, commit-bound archive:
 
-Record the zip's SHA-256 digest and S3 object version before creating the service stack. The current template takes a commit-specific `CodeS3Key`; object immutability and bucket versioning remain operator prerequisites.
+```sh
+npm ci
+npm run build:aws-bundle
+```
+
+The builder refuses a dirty checkout, verifies every declared runtime dependency is installed, packages only the intake entry point and its local runtime modules plus `node_modules/` and the package manifests, normalizes ZIP metadata, and writes both the archive and a JSON manifest under the git-ignored `staging/aws/` directory. The archive filename contains the full commit SHA; rerunning the command at the same commit must produce the same SHA-256 digest. It will not overwrite an existing archive or manifest with different bytes.
+
+Upload the archive to the versioned deployment bucket under a key containing the full commit SHA. Do not reuse or overwrite a prior object key.
+
+Record the manifest's archive SHA-256 digest and the S3 object version before creating the service stack. The current template takes a commit-specific `CodeS3Key`; object immutability and bucket versioning remain operator prerequisites.
 
 ### 3. Create a CloudFormation change set
 
