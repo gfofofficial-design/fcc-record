@@ -27,4 +27,4 @@ The frozen governing documents remain controlling:
 
 This README summarizes the present repository state. It does not amend, reinterpret, or supersede those frozen documents.
 
-The public FCC site and user interface are [not yet built](site/README.md). Any possible later stage remains separately gated and is not authorized by this repository.
+A [local Stage 0 workbench](site/README.md) supports committed-record inspection and isolated fixture workflows. It is not a deployed public FCC site and cannot publish or modify the real record. Any possible later stage remains separately gated and is not authorized by this repository.
