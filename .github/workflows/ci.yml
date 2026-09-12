@@ -19,6 +19,7 @@ jobs:
       - run: npm run test:infra
       - run: npm run test:aws-bundle
       - run: npm run test:aws-preflight
+      - run: npm run test:aws-quota
       - run: npm run build
 
   foundation-battery:

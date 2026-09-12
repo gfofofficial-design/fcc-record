@@ -4,6 +4,8 @@
   "private": true,
   "description": "FCC Stage-0 CI foundation tooling (Node primary)",
   "scripts": {
+    "test:aws-quota": "node --test tests/aws-staging-quota.test.js",
+    "check:aws-quota": "node tools/check-aws-staging-quota.js",
     "test:aws": "node --test tests/aws-staging-intake.test.js",
     "test:infra": "node --test tests/aws-staging-infrastructure.test.js",
     "test:aws-bundle": "python tests/aws-staging-bundle.test.py",
