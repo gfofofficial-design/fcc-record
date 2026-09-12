@@ -38,6 +38,7 @@ npm ci
 npm run test:aws
 npm run test:infra
 npm run test:aws-bundle
+npm run test:aws-preflight
 aws cloudformation validate-template --template-body file://infrastructure/aws-staging-signing-key.template.json
 aws cloudformation validate-template --template-body file://infrastructure/aws-staging-intake.template.json
 ```
@@ -72,6 +73,16 @@ The builder refuses a dirty checkout, verifies every declared runtime dependency
 Upload the archive to the versioned deployment bucket under a key containing the full commit SHA. Do not reuse or overwrite a prior object key.
 
 Record the manifest's archive SHA-256 digest and the S3 object version before creating the service stack. The current template takes a commit-specific `CodeS3Key`; object immutability and bucket versioning remain operator prerequisites.
+
+### 2a. Run the read-only AWS preflight
+
+Copy `infrastructure/aws-staging-preflight.example.json` to the git-ignored path `staging/aws/preflight.json` and replace every placeholder with the five recorded owner decisions and the full approved commit SHA. Then run:
+
+```sh
+npm run preflight:aws
+```
+
+The preflight fails unless the checkout is clean, the bundle and manifest match the exact `HEAD`, the configured AWS caller is in the expected 12-digit account, the bucket is in the selected commercial region with versioning and default encryption enabled, all four bucket-level public-access blocks are true, the bucket policy is non-public, and AWS accepts both CloudFormation templates. Its AWS command allowlist contains only identity, bucket-inspection, and template-validation calls; it cannot create, update, upload, deploy, or delete anything.
 
 ### 3. Create a CloudFormation change set
 
