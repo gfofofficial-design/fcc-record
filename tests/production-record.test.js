@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('crypto'),path=require('path');
 const {REPOSITORY,buildPlan,verifyProductionRecord}=require('../tools/lib/production-record');
+const {assessReport,readProductionReport}=require('../tools/lib/production-report');
 const bytes=Buffer.from('exact UTF-8 bytes — 日本語\n');
 const digest=crypto.createHash('sha256').update(bytes).digest('hex');
 const plan={repository:REPOSITORY,commit:'a'.repeat(40),artifacts:[{path:'record/example.json',expected_sha256:digest}]};
@@ -27,4 +28,35 @@ test('reject mutable refs, alternate repositories, duplicate targets and path tr
 });
 test('plan derives pinned hashes from committed blobs, including every record file',()=>{
   const p=buildPlan(path.join(__dirname,'..'));assert.match(p.commit,/^[a-f0-9]{40}$/);assert.ok(p.artifacts.some(a=>a.path==='governance/evidence/byte-exact-manifest.json'));assert.ok(p.artifacts.some(a=>a.manifest_pinned));assert.ok(p.artifacts.some(a=>a.path.startsWith('record/')));
+});
+test('saved reports require complete current-commit evidence and consistent totals',async()=>{
+  const p={...plan,artifacts:[{...plan.artifacts[0],bytes:bytes.length}]};
+  const report=await verifyProductionRecord(p,{fetchImpl:async()=>new Response(bytes)});
+  assert.equal(assessReport(report,p).status,'VERIFIED');
+  const corruptions=[
+    r=>{r.artifacts=[];}, r=>{r.artifacts.push(r.artifacts[0]);},
+    r=>{r.artifacts[0].observed_sha256='0'.repeat(64);},
+    r=>{r.artifacts[0].expected_sha256='0'.repeat(64);},
+    r=>{r.artifacts[0].bytes++;}, r=>{r.artifacts[0].path='record/other';},
+    r=>{r.matched=0;},r=>{r.total=0;},r=>{r.observed_at='invalid';},
+    r=>{r.repository='other/repo';},r=>{r.artifacts[0]=null;}
+  ];
+  for(const mutate of corruptions){const copy=structuredClone(report);mutate(copy);assert.equal(assessReport(copy,p).status,'INVALID_REPORT');}
+  const stale=assessReport(report,{...p,commit:'b'.repeat(40)});
+  assert.equal(stale.status,'STALE');assert.equal(stale.matches_current_commit,false);
+  const failed=await verifyProductionRecord(p,{fetchImpl:async()=>new Response('',{status:404})});
+  assert.equal(assessReport(failed,p).status,'FAILED');
+  failed.status='VERIFIED';assert.equal(assessReport(failed,p).status,'INVALID_REPORT');
+});
+test('missing and malformed saved reports remain explicitly unverified',()=>{
+  const fs=require('fs');
+  const parent=path.join(__dirname,'..','.fcc-local','report-tests');
+  fs.mkdirSync(parent,{recursive:true});
+  const root=fs.mkdtempSync(path.join(parent,'case-'));
+  const local=path.join(root,'.fcc-local');fs.mkdirSync(local);
+  const file=path.join(local,'production-readback.json');
+  try {
+    assert.equal(readProductionReport(root).status,'NOT_RUN');
+    fs.writeFileSync(file,'{incomplete');assert.equal(readProductionReport(root).status,'INVALID_REPORT');
+  } finally { fs.unlinkSync(file);fs.rmdirSync(local);fs.rmdirSync(root); }
 });

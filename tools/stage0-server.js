@@ -6,6 +6,7 @@ const path = require('path');
 const { createWorkspace, verifyReceipt } = require('./lib/stage0-workspace');
 const { recordReader } = require('./lib/stage0-record');
 const domain = require('./lib/stage0-domain');
+const { readProductionReport } = require('./lib/production-report');
 function createServer({ root = path.join(__dirname,'..'), workspace = path.join(root,'.fcc-local','stage0'), port = 4173 } = {}) {
   const store = createWorkspace(workspace); const records = recordReader(root);
   const assets = { '/': ['index.html','text/html'], '/app.js': ['app.js','text/javascript'], '/styles.css': ['styles.css','text/css'] };
@@ -24,10 +25,7 @@ function createServer({ root = path.join(__dirname,'..'), workspace = path.join(
         if(url.pathname === '/api/state') return send(res,200,store.publicState());
         if(url.pathname === '/api/record') return send(res,200,records.projection());
         if(url.pathname === '/api/production-readback') {
-          const file=path.join(root,'.fcc-local','production-readback.json');
-          if(!fs.existsSync(file)) return send(res,200,{status:'NOT_RUN'});
-          const report=JSON.parse(fs.readFileSync(file,'utf8'));
-          return send(res,200,{...report,matches_current_commit:report.commit===records.projection().commit});
+          return send(res,200,readProductionReport(root));
         }
         if(url.pathname === '/api/document') return send(res,200,records.document(url.searchParams.get('key')));
         if(url.pathname === '/api/artifact') return send(res,200,records.artifact(url.searchParams.get('path')));
