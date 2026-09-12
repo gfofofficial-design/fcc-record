@@ -7,6 +7,8 @@
     "test": "node tools/run-ci-foundation-tests.js",
     "test:app": "node --test tests/stage0-app.test.js",
     "verify:app": "node tools/verify-stage0.js",
+    "verify:production": "node tools/verify-production-record.js",
+    "test:production": "node --test tests/production-record.test.js",
     "build": "node tools/build-stage0.js",
     "start": "node tools/stage0-server.js"
   },
