@@ -12,6 +12,8 @@ Saved telemetry is checked against a freshly derived plan for the current local 
 
 ## Still inactive
 
+The AWS staging intake handler and durable outbox dispatcher are implemented with mocked-service tests; see `AWS_STAGING_INTAKE.md`. No AWS resources have been provisioned and no public receipt consumer or publisher is active.
+
 - Git and Telegram witness publication and independently scoped publication credentials.
 - Public challenge receipt signing, durable hosted queues, and public receipt publication.
 - Verified production identities and approved AI-provider integration.
