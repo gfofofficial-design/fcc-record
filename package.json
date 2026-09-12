@@ -6,6 +6,8 @@
   "scripts": {
     "test:aws": "node --test tests/aws-staging-intake.test.js",
     "test:infra": "node --test tests/aws-staging-infrastructure.test.js",
+    "test:aws-bundle": "python tests/aws-staging-bundle.test.py",
+    "build:aws-bundle": "python tools/build-aws-staging-bundle.py",
     "test": "node tools/run-ci-foundation-tests.js",
     "test:app": "node --test tests/stage0-app.test.js",
     "verify:app": "node tools/verify-stage0.js",
