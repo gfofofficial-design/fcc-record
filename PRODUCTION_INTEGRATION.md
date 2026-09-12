@@ -8,6 +8,8 @@ The reader enforces the repository, full commit SHA, allowed artifact paths, req
 
 The saved report is local, replaceable telemetry, not a governance record or an authorization. Its observation time comes from the local clock. Telemetry distinguishes the checked commit from the current checkout; it does not silently carry forward a successful check to a new commit. CI uses mocked responses and performs no production writes.
 
+Saved telemetry is checked against a freshly derived plan for the current local commit before the application displays VERIFIED. Missing, duplicate, inconsistent, or mismatched evidence is INVALID_REPORT; observations for another commit are STALE. This checks report consistency only: the local report is unsigned and does not prove a fresh network observation. Run the verification command again for a new observation.
+
 ## Still inactive
 
 - Git and Telegram witness publication and independently scoped publication credentials.
